@@ -20,44 +20,49 @@ type Match = {
   company: string;
   role: string;
   location: string;
-  category: "Deployment" | "Forward Deployed" | "Solutions" | "Customer Eng" | "Implementation";
-  careers: string;
+  category: "Deployment" | "Forward Deployed" | "Solutions" | "Customer Eng" | "Implementation" | "AI PM" | "AI Ops";
+  roleUrl: string; // deep link to the role or filtered search
+  careers: string; // company careers home
 };
 
-// Curated list — updated 2026-07. Links point to each company's careers page
-// (not a specific req ID) so they stay live longer. Filter for the categories
-// on arrival.
+// Focus: Charlotte metro AI/ML roles + remote-first AI companies. Role links
+// deep-link to the specific opening or a keyword-filtered search on the
+// company's ATS. Refreshed 2026-07.
 const MATCHES: Match[] = [
-  { company: "OpenAI", role: "Deployment Strategist / Manager", location: "NYC / SF", category: "Deployment", careers: "https://openai.com/careers/search/" },
-  { company: "OpenAI", role: "Forward Deployed Engineer", location: "NYC / SF", category: "Forward Deployed", careers: "https://openai.com/careers/search/" },
-  { company: "OpenAI", role: "Solutions Architect", location: "NYC / SF / Remote", category: "Solutions", careers: "https://openai.com/careers/search/" },
-  { company: "Anthropic", role: "Applied AI, Enterprise", location: "NYC / SF", category: "Solutions", careers: "https://www.anthropic.com/careers" },
-  { company: "Anthropic", role: "Customer Engineer", location: "NYC / SF / Remote", category: "Customer Eng", careers: "https://www.anthropic.com/careers" },
-  { company: "Anthropic", role: "Deployment Strategist", location: "NYC / SF", category: "Deployment", careers: "https://www.anthropic.com/careers" },
-  { company: "Lovable", role: "Forward Deployed Engineer", location: "Stockholm / Remote", category: "Forward Deployed", careers: "https://lovable.dev/careers" },
-  { company: "Lovable", role: "Customer Engineer", location: "Remote", category: "Customer Eng", careers: "https://lovable.dev/careers" },
-  { company: "Cursor", role: "Forward Deployed Engineer", location: "SF", category: "Forward Deployed", careers: "https://cursor.com/careers" },
-  { company: "Cursor", role: "Solutions Engineer", location: "SF", category: "Solutions", careers: "https://cursor.com/careers" },
-  { company: "Perplexity", role: "Enterprise Solutions", location: "SF / NYC", category: "Solutions", careers: "https://www.perplexity.ai/hub/careers" },
-  { company: "Sierra", role: "Agent Engineer / Forward Deployed", location: "SF", category: "Forward Deployed", careers: "https://sierra.ai/careers" },
-  { company: "Decagon", role: "Forward Deployed Engineer", location: "SF / NYC", category: "Forward Deployed", careers: "https://decagon.ai/careers" },
-  { company: "Decagon", role: "Implementation Manager", location: "SF / NYC / Remote", category: "Implementation", careers: "https://decagon.ai/careers" },
-  { company: "Glean", role: "Solutions Engineer", location: "NYC / Remote", category: "Solutions", careers: "https://www.glean.com/careers" },
-  { company: "Glean", role: "Customer Engineer", location: "NYC / Remote", category: "Customer Eng", careers: "https://www.glean.com/careers" },
-  { company: "Writer", role: "AI Solutions Architect", location: "NYC / SF / Remote", category: "Solutions", careers: "https://writer.com/careers/" },
-  { company: "Writer", role: "Deployment Manager", location: "Remote", category: "Deployment", careers: "https://writer.com/careers/" },
-  { company: "Hebbia", role: "Forward Deployed Engineer", location: "NYC", category: "Forward Deployed", careers: "https://www.hebbia.com/careers" },
-  { company: "Hebbia", role: "Solutions Engineer", location: "NYC", category: "Solutions", careers: "https://www.hebbia.com/careers" },
-  { company: "Harvey", role: "Forward Deployed Engineer", location: "NYC / SF", category: "Forward Deployed", careers: "https://www.harvey.ai/careers" },
-  { company: "Sana", role: "Solutions Engineer", location: "NYC / Stockholm", category: "Solutions", careers: "https://sanalabs.com/careers" },
-  { company: "Adept / Amazon AGI", role: "Applied Deployment", location: "SF / Seattle", category: "Deployment", careers: "https://www.amazon.jobs/en/teams/agi" },
-  { company: "Runway", role: "Customer Solutions", location: "NYC", category: "Customer Eng", careers: "https://runwayml.com/careers/" },
-  { company: "Scale AI", role: "Forward Deployed / Enterprise", location: "NYC / SF", category: "Forward Deployed", careers: "https://scale.com/careers" },
-  { company: "Databricks", role: "AI Solutions Architect", location: "NYC / Remote", category: "Solutions", careers: "https://www.databricks.com/company/careers" },
-  { company: "Vercel", role: "Solutions Engineer, AI", location: "NYC / Remote", category: "Solutions", careers: "https://vercel.com/careers" },
-  { company: "Notion", role: "AI Deployment Specialist", location: "NYC / SF", category: "Deployment", careers: "https://www.notion.so/careers" },
-  { company: "Retool", role: "Forward Deployed Engineer", location: "NYC / SF", category: "Forward Deployed", careers: "https://retool.com/careers" },
-  { company: "Ramp", role: "AI Solutions", location: "NYC", category: "Solutions", careers: "https://ramp.com/careers" },
+  // ─── Charlotte metro ────────────────────────────────────────────────
+  { company: "Bank of America", role: "AI / GenAI Solutions Lead", location: "Charlotte, NC", category: "Solutions", roleUrl: "https://careers.bankofamerica.com/en-us/search-results?keywords=AI&location=Charlotte", careers: "https://careers.bankofamerica.com/" },
+  { company: "Bank of America", role: "AI Product Manager", location: "Charlotte, NC", category: "AI PM", roleUrl: "https://careers.bankofamerica.com/en-us/search-results?keywords=AI%20product%20manager&location=Charlotte", careers: "https://careers.bankofamerica.com/" },
+  { company: "Lowe's", role: "AI / ML Product Manager", location: "Charlotte, NC (Tech Hub)", category: "AI PM", roleUrl: "https://talent.lowes.com/us/en/search-results?keywords=AI", careers: "https://talent.lowes.com/" },
+  { company: "Lowe's", role: "GenAI Solutions Engineer", location: "Charlotte, NC", category: "Solutions", roleUrl: "https://talent.lowes.com/us/en/search-results?keywords=generative%20AI", careers: "https://talent.lowes.com/" },
+  { company: "Honeywell", role: "AI Solutions Architect", location: "Charlotte, NC (HQ)", category: "Solutions", roleUrl: "https://careers.honeywell.com/us/en/search-results?keywords=AI&location=Charlotte", careers: "https://careers.honeywell.com/" },
+  { company: "Duke Energy", role: "AI / Data Product Manager", location: "Charlotte, NC (HQ)", category: "AI PM", roleUrl: "https://jobs.duke-energy.com/search/?q=AI&locationsearch=Charlotte", careers: "https://jobs.duke-energy.com/" },
+  { company: "Truist", role: "AI Deployment / Enablement", location: "Charlotte, NC", category: "Deployment", roleUrl: "https://careers.truist.com/us/en/search-results?keywords=AI&location=Charlotte", careers: "https://careers.truist.com/" },
+  { company: "LPL Financial", role: "AI Solutions / Automation", location: "Fort Mill, SC (Charlotte metro)", category: "AI Ops", roleUrl: "https://careers.lpl.com/jobs/search?query=AI", careers: "https://careers.lpl.com/" },
+  { company: "Ally Financial", role: "AI / ML Product Manager", location: "Charlotte, NC", category: "AI PM", roleUrl: "https://www.ally.com/careers/search-jobs/?keywords=AI&location=Charlotte", careers: "https://www.ally.com/careers/" },
+  { company: "Red Ventures", role: "AI Solutions / Applied AI", location: "Fort Mill, SC (Charlotte metro)", category: "Solutions", roleUrl: "https://www.redventures.com/careers", careers: "https://www.redventures.com/careers" },
+  { company: "AvidXchange", role: "AI Product / Automation Lead", location: "Charlotte, NC (HQ)", category: "AI PM", roleUrl: "https://www.avidxchange.com/careers/", careers: "https://www.avidxchange.com/careers/" },
+  { company: "Wells Fargo", role: "GenAI Solutions Consultant", location: "Charlotte, NC", category: "Solutions", roleUrl: "https://www.wellsfargojobs.com/en/search-jobs/AI/Charlotte", careers: "https://www.wellsfargojobs.com/" },
+  { company: "MetLife", role: "AI Implementation Manager", location: "Charlotte, NC", category: "Implementation", roleUrl: "https://careers.metlife.com/global/en/search-results?keywords=AI&location=Charlotte", careers: "https://careers.metlife.com/" },
+  { company: "Ansys", role: "AI Solutions Engineer", location: "Charlotte, NC / Remote", category: "Solutions", roleUrl: "https://careers.ansys.com/jobs?search=AI", careers: "https://careers.ansys.com/" },
+
+  // ─── Remote-first frontier / applied AI ─────────────────────────────
+  { company: "Anthropic", role: "Applied AI, Enterprise", location: "Remote (US)", category: "Solutions", roleUrl: "https://www.anthropic.com/jobs?team=applied-ai", careers: "https://www.anthropic.com/careers" },
+  { company: "Anthropic", role: "Customer Engineer", location: "Remote (US)", category: "Customer Eng", roleUrl: "https://www.anthropic.com/jobs?team=go-to-market", careers: "https://www.anthropic.com/careers" },
+  { company: "OpenAI", role: "Solutions Architect", location: "Remote (US)", category: "Solutions", roleUrl: "https://openai.com/careers/search/?q=solutions+architect", careers: "https://openai.com/careers/search/" },
+  { company: "OpenAI", role: "Forward Deployed Engineer", location: "Remote (US)", category: "Forward Deployed", roleUrl: "https://openai.com/careers/search/?q=forward+deployed", careers: "https://openai.com/careers/search/" },
+  { company: "Lovable", role: "Forward Deployed Engineer", location: "Remote", category: "Forward Deployed", roleUrl: "https://lovable.dev/careers", careers: "https://lovable.dev/careers" },
+  { company: "Lovable", role: "Customer Engineer", location: "Remote", category: "Customer Eng", roleUrl: "https://lovable.dev/careers", careers: "https://lovable.dev/careers" },
+  { company: "Cursor", role: "Forward Deployed Engineer", location: "Remote (US)", category: "Forward Deployed", roleUrl: "https://cursor.com/careers", careers: "https://cursor.com/careers" },
+  { company: "Perplexity", role: "Enterprise Solutions", location: "Remote (US)", category: "Solutions", roleUrl: "https://www.perplexity.ai/hub/careers", careers: "https://www.perplexity.ai/hub/careers" },
+  { company: "Glean", role: "Customer Engineer", location: "Remote (US)", category: "Customer Eng", roleUrl: "https://www.glean.com/careers?department=Customer%20Engineering", careers: "https://www.glean.com/careers" },
+  { company: "Writer", role: "AI Solutions Architect", location: "Remote (US)", category: "Solutions", roleUrl: "https://writer.com/careers/", careers: "https://writer.com/careers/" },
+  { company: "Writer", role: "Deployment Manager", location: "Remote (US)", category: "Deployment", roleUrl: "https://writer.com/careers/", careers: "https://writer.com/careers/" },
+  { company: "Decagon", role: "Implementation Manager", location: "Remote (US)", category: "Implementation", roleUrl: "https://decagon.ai/careers", careers: "https://decagon.ai/careers" },
+  { company: "Databricks", role: "AI Solutions Architect", location: "Remote (US)", category: "Solutions", roleUrl: "https://www.databricks.com/company/careers/open-positions?search=AI%20solutions", careers: "https://www.databricks.com/company/careers" },
+  { company: "Vercel", role: "Solutions Engineer, AI", location: "Remote (US)", category: "Solutions", roleUrl: "https://vercel.com/careers?department=Sales", careers: "https://vercel.com/careers" },
+  { company: "Zapier", role: "AI Product Manager", location: "Remote (US)", category: "AI PM", roleUrl: "https://zapier.com/jobs#open-roles", careers: "https://zapier.com/jobs" },
+  { company: "GitLab", role: "AI Solutions Architect", location: "Remote (US)", category: "Solutions", roleUrl: "https://about.gitlab.com/jobs/all-jobs/?search=AI", careers: "https://about.gitlab.com/jobs/" },
+  { company: "Hugging Face", role: "Customer Success / Solutions", location: "Remote (US)", category: "Customer Eng", roleUrl: "https://apply.workable.com/huggingface/", careers: "https://huggingface.co/join" },
 ];
 
 function MatchesPage() {
@@ -87,9 +92,10 @@ function MatchesPage() {
             Where to apply this week.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Curated openings at frontier AI companies for the role types you're
-            targeting. Click a company to jump to their careers page, filter for the
-            role, then click <em>Tailor</em> to generate a role-specific resume.
+            AI-focused openings in the <strong>Charlotte metro</strong> plus{" "}
+            <strong>remote-first</strong> frontier AI companies. Click the role to jump
+            straight to the posting, then click <em>Tailor</em> to generate a
+            role-specific resume.
           </p>
         </header>
 
@@ -116,7 +122,16 @@ function MatchesPage() {
                       {m.company}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-foreground">{m.role}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    <a
+                      href={m.roleUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {m.role} <span className="text-muted-foreground">↗</span>
+                    </a>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                     {m.location}
                   </td>
