@@ -139,7 +139,7 @@ export const Route = createFileRoute("/api/tailored-resume")({
         y -= 28;
         page.drawText(sanitize(RESUME.title), { x: MARGIN, y: y - 12, size: 12, font: helv, color: ACCENT });
         y -= 18;
-        const contact = `${RESUME.email}  •  ${RESUME.phone}  •  ${RESUME.location}`;
+        const contact = `${RESUME.email}  •  ${RESUME.phone}  •  ${RESUME.github}  •  ${RESUME.location}`;
         page.drawText(sanitize(contact), { x: MARGIN, y: y - 9, size: 9, font: helv, color: MUTED });
         y -= 16;
         if (data.company || data.role) {
