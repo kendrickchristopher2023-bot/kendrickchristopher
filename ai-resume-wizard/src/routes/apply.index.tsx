@@ -220,6 +220,12 @@ const TOOLS = [
     desc: "Name + company → personalized LinkedIn DM asking for a 15-min chat. Warm intros beat cold apps.",
     badge: "AI-powered",
   },
+  {
+    to: "/apply/metrics" as const,
+    title: "Funnel Metrics",
+    desc: "Log every application. See conversion rates from applied → response → onsite → offer. Kill what isn't working.",
+    badge: "Tracker",
+  },
 ];
 
 function ApplyPage() {

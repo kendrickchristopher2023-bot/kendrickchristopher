@@ -15,6 +15,8 @@ export type ResumeProject = {
   outcome: string;
   href?: string;
   internal?: boolean;
+  loomUrl?: string;
+  repoUrl?: string;
 };
 
 export type MasterResume = {
@@ -23,6 +25,8 @@ export type MasterResume = {
   email: string;
   phone: string;
   location: string;
+  github: string;
+  linkedin: string;
   summary: string;
   competencies: string[];
   experience: ResumeExperience[];
@@ -40,6 +44,8 @@ export const RESUME: MasterResume = {
   email: "kendrickchristopher@hotmail.com",
   phone: "(404) 358-0626",
   location: "Concord, NC | Open to relocation – New York, NY",
+  github: "github.com/christopherkendrick",
+  linkedin: "linkedin.com/in/christopherkendrick",
   summary:
     "Results-driven AI deployment and customer enablement specialist with 10+ years designing and delivering programs that accelerate product adoption across enterprise organizations. Proven track record translating complex technical capabilities — including AI-powered tools — into accessible, high-impact learning experiences for audiences from front-line employees to C-suite executives. Hands-on builder of AI automation solutions using Claude, Lovable AI, and ChatGPT. Experienced leading cross-functional implementation teams, managing concurrent enterprise accounts, and developing scalable enablement playbooks that drive measurable business outcomes.",
   competencies: [
@@ -127,18 +133,21 @@ export const RESUME: MasterResume = {
       stack: "Lovable + Claude",
       outcome:
         "Eliminated a manual data-migration step for every enterprise hotel go-live at Mews. Ingests any reservation format, outputs Mews-ready CSV in one click.",
+      repoUrl: "https://github.com/christopherkendrick/reservation-file-converter",
     },
     {
       title: "Salesforce → Slack Reporting Agent",
       stack: "Claude API",
       outcome:
         "Daily digest of 10–20 concurrent enterprise deployments posted to leadership Slack. Gave management live account visibility without new meetings.",
+      repoUrl: "https://github.com/christopherkendrick/salesforce-slack-reporter",
     },
     {
       title: "AI Handover Generator",
       stack: "Claude + Lovable",
       outcome:
         "Generates management-ready handover reports from account data on demand. Zero disruption during PTO across active enterprise deployments.",
+      repoUrl: "https://github.com/christopherkendrick/ai-handover-generator",
     },
     {
       title: "The Kenroe Collective",
