@@ -9,103 +9,108 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResumeRouteImport } from './routes/resume'
-import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApplyIndexRouteImport } from './routes/apply.index'
-import { Route as ApplyTailorRouteImport } from './routes/apply.tailor'
-import { Route as ApplyReferralsRouteImport } from './routes/apply.referrals'
-import { Route as ApplyMetricsRouteImport } from './routes/apply.metrics'
-import { Route as ApplyMatchesRouteImport } from './routes/apply.matches'
-import { Route as ApplyAutofillRouteImport } from './routes/apply.autofill'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
+import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
+import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
+import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
+import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
+import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authenticated/apply.referrals'
+import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
+import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
+import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 
-const ResumeRoute = ResumeRouteImport.update({
-  id: '/resume',
-  path: '/resume',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplyRoute = ApplyRouteImport.update({
-  id: '/apply',
-  path: '/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ApplyIndexRoute = ApplyIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ApplyRoute,
-} as any)
-const ApplyTailorRoute = ApplyTailorRouteImport.update({
-  id: '/tailor',
-  path: '/tailor',
-  getParentRoute: () => ApplyRoute,
-} as any)
-const ApplyReferralsRoute = ApplyReferralsRouteImport.update({
-  id: '/referrals',
-  path: '/referrals',
-  getParentRoute: () => ApplyRoute,
-} as any)
-const ApplyMetricsRoute = ApplyMetricsRouteImport.update({
-  id: '/metrics',
-  path: '/metrics',
-  getParentRoute: () => ApplyRoute,
-} as any)
-const ApplyMatchesRoute = ApplyMatchesRouteImport.update({
-  id: '/matches',
-  path: '/matches',
-  getParentRoute: () => ApplyRoute,
-} as any)
-const ApplyAutofillRoute = ApplyAutofillRouteImport.update({
-  id: '/autofill',
-  path: '/autofill',
-  getParentRoute: () => ApplyRoute,
 } as any)
 const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
   id: '/api/tailored-resume',
   path: '/api/tailored-resume',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
+  id: '/_authenticated/resume',
+  path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApplyRoute = AuthenticatedApplyRouteImport.update({
+  id: '/_authenticated/apply',
+  path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApplyIndexRoute = AuthenticatedApplyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedApplyRoute,
+} as any)
+const AuthenticatedApplyTailorRoute =
+  AuthenticatedApplyTailorRouteImport.update({
+    id: '/tailor',
+    path: '/tailor',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
+const AuthenticatedApplyReferralsRoute =
+  AuthenticatedApplyReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
+const AuthenticatedApplyMetricsRoute =
+  AuthenticatedApplyMetricsRouteImport.update({
+    id: '/metrics',
+    path: '/metrics',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
+const AuthenticatedApplyMatchesRoute =
+  AuthenticatedApplyMatchesRouteImport.update({
+    id: '/matches',
+    path: '/matches',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
+const AuthenticatedApplyAutofillRoute =
+  AuthenticatedApplyAutofillRouteImport.update({
+    id: '/autofill',
+    path: '/autofill',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/apply': typeof ApplyRouteWithChildren
-  '/resume': typeof ResumeRoute
+  '/apply': typeof AuthenticatedApplyRouteWithChildren
+  '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
-  '/apply/autofill': typeof ApplyAutofillRoute
-  '/apply/matches': typeof ApplyMatchesRoute
-  '/apply/metrics': typeof ApplyMetricsRoute
-  '/apply/referrals': typeof ApplyReferralsRoute
-  '/apply/tailor': typeof ApplyTailorRoute
-  '/apply/': typeof ApplyIndexRoute
+  '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/matches': typeof AuthenticatedApplyMatchesRoute
+  '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
+  '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/apply/': typeof AuthenticatedApplyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/resume': typeof ResumeRoute
+  '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
-  '/apply/autofill': typeof ApplyAutofillRoute
-  '/apply/matches': typeof ApplyMatchesRoute
-  '/apply/metrics': typeof ApplyMetricsRoute
-  '/apply/referrals': typeof ApplyReferralsRoute
-  '/apply/tailor': typeof ApplyTailorRoute
-  '/apply': typeof ApplyIndexRoute
+  '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/matches': typeof AuthenticatedApplyMatchesRoute
+  '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
+  '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/apply': typeof AuthenticatedApplyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/apply': typeof ApplyRouteWithChildren
-  '/resume': typeof ResumeRoute
+  '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
+  '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
-  '/apply/autofill': typeof ApplyAutofillRoute
-  '/apply/matches': typeof ApplyMatchesRoute
-  '/apply/metrics': typeof ApplyMetricsRoute
-  '/apply/referrals': typeof ApplyReferralsRoute
-  '/apply/tailor': typeof ApplyTailorRoute
-  '/apply/': typeof ApplyIndexRoute
+  '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
+  '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
+  '/_authenticated/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,88 +139,32 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/apply'
-    | '/resume'
+    | '/_authenticated/apply'
+    | '/_authenticated/resume'
     | '/api/tailored-resume'
-    | '/apply/autofill'
-    | '/apply/matches'
-    | '/apply/metrics'
-    | '/apply/referrals'
-    | '/apply/tailor'
-    | '/apply/'
+    | '/_authenticated/apply/autofill'
+    | '/_authenticated/apply/matches'
+    | '/_authenticated/apply/metrics'
+    | '/_authenticated/apply/referrals'
+    | '/_authenticated/apply/tailor'
+    | '/_authenticated/apply/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApplyRoute: typeof ApplyRouteWithChildren
-  ResumeRoute: typeof ResumeRoute
+  AuthenticatedApplyRoute: typeof AuthenticatedApplyRouteWithChildren
+  AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/resume': {
-      id: '/resume'
-      path: '/resume'
-      fullPath: '/resume'
-      preLoaderRoute: typeof ResumeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/apply': {
-      id: '/apply'
-      path: '/apply'
-      fullPath: '/apply'
-      preLoaderRoute: typeof ApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/apply/': {
-      id: '/apply/'
-      path: '/'
-      fullPath: '/apply/'
-      preLoaderRoute: typeof ApplyIndexRouteImport
-      parentRoute: typeof ApplyRoute
-    }
-    '/apply/tailor': {
-      id: '/apply/tailor'
-      path: '/tailor'
-      fullPath: '/apply/tailor'
-      preLoaderRoute: typeof ApplyTailorRouteImport
-      parentRoute: typeof ApplyRoute
-    }
-    '/apply/referrals': {
-      id: '/apply/referrals'
-      path: '/referrals'
-      fullPath: '/apply/referrals'
-      preLoaderRoute: typeof ApplyReferralsRouteImport
-      parentRoute: typeof ApplyRoute
-    }
-    '/apply/metrics': {
-      id: '/apply/metrics'
-      path: '/metrics'
-      fullPath: '/apply/metrics'
-      preLoaderRoute: typeof ApplyMetricsRouteImport
-      parentRoute: typeof ApplyRoute
-    }
-    '/apply/matches': {
-      id: '/apply/matches'
-      path: '/matches'
-      fullPath: '/apply/matches'
-      preLoaderRoute: typeof ApplyMatchesRouteImport
-      parentRoute: typeof ApplyRoute
-    }
-    '/apply/autofill': {
-      id: '/apply/autofill'
-      path: '/autofill'
-      fullPath: '/apply/autofill'
-      preLoaderRoute: typeof ApplyAutofillRouteImport
-      parentRoute: typeof ApplyRoute
     }
     '/api/tailored-resume': {
       id: '/api/tailored-resume'
@@ -224,33 +173,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTailoredResumeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/resume': {
+      id: '/_authenticated/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof AuthenticatedResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/apply': {
+      id: '/_authenticated/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof AuthenticatedApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/apply/': {
+      id: '/_authenticated/apply/'
+      path: '/'
+      fullPath: '/apply/'
+      preLoaderRoute: typeof AuthenticatedApplyIndexRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/_authenticated/apply/tailor': {
+      id: '/_authenticated/apply/tailor'
+      path: '/tailor'
+      fullPath: '/apply/tailor'
+      preLoaderRoute: typeof AuthenticatedApplyTailorRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/_authenticated/apply/referrals': {
+      id: '/_authenticated/apply/referrals'
+      path: '/referrals'
+      fullPath: '/apply/referrals'
+      preLoaderRoute: typeof AuthenticatedApplyReferralsRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/_authenticated/apply/metrics': {
+      id: '/_authenticated/apply/metrics'
+      path: '/metrics'
+      fullPath: '/apply/metrics'
+      preLoaderRoute: typeof AuthenticatedApplyMetricsRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/_authenticated/apply/matches': {
+      id: '/_authenticated/apply/matches'
+      path: '/matches'
+      fullPath: '/apply/matches'
+      preLoaderRoute: typeof AuthenticatedApplyMatchesRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/_authenticated/apply/autofill': {
+      id: '/_authenticated/apply/autofill'
+      path: '/autofill'
+      fullPath: '/apply/autofill'
+      preLoaderRoute: typeof AuthenticatedApplyAutofillRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
   }
 }
 
-interface ApplyRouteChildren {
-  ApplyAutofillRoute: typeof ApplyAutofillRoute
-  ApplyMatchesRoute: typeof ApplyMatchesRoute
-  ApplyMetricsRoute: typeof ApplyMetricsRoute
-  ApplyReferralsRoute: typeof ApplyReferralsRoute
-  ApplyTailorRoute: typeof ApplyTailorRoute
-  ApplyIndexRoute: typeof ApplyIndexRoute
+interface AuthenticatedApplyRouteChildren {
+  AuthenticatedApplyAutofillRoute: typeof AuthenticatedApplyAutofillRoute
+  AuthenticatedApplyMatchesRoute: typeof AuthenticatedApplyMatchesRoute
+  AuthenticatedApplyMetricsRoute: typeof AuthenticatedApplyMetricsRoute
+  AuthenticatedApplyReferralsRoute: typeof AuthenticatedApplyReferralsRoute
+  AuthenticatedApplyTailorRoute: typeof AuthenticatedApplyTailorRoute
+  AuthenticatedApplyIndexRoute: typeof AuthenticatedApplyIndexRoute
 }
 
-const ApplyRouteChildren: ApplyRouteChildren = {
-  ApplyAutofillRoute: ApplyAutofillRoute,
-  ApplyMatchesRoute: ApplyMatchesRoute,
-  ApplyMetricsRoute: ApplyMetricsRoute,
-  ApplyReferralsRoute: ApplyReferralsRoute,
-  ApplyTailorRoute: ApplyTailorRoute,
-  ApplyIndexRoute: ApplyIndexRoute,
+const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
+  AuthenticatedApplyAutofillRoute: AuthenticatedApplyAutofillRoute,
+  AuthenticatedApplyMatchesRoute: AuthenticatedApplyMatchesRoute,
+  AuthenticatedApplyMetricsRoute: AuthenticatedApplyMetricsRoute,
+  AuthenticatedApplyReferralsRoute: AuthenticatedApplyReferralsRoute,
+  AuthenticatedApplyTailorRoute: AuthenticatedApplyTailorRoute,
+  AuthenticatedApplyIndexRoute: AuthenticatedApplyIndexRoute,
 }
 
-const ApplyRouteWithChildren = ApplyRoute._addFileChildren(ApplyRouteChildren)
+const AuthenticatedApplyRouteWithChildren =
+  AuthenticatedApplyRoute._addFileChildren(AuthenticatedApplyRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApplyRoute: ApplyRouteWithChildren,
-  ResumeRoute: ResumeRoute,
+  AuthenticatedApplyRoute: AuthenticatedApplyRouteWithChildren,
+  AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
 }
 export const routeTree = rootRouteImport
