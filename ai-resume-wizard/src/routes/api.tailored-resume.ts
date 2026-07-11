@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/tailored-resume")({
           let line = "";
           for (const w of words) {
             const test = line ? `${line} ${w}` : w;
-            if (font.widthOfTextAtSize(test, size) > maxW && line) {
+            if (font.widthOfTextAtSize(sanitize(test), size) > maxW && line) {
               lines.push(line);
               line = w;
             } else {
@@ -94,7 +94,7 @@ export const Route = createFileRoute("/api/tailored-resume")({
           const lineH = size * 1.28;
           for (const l of lines) {
             needSpace(lineH);
-            page.drawText(l, { x: MARGIN, y: y - size, size, font, color });
+            page.drawText(sanitize(l), { x: MARGIN, y: y - size, size, font, color });
             y -= lineH;
           }
           y -= opts.gapAfter ?? 0;
@@ -108,10 +108,10 @@ export const Route = createFileRoute("/api/tailored-resume")({
           const lines = wrap(text, font, size, maxW);
           const lineH = size * 1.32;
           needSpace(lineH);
-          page.drawText("•", { x: MARGIN, y: y - size, size, font: bold, color: ACCENT });
+          page.drawText(sanitize("•"), { x: MARGIN, y: y - size, size, font: bold, color: ACCENT });
           for (let i = 0; i < lines.length; i++) {
             if (i > 0) needSpace(lineH);
-            page.drawText(lines[i], { x: MARGIN + bulletIndent, y: y - size, size, font, color: TEXT_COLOR });
+            page.drawText(sanitize(lines[i]), { x: MARGIN + bulletIndent, y: y - size, size, font, color: TEXT_COLOR });
             y -= lineH;
           }
         };
@@ -130,21 +130,21 @@ export const Route = createFileRoute("/api/tailored-resume")({
         const sectionHeader = (label: string) => {
           needSpace(24);
           y -= 4;
-          page.drawText(label.toUpperCase(), { x: MARGIN, y: y - 9, size: 9, font: bold, color: MUTED });
+          page.drawText(sanitize(label.toUpperCase()), { x: MARGIN, y: y - 9, size: 9, font: bold, color: MUTED });
           y -= 14;
           rule();
         };
 
-        page.drawText(RESUME.name, { x: MARGIN, y: y - 22, size: 22, font: bold, color: TEXT_COLOR });
+        page.drawText(sanitize(RESUME.name), { x: MARGIN, y: y - 22, size: 22, font: bold, color: TEXT_COLOR });
         y -= 28;
-        page.drawText(RESUME.title, { x: MARGIN, y: y - 12, size: 12, font: helv, color: ACCENT });
+        page.drawText(sanitize(RESUME.title), { x: MARGIN, y: y - 12, size: 12, font: helv, color: ACCENT });
         y -= 18;
         const contact = `${RESUME.email}  •  ${RESUME.phone}  •  ${RESUME.location}`;
-        page.drawText(contact, { x: MARGIN, y: y - 9, size: 9, font: helv, color: MUTED });
+        page.drawText(sanitize(contact), { x: MARGIN, y: y - 9, size: 9, font: helv, color: MUTED });
         y -= 16;
         if (data.company || data.role) {
           const targ = `Tailored for: ${[data.role, data.company].filter(Boolean).join(" @ ")}`;
-          page.drawText(targ, { x: MARGIN, y: y - 8, size: 8, font: italic, color: MUTED });
+          page.drawText(sanitize(targ), { x: MARGIN, y: y - 8, size: 8, font: italic, color: MUTED });
           y -= 14;
         }
         rule();
@@ -160,11 +160,11 @@ export const Route = createFileRoute("/api/tailored-resume")({
           const overridden = data.bullets.find((b) => b.company.toLowerCase() === role.company.toLowerCase());
           const bullets = overridden?.bullets?.length ? overridden.bullets : role.bullets;
           needSpace(30);
-          page.drawText(role.title, { x: MARGIN, y: y - 11, size: 11, font: bold, color: TEXT_COLOR });
-          const dateW = helv.widthOfTextAtSize(role.dates, 9);
-          page.drawText(role.dates, { x: MARGIN + CONTENT_W - dateW, y: y - 11, size: 9, font: helv, color: MUTED });
+          page.drawText(sanitize(role.title), { x: MARGIN, y: y - 11, size: 11, font: bold, color: TEXT_COLOR });
+          const dateW = helv.widthOfTextAtSize(sanitize(role.dates), 9);
+          page.drawText(sanitize(role.dates), { x: MARGIN + CONTENT_W - dateW, y: y - 11, size: 9, font: helv, color: MUTED });
           y -= 14;
-          page.drawText(`${role.company} — ${role.location}`, { x: MARGIN, y: y - 9, size: 9.5, font: italic, color: ACCENT });
+          page.drawText(sanitize(`${role.company} — ${role.location}`), { x: MARGIN, y: y - 9, size: 9.5, font: italic, color: ACCENT });
           y -= 14;
           for (const b of bullets) drawBullet(b);
           y -= 6;
@@ -175,15 +175,15 @@ export const Route = createFileRoute("/api/tailored-resume")({
 
         sectionHeader("AI & Technical Proficiencies");
         for (const p of RESUME.proficiencies) {
-          const labelW = bold.widthOfTextAtSize(`${p.label}: `, 9.5);
+          const labelW = bold.widthOfTextAtSize(sanitize(`${p.label}: `), 9.5);
           needSpace(14);
-          page.drawText(`${p.label}: `, { x: MARGIN, y: y - 9, size: 9.5, font: bold, color: ACCENT });
+          page.drawText(sanitize(`${p.label}: `), { x: MARGIN, y: y - 9, size: 9.5, font: bold, color: ACCENT });
           const lines = wrap(p.value, helv, 9.5, CONTENT_W - labelW);
-          page.drawText(lines[0] ?? "", { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
+          page.drawText(sanitize(lines[0] ?? ""), { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
           y -= 13;
           for (let i = 1; i < lines.length; i++) {
             needSpace(13);
-            page.drawText(lines[i], { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
+            page.drawText(sanitize(lines[i]), { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
             y -= 13;
           }
           y -= 2;
