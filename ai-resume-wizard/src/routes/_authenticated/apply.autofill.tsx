@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute("/apply/autofill")({
+export const Route = createFileRoute("/_authenticated/apply/autofill")({
   head: () => ({
     meta: [
       { title: "Application Autofill — Christopher Kendrick" },

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { RESUME } from "@/lib/resume-data";
 
 
-export const Route = createFileRoute("/resume")({
+export const Route = createFileRoute("/_authenticated/resume")({
   head: () => ({
     meta: [
       { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
