@@ -12,6 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApplyIndexRouteImport } from './routes/apply.index'
+import { Route as ApplyTailorRouteImport } from './routes/apply.tailor'
+import { Route as ApplyReferralsRouteImport } from './routes/apply.referrals'
+import { Route as ApplyMatchesRouteImport } from './routes/apply.matches'
+import { Route as ApplyAutofillRouteImport } from './routes/apply.autofill'
+import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 
 const ResumeRoute = ResumeRouteImport.update({
   id: '/resume',
@@ -28,35 +34,110 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplyIndexRoute = ApplyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ApplyRoute,
+} as any)
+const ApplyTailorRoute = ApplyTailorRouteImport.update({
+  id: '/tailor',
+  path: '/tailor',
+  getParentRoute: () => ApplyRoute,
+} as any)
+const ApplyReferralsRoute = ApplyReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => ApplyRoute,
+} as any)
+const ApplyMatchesRoute = ApplyMatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => ApplyRoute,
+} as any)
+const ApplyAutofillRoute = ApplyAutofillRouteImport.update({
+  id: '/autofill',
+  path: '/autofill',
+  getParentRoute: () => ApplyRoute,
+} as any)
+const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
+  id: '/api/tailored-resume',
+  path: '/api/tailored-resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/apply': typeof ApplyRoute
+  '/apply': typeof ApplyRouteWithChildren
   '/resume': typeof ResumeRoute
+  '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/apply/autofill': typeof ApplyAutofillRoute
+  '/apply/matches': typeof ApplyMatchesRoute
+  '/apply/referrals': typeof ApplyReferralsRoute
+  '/apply/tailor': typeof ApplyTailorRoute
+  '/apply/': typeof ApplyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/apply': typeof ApplyRoute
   '/resume': typeof ResumeRoute
+  '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/apply/autofill': typeof ApplyAutofillRoute
+  '/apply/matches': typeof ApplyMatchesRoute
+  '/apply/referrals': typeof ApplyReferralsRoute
+  '/apply/tailor': typeof ApplyTailorRoute
+  '/apply': typeof ApplyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/apply': typeof ApplyRoute
+  '/apply': typeof ApplyRouteWithChildren
   '/resume': typeof ResumeRoute
+  '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/apply/autofill': typeof ApplyAutofillRoute
+  '/apply/matches': typeof ApplyMatchesRoute
+  '/apply/referrals': typeof ApplyReferralsRoute
+  '/apply/tailor': typeof ApplyTailorRoute
+  '/apply/': typeof ApplyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/apply' | '/resume'
+  fullPaths:
+    | '/'
+    | '/apply'
+    | '/resume'
+    | '/api/tailored-resume'
+    | '/apply/autofill'
+    | '/apply/matches'
+    | '/apply/referrals'
+    | '/apply/tailor'
+    | '/apply/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/apply' | '/resume'
-  id: '__root__' | '/' | '/apply' | '/resume'
+  to:
+    | '/'
+    | '/resume'
+    | '/api/tailored-resume'
+    | '/apply/autofill'
+    | '/apply/matches'
+    | '/apply/referrals'
+    | '/apply/tailor'
+    | '/apply'
+  id:
+    | '__root__'
+    | '/'
+    | '/apply'
+    | '/resume'
+    | '/api/tailored-resume'
+    | '/apply/autofill'
+    | '/apply/matches'
+    | '/apply/referrals'
+    | '/apply/tailor'
+    | '/apply/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApplyRoute: typeof ApplyRoute
+  ApplyRoute: typeof ApplyRouteWithChildren
   ResumeRoute: typeof ResumeRoute
+  ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,24 +163,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/apply/': {
+      id: '/apply/'
+      path: '/'
+      fullPath: '/apply/'
+      preLoaderRoute: typeof ApplyIndexRouteImport
+      parentRoute: typeof ApplyRoute
+    }
+    '/apply/tailor': {
+      id: '/apply/tailor'
+      path: '/tailor'
+      fullPath: '/apply/tailor'
+      preLoaderRoute: typeof ApplyTailorRouteImport
+      parentRoute: typeof ApplyRoute
+    }
+    '/apply/referrals': {
+      id: '/apply/referrals'
+      path: '/referrals'
+      fullPath: '/apply/referrals'
+      preLoaderRoute: typeof ApplyReferralsRouteImport
+      parentRoute: typeof ApplyRoute
+    }
+    '/apply/matches': {
+      id: '/apply/matches'
+      path: '/matches'
+      fullPath: '/apply/matches'
+      preLoaderRoute: typeof ApplyMatchesRouteImport
+      parentRoute: typeof ApplyRoute
+    }
+    '/apply/autofill': {
+      id: '/apply/autofill'
+      path: '/autofill'
+      fullPath: '/apply/autofill'
+      preLoaderRoute: typeof ApplyAutofillRouteImport
+      parentRoute: typeof ApplyRoute
+    }
+    '/api/tailored-resume': {
+      id: '/api/tailored-resume'
+      path: '/api/tailored-resume'
+      fullPath: '/api/tailored-resume'
+      preLoaderRoute: typeof ApiTailoredResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface ApplyRouteChildren {
+  ApplyAutofillRoute: typeof ApplyAutofillRoute
+  ApplyMatchesRoute: typeof ApplyMatchesRoute
+  ApplyReferralsRoute: typeof ApplyReferralsRoute
+  ApplyTailorRoute: typeof ApplyTailorRoute
+  ApplyIndexRoute: typeof ApplyIndexRoute
+}
+
+const ApplyRouteChildren: ApplyRouteChildren = {
+  ApplyAutofillRoute: ApplyAutofillRoute,
+  ApplyMatchesRoute: ApplyMatchesRoute,
+  ApplyReferralsRoute: ApplyReferralsRoute,
+  ApplyTailorRoute: ApplyTailorRoute,
+  ApplyIndexRoute: ApplyIndexRoute,
+}
+
+const ApplyRouteWithChildren = ApplyRoute._addFileChildren(ApplyRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApplyRoute: ApplyRoute,
+  ApplyRoute: ApplyRouteWithChildren,
   ResumeRoute: ResumeRoute,
+  ApiTailoredResumeRoute: ApiTailoredResumeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
