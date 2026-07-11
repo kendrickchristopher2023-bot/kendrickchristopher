@@ -92,9 +92,10 @@ function MatchesPage() {
             Where to apply this week.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Curated openings at frontier AI companies for the role types you're
-            targeting. Click a company to jump to their careers page, filter for the
-            role, then click <em>Tailor</em> to generate a role-specific resume.
+            AI-focused openings in the <strong>Charlotte metro</strong> plus{" "}
+            <strong>remote-first</strong> frontier AI companies. Click the role to jump
+            straight to the posting, then click <em>Tailor</em> to generate a
+            role-specific resume.
           </p>
         </header>
 
