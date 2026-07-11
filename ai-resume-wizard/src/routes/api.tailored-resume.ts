@@ -43,6 +43,21 @@ export const Route = createFileRoute("/api/tailored-resume")({
         let page = doc.addPage([PAGE_W, PAGE_H]);
         let y = PAGE_H - MARGIN;
 
+        // Standard PDF fonts are WinAnsi-only. Convert unicode chars that
+        // appear in the resume (dashes, curly quotes, arrows, bullets) to
+        // safe ASCII/WinAnsi equivalents so encoding never throws.
+        const sanitize = (s: string) =>
+          s
+            .replace(/[\u2013\u2014]/g, "-")
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/\u2022/g, "-")
+            .replace(/\u2192/g, "->")
+            .replace(/\u2190/g, "<-")
+            .replace(/\u25B8/g, ">")
+            .replace(/[^\x00-\xFF]/g, "?");
+
+
         const wrap = (text: string, font: typeof helv, size: number, maxW: number) => {
           const words = text.split(/\s+/);
           const lines: string[] = [];
