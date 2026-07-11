@@ -158,7 +158,8 @@ function Index() {
         </section>
 
         <footer className="mt-16 border-t border-border pt-6 text-xs text-muted-foreground">
-          Concord, NC · {email} · {RESUME.phone}
+          Concord, NC · {email} · {RESUME.phone} ·{" "}
+          <a href={`https://${RESUME.github}`} target="_blank" rel="noreferrer" className="hover:text-primary">{RESUME.github}</a>
           <br />
           <span className="mt-2 inline-block">
             Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
