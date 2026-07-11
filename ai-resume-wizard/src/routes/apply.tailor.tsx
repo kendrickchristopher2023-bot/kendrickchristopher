@@ -31,7 +31,7 @@ const HISTORY_KEY = "ck.tailor.history.v1";
 
 function TailorPage() {
   const tailor = useServerFn(tailorResume);
-  const makePdf = useServerFn(generateTailoredPdf);
+
 
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
@@ -87,14 +87,18 @@ function TailorPage() {
     if (!result) return;
     setPdfLoading(true);
     try {
-      const res = (await makePdf({
-        data: {
+      const res = await fetch("/api/tailored-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           summary: result.summary,
           bullets: result.bullets,
           company,
           role,
-        },
-      })) as unknown as Response;
+        }),
+      });
+      if (!res.ok) throw new Error(`PDF generation failed (${res.status})`);
+
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
