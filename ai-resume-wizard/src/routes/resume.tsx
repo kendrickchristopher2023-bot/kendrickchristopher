@@ -267,6 +267,7 @@ function ResumePage() {
             </h2>
             <div className="space-y-4">
               {RESUME.projects.map((p) => {
+                const linkHref = p.href ?? p.repoUrl;
                 const body = (
                   <>
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -274,13 +275,29 @@ function ResumePage() {
                       <span className="text-xs font-medium uppercase tracking-wider text-primary">{p.stack}</span>
                     </div>
                     <p className="mt-2 text-sm leading-relaxed text-foreground">{p.outcome}</p>
-                    {p.href && <p className="mt-1 text-xs text-primary">{p.href.replace(/^https?:\/\//, "")}</p>}
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                      {p.loomUrl && (
+                        <a href={p.loomUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                          ▶ Watch demo (60s)
+                        </a>
+                      )}
+                      {p.repoUrl && (
+                        <a href={p.repoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                          GitHub →
+                        </a>
+                      )}
+                      {p.href && (
+                        <a href={p.href} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                          Visit →
+                        </a>
+                      )}
+                    </div>
                   </>
                 );
-                return p.href ? (
-                  <a key={p.title} href={p.href} target="_blank" rel="noreferrer" className="block rounded-md border border-border bg-card/50 p-4 hover:border-primary/60 transition-colors">
+                return linkHref ? (
+                  <div key={p.title} className="rounded-md border border-border bg-card/50 p-4 hover:border-primary/60 transition-colors">
                     {body}
-                  </a>
+                  </div>
                 ) : (
                   <div key={p.title} className="rounded-md border border-border bg-card/50 p-4">
                     {body}
