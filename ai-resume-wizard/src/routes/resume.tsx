@@ -75,13 +75,15 @@ function ResumePage() {
               AI Deployment & Enablement Manager
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
-              kendrickchristopher@hotmail.com
+              {RESUME.email}
               <span className="mx-2 text-border">•</span>
-              (404) 358-0626
+              {RESUME.phone}
               <span className="mx-2 text-border">•</span>
-              LinkedIn
+              <a href={`https://${RESUME.github}`} target="_blank" rel="noreferrer" className="hover:text-primary">{RESUME.github}</a>
               <span className="mx-2 text-border">•</span>
-              Concord, NC | Open to relocation – New York, NY
+              <a href={`https://${RESUME.linkedin}`} target="_blank" rel="noreferrer" className="hover:text-primary">LinkedIn</a>
+              <span className="mx-2 text-border">•</span>
+              {RESUME.location}
             </p>
           </header>
 
