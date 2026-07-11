@@ -1,50 +1,45 @@
-## Goal
-Turn Christopher’s experience into a tight, 2-page resume targeted at AI Deployment / Enablement / Customer Success roles at companies like OpenAI and Lovable, delivered as:
-1. A shareable web page on the app (`/resume`)
-2. An editable DOCX file
-3. A print-ready PDF
+# Finish the AI Resume + Application Kit
 
-## Design direction
-- Minimal & editorial: generous whitespace, clean typography, restrained color, strong hierarchy
-- Single-column layout with clear section dividers
-- No photo, no graphics beyond subtle typographic structure
-- Colors pulled from the existing project token system (or a small neutral/slate accent set)
+The resume is already built in all 3 formats:
+- Web page at `/resume`
+- `public/Christopher_Kendrick_Resume.pdf`
+- `public/Christopher_Kendrick_Resume.docx`
+- Both files also in `/mnt/documents/` for direct download
 
-## Content edits
-- Refine headline to work for both "AI Deployment & Enablement Manager" and adjacent AI customer-success / implementation roles
-- Keep the strongest, most quantified bullets; trim older/less relevant details so the resume fits 2 pages cleanly
-- Lead with AI-specific achievements (Lovable/Claude automations, onboarding efficiency gains, executive enablement)
-- Move "AI & Technical Proficiencies" above Education for relevance
-- Keep certifications that reinforce AI/enablement credibility
+## What I'll finish this pass
 
-## Implementation steps
+1. **Visual QA the PDF** — render each page to an image and check for overflow, cramped spacing, orphan headings, and confirm it holds to exactly 2 pages on US Letter.
+2. **Polish the web `/resume` page**
+   - Add a print stylesheet so `Cmd/Ctrl+P` produces a clean 2-page print identical to the PDF (hide download bar, tighten margins).
+   - Add a subtle "last updated" line and a copy-email button.
+   - Confirm semantic tokens (no hardcoded colors) and mobile layout.
+3. **Home page (`/`)** — make it a proper mini portfolio landing:
+   - One-line positioning statement targeting AI Deployment / Forward Deployed / Customer Engineering roles.
+   - Buttons: View Resume · Download PDF · Email · LinkedIn.
+   - Quick "Selected wins" strip (3 metrics from the resume).
 
-### 1. Web page (`/resume`)
-- Create `src/routes/resume.tsx` with a clean, printable resume layout
-- Use Tailwind semantic tokens and a minimal editorial style
-- Add a "Download PDF / DOCX" section with links to the generated artifacts
-- Add route-specific `head()` with title/description for SEO
+## Application kit (the "anything else you need")
 
-### 2. DOCX generation
-- Generate a 2-page, US Letter DOCX using `docx-js`
-- Match the web page content and visual hierarchy
-- Save to `/mnt/documents/Christopher_Kendrick_Resume.docx`
+Add a new route `/apply` (not linked from nav, just for you) containing copy‑paste ready assets tuned for OpenAI-style AI companies (OpenAI, Anthropic, Lovable, Cursor, Perplexity, Sierra, Decagon):
 
-### 3. PDF generation
-- Convert the DOCX to PDF via LibreOffice
-- Inspect both pages as images for margins, overflow, and formatting issues
-- Save final PDF to `/mnt/documents/Christopher_Kendrick_Resume.pdf`
+1. **Tailored cover letter template** — one general + one OpenAI-specific version, editable placeholders for `{{Company}}` / `{{Role}}`.
+2. **LinkedIn "About" rewrite** — 3–4 short paragraphs positioning you as AI Deployment / Forward Deployed Engineer-adjacent.
+3. **LinkedIn headline options** (3 variants under 220 chars).
+4. **Short-form intro** — 2‑sentence pitch for recruiter DMs / "Tell me about yourself".
+5. **Interview prep sheet** — 6–8 STAR stories mapped to competencies AI-deployment roles screen for (customer enablement, technical translation, cross-functional delivery, measurable adoption lift, ambiguity, executive comms).
+6. **Target company list** with role titles to search (AI Deployment Manager, Forward Deployed Engineer, Solutions Architect, Implementation Manager, Customer Engineer, GTM Engineer).
+7. **Application tracker CSV** dropped in `/mnt/documents/` so you can log outreach.
 
-### 4. QA
-- Verify web page renders correctly in the preview
-- Verify DOCX opens cleanly and is 2 pages
-- Verify PDF is 2 pages with no overflow, clipping, or formatting defects
+Each block has a one-click "Copy" button.
 
-## Deliverables
-- `/src/routes/resume.tsx` — live resume page
-- `/mnt/documents/Christopher_Kendrick_Resume.docx` — editable resume
-- `/mnt/documents/Christopher_Kendrick_Resume.pdf` — print-ready resume
+## Won't do unless you ask
 
-## Notes
-- Since you mentioned Lovable, I’ll keep the positioning broad enough for AI Deployment/Enablement roles while still speaking directly to AI-product companies.
-- No backend or auth needed; this is a static content page plus generated documents.
+- No changes to resume content/wording (already approved).
+- No auth, no database — everything static.
+- Won't publish the site; say the word and I'll deploy.
+
+## Technical notes
+
+- Print CSS via a `@media print` block in `src/styles.css` scoped to `/resume`.
+- `/apply` route follows existing TanStack file-based routing pattern (`src/routes/apply.tsx`), own `head()` with `noindex` so it isn't crawled.
+- Cover letter + LinkedIn copy stored as plain string constants in the route file — no backend needed.
