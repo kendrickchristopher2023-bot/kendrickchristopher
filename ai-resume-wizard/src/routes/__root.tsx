@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      { name: "description", content: "AI deployment and customer enablement specialist with 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      { property: "og:description", content: "AI deployment and customer enablement specialist with 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      { name: "twitter:description", content: "AI deployment and customer enablement specialist with 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ad5a47f5-0c83-441a-af82-e30dafcc350c/id-preview-e9ceb4c2--b49a53a4-bc7f-4d23-aaab-edf822850b4d.lovable.app-1783741458603.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ad5a47f5-0c83-441a-af82-e30dafcc350c/id-preview-e9ceb4c2--b49a53a4-bc7f-4d23-aaab-edf822850b4d.lovable.app-1783741458603.png" },
     ],
     links: [
       {
