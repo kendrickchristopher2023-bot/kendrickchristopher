@@ -68,48 +68,82 @@ const HEADLINES = [
 
 const SHORT_PITCH = `I'm Christopher — I've spent 10+ years getting enterprise customers to real value with new software, and the last two shipping Claude and Lovable automations that replace manual work at Mews. Looking for AI Deployment / Forward Deployed roles at a frontier AI company, open to relocating to NYC.`;
 
-type Star = { title: string; competency: string; body: string };
+type Star = { title: string; competency: string; action: string; result: string; context: string };
 
+// Rewritten action-first: what I did leads, result is bolded, context is a
+// one-liner at the end.
 const STAR_STORIES: Star[] = [
   {
     title: "Reservation File Converter (Mews)",
     competency: "Technical build · AI automation",
-    body: "S/T: Onboarding managers were manually reformatting reservation files for every new hotel — hours per go-live, high error rate. A: Built a Lovable + Claude web tool that ingests any format and outputs Mews-ready CSV in one click; iterated with the onboarding team as design partners. R: Manual step eliminated; hours-to-days of effort saved per implementation and adopted across the team.",
+    action:
+      "Designed and shipped a Lovable + Claude web tool that ingests any reservation-file format and outputs Mews-ready CSV in one click. Ran the onboarding team as design partners through three iterations and rolled it out across implementations.",
+    result:
+      "Eliminated a manual migration step from every enterprise hotel go-live — hours to days of saved effort per implementation, adopted team-wide.",
+    context: "Previously the reformat was manual per hotel, hours per go-live and error-prone.",
   },
   {
     title: "Onboarding Redesign (Mews)",
     competency: "Enterprise onboarding · KPI impact",
-    body: "S/T: Onboarding was inconsistent across managers; ramp times varied and clients churned early. A: Standardized workflows, wrote user manuals and best-practice guides, and built structured checkpoints across the 2–4 week cycle. R: 20% reduction in onboarding time and improved self-service adoption while running 10–20 accounts concurrently.",
+    action:
+      "Rebuilt the enterprise onboarding program end-to-end: standardized workflows, wrote user manuals and best-practice guides, and installed structured checkpoints across the 2–4 week cycle.",
+    result:
+      "20% reduction in onboarding time while running 10–20 concurrent enterprise accounts, and materially better self-service adoption downstream.",
+    context: "Onboarding had been ad-hoc, varying by manager.",
   },
   {
     title: "Training Curriculum Rebuild (PurpleCloud)",
     competency: "Instructional design · Measurable adoption lift",
-    body: "S/T: 5-day training program was too long, hurting deal velocity and CSAT. A: Rebuilt curriculum from scratch — cut redundancies, moved reference material to on-demand, redesigned delivery for live + recorded formats. R: Training time cut 60% (5 → 2 days) and implementation time cut 50% (2 mo → 1 mo).",
+    action:
+      "Rewrote the customer training curriculum from scratch — cut redundancies, moved reference material to on-demand, and redesigned delivery for a hybrid live + recorded format.",
+    result:
+      "Training time cut 60% (5 days → 2) and implementation time cut 50% (2 months → 1 month), directly accelerating deal-to-live velocity.",
+    context: "The legacy 5-day program was hurting velocity and CSAT.",
   },
   {
-    title: "Salesforce-to-Slack Reporting Agent (Mews)",
+    title: "Salesforce → Slack Reporting Agent (Mews)",
     competency: "Cross-functional delivery · Executive visibility",
-    body: "S/T: Leadership had no live visibility into concurrent enterprise deployments. A: Built a Claude-powered reporting tool that pulls Salesforce state daily and posts a structured status digest to Slack. R: Increased management visibility and team accountability without adding meetings.",
+    action:
+      "Built a Claude-powered reporting agent that pulls Salesforce state daily and posts a structured account-status digest to leadership Slack.",
+    result:
+      "Gave management live visibility into every enterprise deployment with zero added meetings, and raised team accountability by making status public and repeatable.",
+    context: "Leadership had no rolling view across 10–20 concurrent enterprise deployments.",
   },
   {
-    title: "Handover Automation (Mews)",
-    competency: "Ambiguity · Operational resilience",
-    body: "S/T: Planned absences risked disrupting active enterprise deployments. A: Built a Claude + Lovable automation that generates management-ready handover reports from account data on demand. R: Zero disruption during PTO across active accounts.",
+    title: "PTO Handover Automation (Mews)",
+    competency: "Operational resilience · Build",
+    action:
+      "Built a Claude + Lovable automation that generates management-ready handover reports from account data on demand. Rolled it out to the onboarding team as a self-serve tool.",
+    result:
+      "Zero deployment disruption across active accounts during planned absences — the tool now covers every managed handover.",
+    context: "Planned absences had been a recurring risk to active enterprise deployments.",
   },
   {
     title: "C-Suite Enablement (PurpleCloud)",
-    competency: "Executive stakeholder engagement · Translation",
-    body: "S/T: Executive buyers needed to see business value, not feature tours. A: Ran discovery on each exec's KPIs, tailored sessions to connect product capabilities to their objectives, followed up with a written value summary. R: Faster adoption sign-off and stronger renewal posture.",
+    competency: "Executive engagement · Translation",
+    action:
+      "Ran executive discovery on each buyer's quarterly KPIs, then designed tailored sessions that mapped product capabilities directly to those metrics. Followed every session with a written value summary the exec could forward internally.",
+    result:
+      "Faster adoption sign-off and a stronger renewal posture — the written summaries became the exec's internal pitch, not mine.",
+    context: "Feature-tour demos were failing to move exec buyers.",
   },
   {
-    title: "Amadeus Top Performer (2017)",
+    title: "Top Performer, North America (Amadeus, 2017)",
     competency: "Grit · Volume · Customer obsession",
-    body: "S/T: North America Hotel SalesPro support queue was overwhelmed. A: Worked the second-highest case volume company-wide while running RCAs on repeat issues and pushing fixes upstream. R: Named Top Performer 2017; reduced repeat ticket categories.",
+    action:
+      "Worked the second-highest support case volume company-wide while running root-cause analyses on repeat issues and pushing durable fixes upstream to engineering.",
+    result:
+      "Named Top Performer 2017; measurably reduced the top repeat-ticket categories the following quarters.",
+    context: "The Hotel SalesPro NA support queue was overwhelmed.",
   },
   {
-    title: "Systems Migrations (Amadeus)",
+    title: "Legacy → Modern Platform Migrations (Amadeus)",
     competency: "Change management · Minimal disruption",
-    body: "S/T: Legacy-to-new-platform transitions across enterprise environments. A: Owned migration planning, comms, training, and rollback plans; sequenced cutover by risk tier. R: Delivered with minimal business disruption.",
+    action:
+      "Owned end-to-end enterprise migration plans — sequencing, comms, training, rollback — and led cutovers tiered by risk so critical accounts moved with a safety net.",
+    result:
+      "Delivered every migration on-plan with minimal customer disruption; no rollbacks triggered on the accounts I owned.",
+    context: "Complex enterprise environments moving from legacy to new platform.",
   },
 ];
 
@@ -140,37 +174,20 @@ function CopyBlock({ label, text }: { label: string; text: string }) {
   return (
     <div className="mt-4 rounded-lg border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </p>
-        <button
-          type="button"
-          onClick={copy}
-          className="text-xs font-medium text-primary hover:underline"
-        >
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <button type="button" onClick={copy} className="text-xs font-medium text-primary hover:underline">
           {copied ? "Copied ✓" : "Copy"}
         </button>
       </div>
-      <pre className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground font-sans">
-        {text}
-      </pre>
+      <pre className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground font-sans">{text}</pre>
     </div>
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-14">
-      <h2
-        className="text-2xl font-bold tracking-tight text-foreground"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
+      <h2 className="text-2xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         {title}
       </h2>
       <div className="mt-4">{children}</div>
@@ -178,47 +195,78 @@ function Section({
   );
 }
 
+const TOOLS = [
+  {
+    to: "/apply/tailor" as const,
+    title: "AI Resume Tailor",
+    desc: "Paste a JD, get a role-specific resume + cover letter + downloadable PDF in ~15 seconds.",
+    badge: "AI-powered",
+  },
+  {
+    to: "/apply/matches" as const,
+    title: "Job Matches",
+    desc: "Curated live openings at 30 frontier AI companies. One click to tailor for each.",
+    badge: "30 openings",
+  },
+  {
+    to: "/apply/autofill" as const,
+    title: "Application Autofill",
+    desc: "Copy-paste answers to the 12 screener questions every AI company asks.",
+    badge: "12 questions",
+  },
+  {
+    to: "/apply/referrals" as const,
+    title: "Referral DM Generator",
+    desc: "Name + company → personalized LinkedIn DM asking for a 15-min chat. Warm intros beat cold apps.",
+    badge: "AI-powered",
+  },
+];
+
 function ApplyPage() {
   return (
-    <main
-      className="min-h-screen bg-background px-6 py-12"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-    >
+    <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between">
-          <Link
-            to="/"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
+          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             ← Back home
           </Link>
-          <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
-            Private
-          </span>
+          <span className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">Private</span>
         </div>
 
         <header className="mt-8 border-b border-border pb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Application Kit
-          </p>
-          <h1
-            className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-foreground"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Application Kit</p>
+          <h1 className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Everything you need to apply.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Copy-paste ready: cover letters, LinkedIn copy, STAR stories, and a
-            target-company list. Tuned for AI Deployment / Forward Deployed /
-            Customer Engineering roles at frontier AI companies.
+            Four AI-powered tools + copy-paste content. Tuned for AI Deployment / Forward
+            Deployed / Customer Engineering roles at frontier AI companies.
           </p>
         </header>
 
+        <Section title="Tools">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {TOOLS.map((t) => (
+              <Link
+                key={t.to}
+                to={t.to}
+                className="group rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <h3 className="text-base font-semibold text-foreground group-hover:text-primary">{t.title}</h3>
+                  <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {t.badge}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.desc}</p>
+                <p className="mt-3 text-xs font-medium text-primary">Open →</p>
+              </Link>
+            ))}
+          </div>
+        </Section>
+
         <Section title="Cover letters">
-          <CopyBlock
-            label="General (edit the {{placeholders}})"
-            text={COVER_LETTER_GENERAL}
-          />
+          <CopyBlock label="General (edit the {{placeholders}})" text={COVER_LETTER_GENERAL} />
           <CopyBlock label="OpenAI-specific" text={COVER_LETTER_OPENAI} />
         </Section>
 
@@ -226,9 +274,7 @@ function ApplyPage() {
           <CopyBlock label='"About" section' text={LINKEDIN_ABOUT} />
           <div className="mt-4 rounded-lg border border-border bg-card">
             <div className="border-b border-border px-4 py-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Headline options (3)
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Headline options (3)</p>
             </div>
             <ul className="divide-y divide-border">
               {HEADLINES.map((h, i) => (
@@ -246,20 +292,23 @@ function ApplyPage() {
         </Section>
 
         <Section title="STAR interview stories">
+          <p className="text-sm text-muted-foreground mb-4">
+            Action leads. Result is the point. Context is one line at the end, only if needed.
+          </p>
           <div className="space-y-4">
             {STAR_STORIES.map((s) => (
               <div key={s.title} className="rounded-lg border border-border bg-card p-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-base font-semibold text-foreground">
-                    {s.title}
-                  </h3>
-                  <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                    {s.competency}
-                  </p>
+                  <h3 className="text-base font-semibold text-foreground">{s.title}</h3>
+                  <p className="text-xs font-medium uppercase tracking-wider text-primary">{s.competency}</p>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-foreground">
-                  {s.body}
+                <p className="mt-3 text-sm leading-relaxed text-foreground">
+                  <strong className="text-foreground">What I did.</strong> {s.action}
                 </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground">
+                  <strong className="text-primary">Result.</strong> {s.result}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">Context: {s.context}</p>
               </div>
             ))}
           </div>
@@ -270,20 +319,14 @@ function ApplyPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-4 py-2 text-left font-semibold text-foreground">
-                    Company
-                  </th>
-                  <th className="px-4 py-2 text-left font-semibold text-foreground">
-                    Roles to search
-                  </th>
+                  <th className="px-4 py-2 text-left font-semibold text-foreground">Company</th>
+                  <th className="px-4 py-2 text-left font-semibold text-foreground">Roles to search</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {TARGET_COMPANIES.map((c) => (
                   <tr key={c.company}>
-                    <td className="px-4 py-2 font-medium text-foreground">
-                      {c.company}
-                    </td>
+                    <td className="px-4 py-2 font-medium text-foreground">{c.company}</td>
                     <td className="px-4 py-2 text-muted-foreground">{c.roles}</td>
                   </tr>
                 ))}
@@ -291,18 +334,13 @@ function ApplyPage() {
             </table>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Tracker CSV:{" "}
-            <a
-              href="/application_tracker.csv"
-              className="text-primary hover:underline"
-            >
-              application_tracker.csv
-            </a>
+            Full dashboard: <Link to="/apply/matches" className="text-primary hover:underline">/apply/matches</Link>. Tracker CSV:{" "}
+            <a href="/application_tracker.csv" className="text-primary hover:underline">application_tracker.csv</a>
           </p>
         </Section>
 
         <footer className="mt-16 border-t border-border pt-6 text-xs text-muted-foreground">
-          Not indexed. Only reachable via /apply.
+          Not indexed. Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a>.
         </footer>
       </div>
     </main>
