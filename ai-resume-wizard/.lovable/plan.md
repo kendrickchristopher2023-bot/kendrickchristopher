@@ -1,106 +1,75 @@
-# v2: Resume tailor, projects, job matcher, Kenroe flag
+# v3: GitHub presence, funnel metrics, and clarifications
 
-Answering your questions in order:
+## Answering your questions first
 
-## What "Copy email" does
-It copies `kendrickchristopher@hotmail.com` to your clipboard — that's it. I'll upgrade it to **also open a pre‑filled draft** (`mailto:` with subject "Introduction — Christopher Kendrick" and a 2‑line body) so one click gets you 80% into an outreach email.
+### What "Loom walkthroughs" means
+Loom is a free screen-recording tool (loom.com). A "walkthrough" = a 60–90 second video where you share your screen and narrate: "Here's the reservation converter I built at Mews. Client sends me this messy CSV → I paste it here → click convert → out comes a Mews-ready file. Saves onboarding managers ~2 hours per hotel."
+
+Why it matters for AI jobs: recruiters at OpenAI/Anthropic/Lovable scan hundreds of resumes. A resume says "I built X." A Loom **proves** it in 60 seconds. It's the single highest-signal artifact you can attach — more than GitHub, more than a portfolio site. I can't record it for you (needs your voice + screen), but I'll add a **"Watch demo"** slot on each project card that shows a play-button when you paste a Loom URL, and hides cleanly when empty. You record 3 Looms this weekend (converter, SF→Slack agent, handover generator), paste URLs into `src/lib/resume-data.ts`, done.
+
+### What "Phase-2 auto-scraper" means
+Right now `/apply/matches` is a **static** curated list — I hand-typed ~30 openings. It goes stale the moment a role closes. Phase-2 = a scheduled server job (runs daily via pg_cron on Lovable Cloud) that:
+1. Hits each target company's careers page (OpenAI, Anthropic, Lovable, etc.)
+2. Parses the current openings
+3. Scores each against your resume with Lovable AI ("how well does this JD match Christopher's experience? 0–100")
+4. Writes results to a `job_matches` table
+5. `/apply/matches` reads live data + shows a "new since yesterday" badge
+
+Result: you open the page each morning and see fresh, ranked, personalized matches. Zero manual curation. It's ~4x the work of v1 (needs Cloud schema, scraper edge function, scheduler, scoring prompt, dedupe logic). My recommendation: **defer until after you've used the current app for 2 weeks and confirmed the tailor flow is landing interviews.** No point automating a step that isn't working manually yet. If you want it sooner, say so and I'll build it.
 
 ## What I'll build this pass
 
-### 1. AI Resume Tailor (the highest-leverage thing for speed of getting a job)
-Recommendation: **AI-powered rewrite + downloadable tailored PDF**. This is what actually moves the needle — every serious application should be tailored, and doing it by hand is why people apply to 5 jobs/week instead of 25.
+### 1. GitHub presence + resume link
+- Add `github` field to `src/lib/resume-data.ts` (default: `github.com/christopherkendrick` — tell me the real handle if different)
+- Show GitHub link in resume page header, PDF header, and homepage hero — alongside email/phone/location
+- Add GitHub icon-link in the site footer
 
-New route `/apply/tailor`:
-- Big textarea: "Paste the job description"
-- Optional inputs: Company name, Role title
-- **"Tailor my resume"** button → sends JD + your master resume JSON to Lovable AI (`openai/gpt-5.5`) which returns:
-  - Rewritten 2‑sentence summary aimed at that JD
-  - Reordered + rewritten bullets emphasizing the skills the JD asks for (no fabrication — only re-weighting real experience)
-  - Keyword-match score + missing keywords list (for ATS)
-  - Tailored cover letter (uses my existing OpenAI-style template as base)
-- **Download tailored PDF** button — regenerates the PDF server-side with the new content
-- **Copy tailored resume text** + **Copy cover letter** buttons
-- Saves your last 10 tailors to localStorage so you can revisit
-- Requires enabling **Lovable Cloud** (for the server function that calls the AI + generates the PDF). I'll flag this before doing it.
+### 2. GitHub project cleanup — READMEs I'll draft
+I can't push to GitHub for you (needs your credentials), but I'll write 3 clean, recruiter-ready `README.md` files you paste into new public repos:
+- `reservation-file-converter/README.md` — problem, before/after example (with fake hotel data), stack, how to run, screenshot slot
+- `salesforce-slack-reporter/README.md` — same shape, sanitized
+- `ai-handover-generator/README.md` — same shape
 
-### 2. STAR stories rewrite — action & result first
-You're right, they read defensive. I'll flip all 8 to lead with what YOU built, not what was broken. New shape:
-- **What I did** (1–2 sentences, active voice, verb-first)
-- **Result** (bolded metric)
-- **Context** (one line at the end, only if needed)
+Each README has a "🎥 Watch 60s demo" line where you paste your Loom URL later. I'll drop them in `docs/github-readmes/` in this project so you can copy-paste into fresh repos.
 
-Example rewrite (Onboarding):
-> **Built** a standardized enterprise onboarding playbook — sequenced workflows, written manuals, and structured checkpoints across the 2–4 week cycle. **Result: 20% faster time-to-value across 10–20 concurrent enterprise accounts.** Context: onboarding had been inconsistent between managers, ramp times varied.
+### 3. Loom slot on project cards
+- Add optional `loomUrl` field to each project in `resume-data.ts`
+- Project cards on `/` and `/resume` show a "▶ Watch demo (60s)" pill when a URL exists, hidden when empty
+- No code change needed later — you just paste URLs into `resume-data.ts` after recording
 
-### 3. Projects section
-Yes — huge yes. Recruiters at AI companies weight "builds things" more than pedigree. I'll add a **Projects** section to:
-- `/resume` web page (new section between Experience and Education)
-- `/` homepage (visual card grid)
-- **Not** the PDF v1 (space is tight); optional PDF v2 later
+### 4. Funnel metrics dashboard (`/apply/metrics`)
+Track your own job hunt as a funnel. Requires **Lovable Cloud** for persistence.
 
-Projects included (all yours):
-- **Reservation File Converter** — Lovable + Claude, eliminated manual migration step at Mews
-- **Salesforce → Slack Reporting Agent** — Claude-powered exec visibility
-- **AI Handover Generator** — Claude + Lovable, zero-disruption PTO coverage
-- **The Kenroe Collective** — your consultancy site
-- **This resume site** — self-referential proof: "the site you're reading was built with the tools I'd deploy for your customers"
+New table `applications`: company, role, jd_url, applied_at, referral_source, resume_version, response_at, response_type (rejected / screen / no-response), interview_stages (jsonb), offer_at, notes.
 
-Each card: title · stack · one-line problem/outcome · link (where public).
+New route `/apply/metrics`:
+- **Log application** form (auto-fills from your last tailor session — company/role pre-populated)
+- **Funnel chart**: Applied → Response → Screen → Onsite → Offer, with conversion % between each stage
+- **Weekly pace**: applications/week, target line at 10/week
+- **By source**: cold apply vs referral vs recruiter-inbound (referrals should convert 5–10x — this will make the case for you to lean into `/apply/referrals`)
+- **By company tier**: frontier labs vs applied AI vs consulting — see where you're actually getting traction
+- Simple table view + CSV export
 
-### 4. "Apply for AI jobs for me" — the honest answer
-Full auto-submit is a bad idea: it violates Greenhouse/Lever/LinkedIn ToS, bans your accounts, and produces low-quality submissions that hurt your brand at the exact companies you want. What actually gets you hired faster is a **job-match dashboard + application autofill helper**, both of which I'll build:
+This turns job hunting from vibes into a system. In 2 weeks you'll know: "cold apps convert at 2%, referrals at 30%, so stop cold applying and only send tailored asks."
 
-**`/apply/matches` — Job Match Dashboard**
-- Static-first (this pass): curated list of ~30 live openings at your target companies (OpenAI, Anthropic, Lovable, Cursor, Perplexity, Sierra, Decagon, Glean, Writer, Hebbia) with title, location, link, and posted date
-- Each row: **"Tailor for this role"** button → pipes JD into the Tailor tool with company/role pre-filled → PDF + cover letter in ~15 seconds
-- v2 (later, needs Cloud + a scheduled function): auto-scrape these companies' careers pages daily and score each opening against your resume with AI. I'll scope this as Phase 2.
-
-**`/apply/autofill` — Application Autofill Helper**
-- Copy-paste ready answers to the 12 screener questions every AI company asks:
-  - "Why [company]?" (template with `{{Company}}` slot the tailor tool auto-fills)
-  - "Why are you leaving your current role?"
-  - "Salary expectations" (with your NC → NYC relocation framing)
-  - "Are you authorized to work in the US?"
-  - "Willing to relocate?" · "Notice period?" · "Preferred start date?"
-  - "Tell us about a time you shipped something with AI"
-  - + 4 more
-- All copy-buttoned.
-
-### 5. Kenroe Collective — plant the flag
-Small footer on every page: "Built by The Kenroe Collective →" linking to your Kenroe project. I'll also add a subtle "About Kenroe" tag under your name on the homepage. **Not** building a full services site this pass — we'll scope that as v3 once the resume + job-match flywheel is proven.
-
-### 6. mailto upgrade + last-updated line
-- "Copy email" → **"Email me"** (opens draft) + tiny "copy" secondary action
-- "Last updated: Jul 11, 2026" line on `/resume`
-
-## What you're missing (my recommendations)
-
-1. **A GitHub with your projects public.** Ship the reservation converter, SF→Slack agent, and handover generator as public repos with clean READMEs. AI companies check. If they're client-confidential, publish sanitized versions with fake data. I can help draft READMEs.
-2. **A loom/video walkthrough** of the reservation converter (60 seconds, screen recording). One link on your resume → recruiters actually see you build. Massive signal.
-3. **LinkedIn "Open to work" + weekly 1 post cadence** on what you're building with Claude/Lovable. Recruiters DM builders who post. I can draft 4 weeks of posts as part of the app kit.
-4. **A referral ask list.** Warm intros beat cold apps 10:1. I'll add a `/apply/referrals` mini-tool: paste a LinkedIn URL of someone at a target company → generates a personalized DM asking for a referral chat.
-5. **Metrics dashboard for your own funnel.** How many applications sent → responses → interviews → offers. Once we enable Cloud, this is trivial and turns job hunting into a system.
-
-I'll build #4 (referral DM generator) this pass since it's cheap and high-leverage. #1, #2, #3, #5 I'll queue up and we can tackle after you validate the tailor flow works for you.
+### 5. Won't do this pass (my recommendation)
+- **Phase-2 auto-scraper** — deferred until manual flow proves out (see above)
+- **Actual Loom recordings** — you do this, I can't
+- **Actual GitHub pushes** — you do this, I'll give you the READMEs
 
 ## Order of operations
+1. Add `github` + `loomUrl` fields to resume-data + wire into UI/PDF
+2. Draft 3 project READMEs in `docs/github-readmes/`
+3. Enable Lovable Cloud (already enabled from last pass — verify)
+4. Migration: `applications` table + RLS + grants
+5. Server fns: `logApplication`, `updateApplication`, `listApplications`
+6. Build `/apply/metrics` route with funnel chart + log form + table
+7. Add `/apply/metrics` link to `/apply` index
+8. QA every page
 
-1. Enable Lovable Cloud (I'll confirm before)
-2. Rewrite 8 STAR stories → action-first
-3. Build `/apply/tailor` (AI resume + cover letter generator + PDF download)
-4. Build `/apply/matches` (curated job list v1)
-5. Build `/apply/autofill` (screener answers)
-6. Build `/apply/referrals` (DM generator)
-7. Projects section on `/` and `/resume`
-8. Kenroe footer + homepage tag
-9. mailto upgrade + last-updated line
-10. QA every page in the preview, verify tailor flow end-to-end with a real JD
+## Thoughts on your overall approach
+You're doing the right things in the right order. The remaining bottleneck isn't tooling — it's **volume of tailored applications × referral warmth**. Once metrics are in, we'll know within 2 weeks whether the play is (a) crank cold apps to 15/week, or (b) go all-in on referral DMs. My bet is (b), but data will decide.
 
-## Won't do this pass
+One thing you're still missing that I'd flag: **a LinkedIn post cadence**. Recruiters at Lovable/Cursor/Anthropic actively DM builders who post about shipping with Claude/Lovable. Your Mews-internal builds are exactly the content they want to see (sanitized). Say the word and I'll draft 4 weeks of posts as `docs/linkedin-posts.md` in the next pass.
 
-- Full mini-business site for Kenroe (you asked to just plant the flag)
-- Auto-submitting applications (bad idea — explained above)
-- Scheduled JD scraping (Phase 2 after Cloud is proven out)
-- Public GitHub cleanup for your projects (I can help but it's outside this app)
-
-Reply **go** and I'll start with enabling Cloud.
+Reply **go** and I'll start.
