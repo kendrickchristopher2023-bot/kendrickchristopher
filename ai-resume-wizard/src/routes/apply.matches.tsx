@@ -122,7 +122,16 @@ function MatchesPage() {
                       {m.company}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-foreground">{m.role}</td>
+                  <td className="px-4 py-3 text-foreground">
+                    <a
+                      href={m.roleUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {m.role} <span className="text-muted-foreground">↗</span>
+                    </a>
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                     {m.location}
                   </td>
