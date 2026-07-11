@@ -133,18 +133,21 @@ export const RESUME: MasterResume = {
       stack: "Lovable + Claude",
       outcome:
         "Eliminated a manual data-migration step for every enterprise hotel go-live at Mews. Ingests any reservation format, outputs Mews-ready CSV in one click.",
+      repoUrl: "https://github.com/christopherkendrick/reservation-file-converter",
     },
     {
       title: "Salesforce → Slack Reporting Agent",
       stack: "Claude API",
       outcome:
         "Daily digest of 10–20 concurrent enterprise deployments posted to leadership Slack. Gave management live account visibility without new meetings.",
+      repoUrl: "https://github.com/christopherkendrick/salesforce-slack-reporter",
     },
     {
       title: "AI Handover Generator",
       stack: "Claude + Lovable",
       outcome:
         "Generates management-ready handover reports from account data on demand. Zero disruption during PTO across active enterprise deployments.",
+      repoUrl: "https://github.com/christopherkendrick/ai-handover-generator",
     },
     {
       title: "The Kenroe Collective",
