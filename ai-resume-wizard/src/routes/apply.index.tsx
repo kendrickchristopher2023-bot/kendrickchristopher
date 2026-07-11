@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
-export const Route = createFileRoute("/apply")({
+export const Route = createFileRoute("/apply/")({
   head: () => ({
     meta: [
       { title: "Application Kit — Christopher Kendrick" },
