@@ -1,75 +1,89 @@
-# v3: GitHub presence, funnel metrics, and clarifications
 
-## Answering your questions first
+# Lock it down + turn it into a real (private) product
 
-### What "Loom walkthroughs" means
-Loom is a free screen-recording tool (loom.com). A "walkthrough" = a 60–90 second video where you share your screen and narrate: "Here's the reservation converter I built at Mews. Client sends me this messy CSV → I paste it here → click convert → out comes a Mews-ready file. Saves onboarding managers ~2 hours per hotel."
+Goal: no one but you and people you invite can access the app. Each invited user gets their own resume, their own tailor history, their own metrics — nothing shared, nothing leaked. Structure is ready to flip to paid later without a rewrite.
 
-Why it matters for AI jobs: recruiters at OpenAI/Anthropic/Lovable scan hundreds of resumes. A resume says "I built X." A Loom **proves** it in 60 seconds. It's the single highest-signal artifact you can attach — more than GitHub, more than a portfolio site. I can't record it for you (needs your voice + screen), but I'll add a **"Watch demo"** slot on each project card that shows a play-button when you paste a Loom URL, and hides cleanly when empty. You record 3 Looms this weekend (converter, SF→Slack agent, handover generator), paste URLs into `src/lib/resume-data.ts`, done.
+## What changes for you today
 
-### What "Phase-2 auto-scraper" means
-Right now `/apply/matches` is a **static** curated list — I hand-typed ~30 openings. It goes stale the moment a role closes. Phase-2 = a scheduled server job (runs daily via pg_cron on Lovable Cloud) that:
-1. Hits each target company's careers page (OpenAI, Anthropic, Lovable, etc.)
-2. Parses the current openings
-3. Scores each against your resume with Lovable AI ("how well does this JD match Christopher's experience? 0–100")
-4. Writes results to a `job_matches` table
-5. `/apply/matches` reads live data + shows a "new since yesterday" badge
+- The public homepage (`/`) stays as your portfolio — that's your outbound artifact. Everything under `/apply`, `/resume` (edit), and the new user features move behind login.
+- You sign in, everything works as it does now, plus new features (cover letters, interview prep, follow-up nudges).
+- You get an admin screen to approve/deny invite requests.
 
-Result: you open the page each morning and see fresh, ranked, personalized matches. Zero manual curation. It's ~4x the work of v1 (needs Cloud schema, scraper edge function, scheduler, scoring prompt, dedupe logic). My recommendation: **defer until after you've used the current app for 2 weeks and confirmed the tailor flow is landing interviews.** No point automating a step that isn't working manually yet. If you want it sooner, say so and I'll build it.
+## What changes for invited users
 
-## What I'll build this pass
+1. They land on `/` (your portfolio, unchanged).
+2. Click "Request access" → email + short "why" note.
+3. You approve in an admin panel → they get an email with a magic link.
+4. First login: pick onboarding path — **paste/upload existing resume** (AI parses into the schema) OR **guided form** (no AI, step-by-step).
+5. They then get their own copy of the whole toolkit against their data.
 
-### 1. GitHub presence + resume link
-- Add `github` field to `src/lib/resume-data.ts` (default: `github.com/christopherkendrick` — tell me the real handle if different)
-- Show GitHub link in resume page header, PDF header, and homepage hero — alongside email/phone/location
-- Add GitHub icon-link in the site footer
+## Job search recommendation (my pick)
 
-### 2. GitHub project cleanup — READMEs I'll draft
-I can't push to GitHub for you (needs your credentials), but I'll write 3 clean, recruiter-ready `README.md` files you paste into new public repos:
-- `reservation-file-converter/README.md` — problem, before/after example (with fake hotel data), stack, how to run, screenshot slot
-- `salesforce-slack-reporter/README.md` — same shape, sanitized
-- `ai-handover-generator/README.md` — same shape
+Drop the hand-curated Charlotte AI matches page for other users — it only makes sense for you. Replace with a **"Paste JD → tailor + cover letter + track"** flow as the primary loop. That flow is industry-agnostic (works for nurses, PMs, teachers, anyone) and doesn't require a jobs data source. Keep your personal Charlotte AI matches list as a **your-account-only** view so you don't lose it. Add a real jobs API (Adzuna is cheapest, ~free tier) later, once there are paying users to justify the per-query cost.
 
-Each README has a "🎥 Watch 60s demo" line where you paste your Loom URL later. I'll drop them in `docs/github-readmes/` in this project so you can copy-paste into fresh repos.
+## Features being added (all four you picked)
 
-### 3. Loom slot on project cards
-- Add optional `loomUrl` field to each project in `resume-data.ts`
-- Project cards on `/` and `/resume` show a "▶ Watch demo (60s)" pill when a URL exists, hidden when empty
-- No code change needed later — you just paste URLs into `resume-data.ts` after recording
+1. **Cover letter generator** — same JD input as tailor; produces a 150–200 word letter grounded in the user's wins. One extra button on `/apply/tailor`.
+2. **Interview prep** — after a tailor session, "Generate likely questions + STAR answers" using their resume + the JD. Saved per application.
+3. **Follow-up nudges** — 7 days after "Applied" with no response, `/apply/metrics` surfaces a "Send follow-up" card with a drafted email. No background jobs needed — computed on page load.
+4. **Chrome extension / bookmarklet** — one button on any job page: captures URL + JD text + company/role, opens the tailor flow prefilled. Bookmarklet first (ships in a day, works everywhere), Chrome extension `.zip` as a follow-up.
 
-### 4. Funnel metrics dashboard (`/apply/metrics`)
-Track your own job hunt as a funnel. Requires **Lovable Cloud** for persistence.
+## Paid-service scaffolding (dormant until you say go)
 
-New table `applications`: company, role, jd_url, applied_at, referral_source, resume_version, response_at, response_type (rejected / screen / no-response), interview_stages (jsonb), offer_at, notes.
+- Add `plan` column to users (`free` | `pro` | `founder`). Everyone starts as `founder` while invite-only. No paywall, no Stripe, no pricing page yet.
+- Feature-gate helpers (`canUseCoverLetter(user)`) in place but currently return `true` for everyone. Flipping to paid = one config change + wiring Stripe/Paddle when you approve.
+- Kenroe Collective branding stays as-is (footer credit + portfolio tag). No separate business surface until you say so.
 
-New route `/apply/metrics`:
-- **Log application** form (auto-fills from your last tailor session — company/role pre-populated)
-- **Funnel chart**: Applied → Response → Screen → Onsite → Offer, with conversion % between each stage
-- **Weekly pace**: applications/week, target line at 10/week
-- **By source**: cold apply vs referral vs recruiter-inbound (referrals should convert 5–10x — this will make the case for you to lean into `/apply/referrals`)
-- **By company tier**: frontier labs vs applied AI vs consulting — see where you're actually getting traction
-- Simple table view + CSV export
+## What I think you're missing (recommended add-ons — say yes/no)
 
-This turns job hunting from vibes into a system. In 2 weeks you'll know: "cold apps convert at 2%, referrals at 30%, so stop cold applying and only send tailored asks."
+- **A. LinkedIn profile optimizer** — paste current LinkedIn "About" + headline, get a rewritten version tailored to their target role. High demand, ~half the work of the resume tailor. **Recommend: yes, ship with v1.**
+- **B. Weekly digest email** — Monday morning: "You applied to 3 last week, 1 needs follow-up, here are 5 tailored resumes you can send today." Retention. **Recommend: defer until you have >5 users.**
+- **C. Referral message templates per JD** — you already have `/apply/referrals`; wire it so pasting a JD generates a warm-intro DM to send to a mutual connection. **Recommend: yes, small addition.**
+- **D. Delete/export their data** — legal/trust basics for anything that becomes paid. **Recommend: yes, ship with v1.**
+- **E. Rate limits on AI calls** — one user could burn your Lovable AI credits. Simple per-user daily cap (e.g., 20 tailors/day). **Recommend: yes, ship with v1.**
 
-### 5. Won't do this pass (my recommendation)
-- **Phase-2 auto-scraper** — deferred until manual flow proves out (see above)
-- **Actual Loom recordings** — you do this, I can't
-- **Actual GitHub pushes** — you do this, I'll give you the READMEs
+## Technical section
+
+- **Backend**: enable Lovable Cloud (Supabase under the hood). Auth via Supabase — email magic link + Google. No password reset flow needed with magic links.
+- **Route architecture**:
+  - Public: `/` (portfolio), `/request-access`, `/auth`, `/auth/callback`
+  - Authenticated (`_authenticated/`): `/apply/*`, `/resume/*`, `/onboarding`, `/settings`
+  - Admin (`_authenticated/_admin/`, gated by `has_role('admin')`): `/admin/invites`, `/admin/users`
+- **Schema** (all with RLS scoped to `auth.uid()`, `user_roles` table pattern):
+  - `profiles` (id, email, full_name, plan, onboarded_at)
+  - `user_roles` (user_id, role) — `admin` | `user`
+  - `access_requests` (email, reason, status: pending/approved/denied, requested_at)
+  - `resumes` (user_id, data jsonb — same shape as current `MasterResume`, is_primary)
+  - `tailor_sessions` (user_id, jd_url, jd_text, company, role, tailored_resume jsonb, cover_letter text, interview_prep jsonb, created_at)
+  - `applications` (user_id, tailor_session_id, company, role, jd_url, source, stage, applied_at, response_at, notes) — replaces current localStorage in `/apply/metrics`
+  - `personal_matches` (user_id, role, company, roleUrl) — your Charlotte list, user-scoped
+  - `usage_daily` (user_id, date, tailor_count, cover_letter_count) — rate limiting
+- **Server fns** all use `requireSupabaseAuth`; admin fns additionally check `has_role(auth.uid(), 'admin')`. Existing `tailor.functions.ts` and `referral.functions.ts` refactored to read/write per-user.
+- **Migration**: existing `localStorage` metrics data — one-time import button on first login for you.
+- **Email**: magic link via Supabase Auth (built in); invite-approved email via Resend (needs API key when we get there).
+- **Onboarding parse**: paste resume → `parseResume` server fn (Lovable AI) returns `MasterResume` JSON → user reviews/edits on `/onboarding` → saved to `resumes`.
 
 ## Order of operations
-1. Add `github` + `loomUrl` fields to resume-data + wire into UI/PDF
-2. Draft 3 project READMEs in `docs/github-readmes/`
-3. Enable Lovable Cloud (already enabled from last pass — verify)
-4. Migration: `applications` table + RLS + grants
-5. Server fns: `logApplication`, `updateApplication`, `listApplications`
-6. Build `/apply/metrics` route with funnel chart + log form + table
-7. Add `/apply/metrics` link to `/apply` index
-8. QA every page
 
-## Thoughts on your overall approach
-You're doing the right things in the right order. The remaining bottleneck isn't tooling — it's **volume of tailored applications × referral warmth**. Once metrics are in, we'll know within 2 weeks whether the play is (a) crank cold apps to 15/week, or (b) go all-in on referral DMs. My bet is (b), but data will decide.
+1. Enable Lovable Cloud + auth setup (email magic link + Google)
+2. Schema + RLS + roles + grant yourself `admin`
+3. `/request-access` public page + `/admin/invites` approval flow + Resend for approval email
+4. Move `/apply/*` and `/resume` under `_authenticated/`, refactor to per-user DB reads
+5. `/onboarding` (paste-or-form) + resume parser
+6. Cover letter + interview prep + follow-up nudges + LinkedIn optimizer + referral DM generator
+7. Settings page (export data, delete account) + daily rate limits
+8. Bookmarklet
+9. Chrome extension `.zip`
 
-One thing you're still missing that I'd flag: **a LinkedIn post cadence**. Recruiters at Lovable/Cursor/Anthropic actively DM builders who post about shipping with Claude/Lovable. Your Mews-internal builds are exactly the content they want to see (sanitized). Say the word and I'll draft 4 weeks of posts as `docs/linkedin-posts.md` in the next pass.
+## What I'm not doing this pass
 
-Reply **go** and I'll start.
+- Stripe/Paddle wiring (dormant until your go-ahead)
+- Live jobs API integration
+- Weekly digest emails
+- Public marketing/pricing pages beyond `/` and `/request-access`
+
+## Decisions I need from you before I build
+
+1. **Email for invite approvals** — Resend is the standard fit; needs an API key. OK to add when we get to step 3, or use a different sender?
+2. **LinkedIn optimizer (A), referral DM generator (C), export/delete (D), rate limits (E)** — all in for v1, or drop any?
+3. **Your Charlotte matches list** — keep as private-to-you `personal_matches`, or delete it and let everyone use the paste-JD flow only?
