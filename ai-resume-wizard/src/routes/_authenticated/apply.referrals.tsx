@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { generateReferralDm } from "@/lib/referral.functions";
 
-export const Route = createFileRoute("/apply/referrals")({
+export const Route = createFileRoute("/_authenticated/apply/referrals")({
   head: () => ({
     meta: [
       { title: "Referral DM Generator — Christopher Kendrick" },

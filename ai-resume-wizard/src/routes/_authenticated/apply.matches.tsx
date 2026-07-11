@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/apply/matches")({
+export const Route = createFileRoute("/_authenticated/apply/matches")({
   head: () => ({
     meta: [
       { title: "Job Matches — Christopher Kendrick" },

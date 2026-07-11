@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
-export const Route = createFileRoute("/apply/metrics")({
+export const Route = createFileRoute("/_authenticated/apply/metrics")({
   head: () => ({
     meta: [
       { title: "Funnel Metrics — Application Kit" },

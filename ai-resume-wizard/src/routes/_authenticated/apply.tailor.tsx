@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 
-export const Route = createFileRoute("/apply/tailor")({
+export const Route = createFileRoute("/_authenticated/apply/tailor")({
   head: () => ({
     meta: [
       { title: "AI Resume Tailor — Christopher Kendrick" },
