@@ -61,9 +61,26 @@ function Index() {
   return (
     <main className="min-h-screen bg-background px-6 py-16 sm:py-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="mx-auto max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Portfolio · 2026 · A Kenroe Collective project
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Portfolio · 2026 · A Kenroe Collective project
+          </p>
+          {user ? (
+            <div className="flex items-center gap-3 text-xs">
+              <Link to="/apply" className="font-medium text-primary hover:underline">
+                Open kit →
+              </Link>
+              <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link to="/auth" className="text-xs font-medium text-primary hover:underline">
+              Sign in →
+            </Link>
+          )}
+        </div>
+
         <h1 className="mt-4 text-5xl sm:text-6xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
           {RESUME.name}
         </h1>
