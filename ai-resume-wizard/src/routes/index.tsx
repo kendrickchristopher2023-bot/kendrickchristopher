@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { RESUME } from "@/lib/resume-data";
+import { useSession, signOut } from "@/lib/session";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,6 +41,8 @@ const WINS = [
 function Index() {
   const [copied, setCopied] = useState(false);
   const email = RESUME.email;
+  const { user } = useSession();
+
 
   const copyEmail = async () => {
     try {

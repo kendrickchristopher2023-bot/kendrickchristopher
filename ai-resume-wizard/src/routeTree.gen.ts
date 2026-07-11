@@ -9,17 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RequestAccessRouteImport } from './routes/request-access'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
 import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
 import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
 import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authenticated/apply.referrals'
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
+import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
+import { Route as AuthenticatedAdminAdminClaimRouteImport } from './routes/_authenticated/_admin/admin.claim'
 
+const RequestAccessRoute = RequestAccessRouteImport.update({
+  id: '/request-access',
+  path: '/request-access',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,14 +51,18 @@ const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
-  id: '/_authenticated/resume',
+  id: '/resume',
   path: '/resume',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedApplyRoute = AuthenticatedApplyRouteImport.update({
-  id: '/_authenticated/apply',
+  id: '/apply',
   path: '/apply',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedApplyIndexRoute = AuthenticatedApplyIndexRouteImport.update({
   id: '/',
@@ -75,9 +99,23 @@ const AuthenticatedApplyAutofillRoute =
     path: '/autofill',
     getParentRoute: () => AuthenticatedApplyRoute,
   } as any)
+const AuthenticatedAdminAdminInvitesRoute =
+  AuthenticatedAdminAdminInvitesRouteImport.update({
+    id: '/admin/invites',
+    path: '/admin/invites',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminAdminClaimRoute =
+  AuthenticatedAdminAdminClaimRouteImport.update({
+    id: '/admin/claim',
+    path: '/admin/claim',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/request-access': typeof RequestAccessRoute
   '/apply': typeof AuthenticatedApplyRouteWithChildren
   '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -87,9 +125,13 @@ export interface FileRoutesByFullPath {
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
+  '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
+  '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/request-access': typeof RequestAccessRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
@@ -98,10 +140,16 @@ export interface FileRoutesByTo {
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
+  '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
+  '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/request-access': typeof RequestAccessRoute
+  '/_authenticated/_admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -111,11 +159,15 @@ export interface FileRoutesById {
   '/_authenticated/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
+  '/_authenticated/_admin/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
+  '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/request-access'
     | '/apply'
     | '/resume'
     | '/api/tailored-resume'
@@ -125,9 +177,13 @@ export interface FileRouteTypes {
     | '/apply/referrals'
     | '/apply/tailor'
     | '/apply/'
+    | '/admin/claim'
+    | '/admin/invites'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/request-access'
     | '/resume'
     | '/api/tailored-resume'
     | '/apply/autofill'
@@ -136,9 +192,15 @@ export interface FileRouteTypes {
     | '/apply/referrals'
     | '/apply/tailor'
     | '/apply'
+    | '/admin/claim'
+    | '/admin/invites'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/request-access'
+    | '/_authenticated/_admin'
     | '/_authenticated/apply'
     | '/_authenticated/resume'
     | '/api/tailored-resume'
@@ -148,17 +210,41 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/referrals'
     | '/_authenticated/apply/tailor'
     | '/_authenticated/apply/'
+    | '/_authenticated/_admin/admin/claim'
+    | '/_authenticated/_admin/admin/invites'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedApplyRoute: typeof AuthenticatedApplyRouteWithChildren
-  AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  RequestAccessRoute: typeof RequestAccessRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/request-access': {
+      id: '/request-access'
+      path: '/request-access'
+      fullPath: '/request-access'
+      preLoaderRoute: typeof RequestAccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -178,14 +264,21 @@ declare module '@tanstack/react-router' {
       path: '/resume'
       fullPath: '/resume'
       preLoaderRoute: typeof AuthenticatedResumeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/apply': {
       id: '/_authenticated/apply'
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof AuthenticatedApplyRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_admin': {
+      id: '/_authenticated/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/apply/': {
       id: '/_authenticated/apply/'
@@ -229,8 +322,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyAutofillRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/_authenticated/_admin/admin/invites': {
+      id: '/_authenticated/_admin/admin/invites'
+      path: '/admin/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AuthenticatedAdminAdminInvitesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/_admin/admin/claim': {
+      id: '/_authenticated/_admin/admin/claim'
+      path: '/admin/claim'
+      fullPath: '/admin/claim'
+      preLoaderRoute: typeof AuthenticatedAdminAdminClaimRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
   }
 }
+
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminAdminClaimRoute: typeof AuthenticatedAdminAdminClaimRoute
+  AuthenticatedAdminAdminInvitesRoute: typeof AuthenticatedAdminAdminInvitesRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminAdminClaimRoute: AuthenticatedAdminAdminClaimRoute,
+    AuthenticatedAdminAdminInvitesRoute: AuthenticatedAdminAdminInvitesRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
 
 interface AuthenticatedApplyRouteChildren {
   AuthenticatedApplyAutofillRoute: typeof AuthenticatedApplyAutofillRoute
@@ -253,10 +376,26 @@ const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
 const AuthenticatedApplyRouteWithChildren =
   AuthenticatedApplyRoute._addFileChildren(AuthenticatedApplyRouteChildren)
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedApplyRoute: typeof AuthenticatedApplyRouteWithChildren
+  AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApplyRoute: AuthenticatedApplyRouteWithChildren,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  RequestAccessRoute: RequestAccessRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
 }
 export const routeTree = rootRouteImport
