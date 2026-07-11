@@ -76,10 +76,12 @@ Return a JSON object with this exact shape:
 Keep the same company order and same number of bullets per company as the master. Use the exact company names above.`;
 
     const { text } = await generateText({
-      model: gateway("openai/gpt-5.5"),
+      // Fast model — big prompts on gpt-5.5 can take 2+ min. Flash gets under 15s.
+      model: gateway("google/gemini-3-flash-preview"),
       system: SYSTEM,
       prompt,
     });
+
 
     // Extract JSON (strip any accidental code fences)
     const cleaned = text

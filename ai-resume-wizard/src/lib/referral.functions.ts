@@ -31,8 +31,9 @@ ${data.context ? `\nExtra context: ${data.context}` : ""}
 Return ONLY the DM text. No preamble, no quotes.`;
 
     const { text } = await generateText({
-      model: gateway("openai/gpt-5.5"),
+      model: gateway("google/gemini-3-flash-preview"),
       prompt,
     });
+
     return { dm: text.trim() };
   });

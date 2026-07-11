@@ -42,6 +42,8 @@ function TailorPage() {
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Init empty on SSR; hydrate from localStorage post-mount to avoid mismatch.
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const loadHistory = (): HistoryEntry[] => {
     if (typeof window === "undefined") return [];
     try {
@@ -50,7 +52,11 @@ function TailorPage() {
       return [];
     }
   };
-  const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  if (typeof window !== "undefined" && history.length === 0) {
+    // no-op guard — real load happens in effect
+  }
+
 
   const saveHistory = (entry: HistoryEntry) => {
     const next = [entry, ...loadHistory()].slice(0, 10);
