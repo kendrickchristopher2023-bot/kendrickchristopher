@@ -351,7 +351,15 @@ function ResumePage() {
             </ul>
           </section>
         </article>
+
+        <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground print:hidden">
+          <span>Last updated {RESUME.lastUpdated}</span>
+          <span>
+            Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a>
+          </span>
+        </footer>
       </div>
     </main>
   );
 }
+
