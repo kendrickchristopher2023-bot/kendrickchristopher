@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { RESUME } from "@/lib/resume-data";
+
 
 export const Route = createFileRoute("/resume")({
   head: () => ({
@@ -255,6 +257,37 @@ function ResumePage() {
               </ul>
             </div>
           </section>
+
+          {/* Projects */}
+          <section className="mb-8">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+              Selected Projects
+            </h2>
+            <div className="space-y-4">
+              {RESUME.projects.map((p) => {
+                const body = (
+                  <>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h3 className="text-base font-semibold text-foreground">{p.title}</h3>
+                      <span className="text-xs font-medium uppercase tracking-wider text-primary">{p.stack}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-foreground">{p.outcome}</p>
+                    {p.href && <p className="mt-1 text-xs text-primary">{p.href.replace(/^https?:\/\//, "")}</p>}
+                  </>
+                );
+                return p.href ? (
+                  <a key={p.title} href={p.href} target="_blank" rel="noreferrer" className="block rounded-md border border-border bg-card/50 p-4 hover:border-primary/60 transition-colors">
+                    {body}
+                  </a>
+                ) : (
+                  <div key={p.title} className="rounded-md border border-border bg-card/50 p-4">
+                    {body}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
 
           {/* Additional Experience */}
           <section className="mb-8">
