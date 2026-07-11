@@ -108,6 +108,7 @@ function Index() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Projects</h2>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {RESUME.projects.map((p) => {
+              const linkHref = p.href ?? p.repoUrl;
               const inner = (
                 <>
                   <div className="flex items-start justify-between gap-3">
@@ -117,20 +118,28 @@ function Index() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.outcome}</p>
-                  {p.href && (
-                    <p className="mt-3 text-xs font-medium text-primary">Visit →</p>
-                  )}
-                  {p.internal && (
-                    <p className="mt-3 text-xs text-muted-foreground">You're looking at it.</p>
-                  )}
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">
+                    {p.loomUrl && (
+                      <a href={p.loomUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                        ▶ Demo (60s)
+                      </a>
+                    )}
+                    {p.repoUrl && (
+                      <a href={p.repoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                        GitHub
+                      </a>
+                    )}
+                    {p.href && <span className="text-primary">Visit →</span>}
+                    {p.internal && <span className="text-muted-foreground">You're looking at it.</span>}
+                  </div>
                 </>
               );
-              return p.href ? (
-                <a key={p.title} href={p.href} target="_blank" rel="noreferrer" className="group rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors">
+              return linkHref && !p.repoUrl ? (
+                <a key={p.title} href={linkHref} target="_blank" rel="noreferrer" className="group rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors">
                   {inner}
                 </a>
               ) : (
-                <div key={p.title} className="rounded-lg border border-border bg-card p-5">
+                <div key={p.title} className="rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors">
                   {inner}
                 </div>
               );
