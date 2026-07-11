@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
-import { generateTailoredPdf } from "@/lib/tailor-pdf.functions";
 
 export const Route = createFileRoute("/apply/tailor")({
   head: () => ({
