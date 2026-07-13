@@ -86,7 +86,7 @@ function AdminInvites() {
                 href={`mailto:${magic.email}?subject=${encodeURIComponent(
                   "You're in — Christopher Kendrick's application toolkit",
                 )}&body=${encodeURIComponent(
-                  `Hey — you're approved. One-click sign-in below (expires in 1 hour):\n\n${magic.link}\n\n—Christopher`,
+                  `Hey — you're approved. One-click sign-in below (expires in 24 hours):\n\n${magic.link}\n\n—Christopher`,
                 )}`}
                 className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
               >
