@@ -17,11 +17,11 @@ export function supabaseAsUser(ctx: ToolContext) {
   });
 }
 
-export function requireAuth(ctx: ToolContext) {
-  if (!ctx.isAuthenticated()) {
-    throw new Error("Not authenticated");
-  }
-  return ctx.getUserId();
+export function requireAuth(ctx: ToolContext): string {
+  if (!ctx.isAuthenticated()) throw new Error("Not authenticated");
+  const uid = ctx.getUserId();
+  if (!uid) throw new Error("No user id on token");
+  return uid;
 }
 
 export async function callGateway(prompt: string, system?: string) {
