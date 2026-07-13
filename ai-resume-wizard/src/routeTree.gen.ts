@@ -27,6 +27,7 @@ import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authent
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
 import { Route as AuthenticatedAdminAdminClaimRouteImport } from './routes/_authenticated/_admin/admin.claim'
 
@@ -126,6 +127,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminAdminInvitesRoute =
   AuthenticatedAdminAdminInvitesRouteImport.update({
     id: '/admin/invites',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/apply': typeof AuthenticatedApplyRouteWithChildren
   '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/apply'
     | '/resume'
     | '/api/tailored-resume'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
     | '/apply/matches'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/resume'
     | '/api/tailored-resume'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
     | '/apply/matches'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply'
     | '/_authenticated/resume'
     | '/api/tailored-resume'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/apply/autofill'
     | '/_authenticated/apply/matches'
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/_admin/admin/invites': {
       id: '/_authenticated/_admin/admin/invites'
       path: '/admin/invites'
@@ -484,6 +504,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
