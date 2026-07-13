@@ -96,38 +96,44 @@ function TailorPage() {
     }
   };
 
-  const onPdf = async () => {
+  const download = async (kind: "pdf" | "docx") => {
     if (!result) return;
-    setPdfLoading(true);
+    if (!resumeData?.resume) {
+      setErr("No resume found. Visit /resume to set one up first.");
+      return;
+    }
+    kind === "pdf" ? setPdfLoading(true) : setDocxLoading(true);
     try {
-      const res = await fetch("/api/tailored-resume", {
+      const url = kind === "pdf" ? "/api/tailored-resume" : "/api/resume-docx";
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          resume: resumeData.resume,
           summary: result.summary,
           bullets: result.bullets,
           company,
           role,
         }),
       });
-      if (!res.ok) throw new Error(`PDF generation failed (${res.status})`);
+      if (!res.ok) throw new Error(`${kind.toUpperCase()} generation failed (${res.status})`);
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        company
-          ? `Christopher_Kendrick_Resume_${company.replace(/[^a-z0-9]/gi, "_")}.pdf`
-          : "Christopher_Kendrick_Resume_Tailored.pdf";
+      const slug = (resumeData.resume.name || "Resume").replace(/[^a-z0-9]/gi, "_");
+      a.href = href;
+      a.download = company
+        ? `${slug}_Resume_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
+        : `${slug}_Resume_Tailored.${kind}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(href);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "PDF export failed.");
+      setErr(e instanceof Error ? e.message : `${kind.toUpperCase()} export failed.`);
     } finally {
-      setPdfLoading(false);
+      kind === "pdf" ? setPdfLoading(false) : setDocxLoading(false);
     }
   };
 
