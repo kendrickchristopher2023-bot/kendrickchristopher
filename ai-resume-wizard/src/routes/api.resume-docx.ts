@@ -89,7 +89,7 @@ export const Route = createFileRoute("/api/resume-docx")({
             children: [new TextRun({ text, size: 20 })],
           });
 
-        const children: Paragraph[] = [];
+        const children: InstanceType<typeof Paragraph>[] = [];
 
         if (R.name)
           children.push(
