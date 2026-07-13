@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
+import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -58,6 +59,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
   id: '/api/tailored-resume',
   path: '/api/tailored-resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
+  id: '/api/resume-docx',
+  path: '/api/resume-docx',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/apply': typeof AuthenticatedApplyRouteWithChildren
   '/resume': typeof AuthenticatedResumeRoute
+  '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/resume': typeof AuthenticatedResumeRoute
+  '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
+  '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/apply'
     | '/resume'
+    | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/resume'
+    | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/apply'
     | '/_authenticated/resume'
+    | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   RequestAccessRoute: typeof RequestAccessRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       path: '/api/tailored-resume'
       fullPath: '/api/tailored-resume'
       preLoaderRoute: typeof ApiTailoredResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/resume-docx': {
+      id: '/api/resume-docx'
+      path: '/api/resume-docx'
+      fullPath: '/api/resume-docx'
+      preLoaderRoute: typeof ApiResumeDocxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/resume': {
@@ -503,6 +523,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,

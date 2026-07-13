@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
+import { getMyResume } from "@/lib/resume.functions";
 
 export const Route = createFileRoute("/_authenticated/apply/tailor")({
   head: () => ({
@@ -31,13 +33,18 @@ const HISTORY_KEY = "ck.tailor.history.v1";
 
 function TailorPage() {
   const tailor = useServerFn(tailorResume);
-
+  const getResume = useServerFn(getMyResume);
+  const { data: resumeData } = useQuery({
+    queryKey: ["my-resume"],
+    queryFn: () => getResume(),
+  });
 
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [docxLoading, setDocxLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -89,38 +96,44 @@ function TailorPage() {
     }
   };
 
-  const onPdf = async () => {
+  const download = async (kind: "pdf" | "docx") => {
     if (!result) return;
-    setPdfLoading(true);
+    if (!resumeData?.resume) {
+      setErr("No resume found. Visit /resume to set one up first.");
+      return;
+    }
+    kind === "pdf" ? setPdfLoading(true) : setDocxLoading(true);
     try {
-      const res = await fetch("/api/tailored-resume", {
+      const url = kind === "pdf" ? "/api/tailored-resume" : "/api/resume-docx";
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          resume: resumeData.resume,
           summary: result.summary,
           bullets: result.bullets,
           company,
           role,
         }),
       });
-      if (!res.ok) throw new Error(`PDF generation failed (${res.status})`);
+      if (!res.ok) throw new Error(`${kind.toUpperCase()} generation failed (${res.status})`);
 
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        company
-          ? `Christopher_Kendrick_Resume_${company.replace(/[^a-z0-9]/gi, "_")}.pdf`
-          : "Christopher_Kendrick_Resume_Tailored.pdf";
+      const slug = (resumeData.resume.name || "Resume").replace(/[^a-z0-9]/gi, "_");
+      a.href = href;
+      a.download = company
+        ? `${slug}_Resume_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
+        : `${slug}_Resume_Tailored.${kind}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(href);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "PDF export failed.");
+      setErr(e instanceof Error ? e.message : `${kind.toUpperCase()} export failed.`);
     } finally {
-      setPdfLoading(false);
+      kind === "pdf" ? setPdfLoading(false) : setDocxLoading(false);
     }
   };
 
@@ -204,14 +217,24 @@ function TailorPage() {
               {loading ? "Tailoring…" : "Tailor my resume"}
             </button>
             {result && (
-              <button
-                type="button"
-                onClick={onPdf}
-                disabled={pdfLoading}
-                className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
-              >
-                {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => download("pdf")}
+                  disabled={pdfLoading || docxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => download("docx")}
+                  disabled={pdfLoading || docxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {docxLoading ? "Building DOCX…" : "Download tailored DOCX"}
+                </button>
+              </>
             )}
           </div>
           {err && (

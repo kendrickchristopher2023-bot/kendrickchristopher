@@ -1,10 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { RESUME } from "@/lib/resume-data";
+
+// Accepts the caller's full master resume JSON in the body so this endpoint
+// works for any signed-in user (not just one hardcoded person). Renders a
+// single-column, ATS-friendly PDF using real embedded fonts (selectable text,
+// not a rasterized image) with the standard section headings screeners parse.
+
+const ResumeInput = z.object({
+  name: z.string().default(""),
+  title: z.string().default(""),
+  email: z.string().default(""),
+  phone: z.string().default(""),
+  location: z.string().default(""),
+  github: z.string().default(""),
+  linkedin: z.string().default(""),
+  summary: z.string().default(""),
+  competencies: z.array(z.string()).default([]),
+  experience: z
+    .array(
+      z.object({
+        title: z.string(),
+        company: z.string(),
+        location: z.string().default(""),
+        dates: z.string().default(""),
+        bullets: z.array(z.string()).default([]),
+      }),
+    )
+    .default([]),
+  additionalExperience: z.array(z.string()).default([]),
+  proficiencies: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
+  education: z.object({ degree: z.string().default(""), school: z.string().default("") }).default({
+    degree: "",
+    school: "",
+  }),
+  certifications: z.array(z.string()).default([]),
+});
 
 const PdfInput = z.object({
-  summary: z.string(),
-  bullets: z.array(z.object({ company: z.string(), bullets: z.array(z.string()) })),
+  resume: ResumeInput,
+  // Optional tailor override
+  summary: z.string().optional(),
+  bullets: z
+    .array(z.object({ company: z.string(), bullets: z.array(z.string()) }))
+    .optional()
+    .default([]),
   company: z.string().optional().default(""),
   role: z.string().optional().default(""),
 });
@@ -21,9 +60,11 @@ export const Route = createFileRoute("/api/tailored-resume")({
         }
         const parsed = PdfInput.safeParse(raw);
         if (!parsed.success) {
-          return new Response("Invalid input", { status: 400 });
+          return new Response("Invalid input: " + parsed.error.message, { status: 400 });
         }
         const data = parsed.data;
+        const R = data.resume;
+        const overrideBullets = data.bullets ?? [];
 
         const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
 
@@ -43,9 +84,6 @@ export const Route = createFileRoute("/api/tailored-resume")({
         let page = doc.addPage([PAGE_W, PAGE_H]);
         let y = PAGE_H - MARGIN;
 
-        // Standard PDF fonts are WinAnsi-only. Convert unicode chars that
-        // appear in the resume (dashes, curly quotes, arrows, bullets) to
-        // safe ASCII/WinAnsi equivalents so encoding never throws.
         const sanitize = (s: string) =>
           s
             .replace(/[\u2013\u2014]/g, "-")
@@ -56,7 +94,6 @@ export const Route = createFileRoute("/api/tailored-resume")({
             .replace(/\u2190/g, "<-")
             .replace(/\u25B8/g, ">")
             .replace(/[^\x00-\xFF]/g, "?");
-
 
         const wrap = (text: string, font: typeof helv, size: number, maxW: number) => {
           const words = text.split(/\s+/);
@@ -108,7 +145,7 @@ export const Route = createFileRoute("/api/tailored-resume")({
           const lines = wrap(text, font, size, maxW);
           const lineH = size * 1.32;
           needSpace(lineH);
-          page.drawText(sanitize("•"), { x: MARGIN, y: y - size, size, font: bold, color: ACCENT });
+          page.drawText("-", { x: MARGIN, y: y - size, size, font: bold, color: ACCENT });
           for (let i = 0; i < lines.length; i++) {
             if (i > 0) needSpace(lineH);
             page.drawText(sanitize(lines[i]), { x: MARGIN + bulletIndent, y: y - size, size, font, color: TEXT_COLOR });
@@ -135,13 +172,26 @@ export const Route = createFileRoute("/api/tailored-resume")({
           rule();
         };
 
-        page.drawText(sanitize(RESUME.name), { x: MARGIN, y: y - 22, size: 22, font: bold, color: TEXT_COLOR });
-        y -= 28;
-        page.drawText(sanitize(RESUME.title), { x: MARGIN, y: y - 12, size: 12, font: helv, color: ACCENT });
-        y -= 18;
-        const contact = `${RESUME.email}  •  ${RESUME.phone}  •  ${RESUME.github}  •  ${RESUME.location}`;
-        page.drawText(sanitize(contact), { x: MARGIN, y: y - 9, size: 9, font: helv, color: MUTED });
-        y -= 16;
+        // Header
+        if (R.name) {
+          page.drawText(sanitize(R.name), { x: MARGIN, y: y - 22, size: 22, font: bold, color: TEXT_COLOR });
+          y -= 28;
+        }
+        if (R.title) {
+          page.drawText(sanitize(R.title), { x: MARGIN, y: y - 12, size: 12, font: helv, color: ACCENT });
+          y -= 18;
+        }
+        const contactParts = [R.email, R.phone, R.github, R.linkedin, R.location].filter(Boolean);
+        if (contactParts.length) {
+          page.drawText(sanitize(contactParts.join("  •  ")), {
+            x: MARGIN,
+            y: y - 9,
+            size: 9,
+            font: helv,
+            color: MUTED,
+          });
+          y -= 16;
+        }
         if (data.company || data.role) {
           const targ = `Tailored for: ${[data.role, data.company].filter(Boolean).join(" @ ")}`;
           page.drawText(sanitize(targ), { x: MARGIN, y: y - 8, size: 8, font: italic, color: MUTED });
@@ -149,57 +199,104 @@ export const Route = createFileRoute("/api/tailored-resume")({
         }
         rule();
 
-        sectionHeader("Professional Summary");
-        drawText(data.summary, { size: 10, gapAfter: 6 });
-
-        sectionHeader("Core Competencies");
-        drawText(RESUME.competencies.join("  •  "), { size: 9.5, gapAfter: 4 });
-
-        sectionHeader("Career Experience");
-        for (const role of RESUME.experience) {
-          const overridden = data.bullets.find((b) => b.company.toLowerCase() === role.company.toLowerCase());
-          const bullets = overridden?.bullets?.length ? overridden.bullets : role.bullets;
-          needSpace(30);
-          page.drawText(sanitize(role.title), { x: MARGIN, y: y - 11, size: 11, font: bold, color: TEXT_COLOR });
-          const dateW = helv.widthOfTextAtSize(sanitize(role.dates), 9);
-          page.drawText(sanitize(role.dates), { x: MARGIN + CONTENT_W - dateW, y: y - 11, size: 9, font: helv, color: MUTED });
-          y -= 14;
-          page.drawText(sanitize(`${role.company} — ${role.location}`), { x: MARGIN, y: y - 9, size: 9.5, font: italic, color: ACCENT });
-          y -= 14;
-          for (const b of bullets) drawBullet(b);
-          y -= 6;
+        // Summary (ATS-standard heading)
+        if (data.summary || R.summary) {
+          sectionHeader("Summary");
+          drawText(data.summary || R.summary, { size: 10, gapAfter: 6 });
         }
 
-        sectionHeader("Additional Experience");
-        for (const a of RESUME.additionalExperience) drawText(a, { size: 9.5, gapAfter: 2 });
+        // Skills (ATS-standard heading; single-column list for parsers)
+        if (R.competencies.length) {
+          sectionHeader("Skills");
+          drawText(R.competencies.join(" • "), { size: 9.5, gapAfter: 4 });
+        }
 
-        sectionHeader("AI & Technical Proficiencies");
-        for (const p of RESUME.proficiencies) {
-          const labelW = bold.widthOfTextAtSize(sanitize(`${p.label}: `), 9.5);
-          needSpace(14);
-          page.drawText(sanitize(`${p.label}: `), { x: MARGIN, y: y - 9, size: 9.5, font: bold, color: ACCENT });
-          const lines = wrap(p.value, helv, 9.5, CONTENT_W - labelW);
-          page.drawText(sanitize(lines[0] ?? ""), { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
-          y -= 13;
-          for (let i = 1; i < lines.length; i++) {
-            needSpace(13);
-            page.drawText(sanitize(lines[i]), { x: MARGIN + labelW, y: y - 9, size: 9.5, font: helv, color: TEXT_COLOR });
-            y -= 13;
+        // Experience
+        if (R.experience.length) {
+          sectionHeader("Experience");
+          for (const role of R.experience) {
+            const overridden = overrideBullets.find(
+              (b) => b.company.toLowerCase() === role.company.toLowerCase(),
+            );
+            const bullets = overridden?.bullets?.length ? overridden.bullets : role.bullets;
+            needSpace(30);
+            page.drawText(sanitize(role.title), { x: MARGIN, y: y - 11, size: 11, font: bold, color: TEXT_COLOR });
+            const dateW = helv.widthOfTextAtSize(sanitize(role.dates), 9);
+            page.drawText(sanitize(role.dates), {
+              x: MARGIN + CONTENT_W - dateW,
+              y: y - 11,
+              size: 9,
+              font: helv,
+              color: MUTED,
+            });
+            y -= 14;
+            const sub = [role.company, role.location].filter(Boolean).join(" — ");
+            if (sub) {
+              page.drawText(sanitize(sub), { x: MARGIN, y: y - 9, size: 9.5, font: italic, color: ACCENT });
+              y -= 14;
+            }
+            for (const b of bullets) drawBullet(b);
+            y -= 6;
           }
-          y -= 2;
         }
 
-        sectionHeader("Education");
-        drawText(RESUME.education.degree, { size: 10, font: bold, gapAfter: 0 });
-        drawText(RESUME.education.school, { size: 9.5, color: MUTED, gapAfter: 4 });
+        if (R.additionalExperience.length) {
+          sectionHeader("Additional Experience");
+          for (const a of R.additionalExperience) drawText(a, { size: 9.5, gapAfter: 2 });
+        }
 
-        sectionHeader("Certifications & Credentials");
-        for (const c of RESUME.certifications) drawText(`• ${c}`, { size: 9.5, gapAfter: 1 });
+        if (R.proficiencies.length) {
+          sectionHeader("Technical Proficiencies");
+          for (const p of R.proficiencies) {
+            const labelW = bold.widthOfTextAtSize(sanitize(`${p.label}: `), 9.5);
+            needSpace(14);
+            page.drawText(sanitize(`${p.label}: `), {
+              x: MARGIN,
+              y: y - 9,
+              size: 9.5,
+              font: bold,
+              color: ACCENT,
+            });
+            const lines = wrap(p.value, helv, 9.5, CONTENT_W - labelW);
+            page.drawText(sanitize(lines[0] ?? ""), {
+              x: MARGIN + labelW,
+              y: y - 9,
+              size: 9.5,
+              font: helv,
+              color: TEXT_COLOR,
+            });
+            y -= 13;
+            for (let i = 1; i < lines.length; i++) {
+              needSpace(13);
+              page.drawText(sanitize(lines[i]), {
+                x: MARGIN + labelW,
+                y: y - 9,
+                size: 9.5,
+                font: helv,
+                color: TEXT_COLOR,
+              });
+              y -= 13;
+            }
+            y -= 2;
+          }
+        }
+
+        if (R.education.degree || R.education.school) {
+          sectionHeader("Education");
+          if (R.education.degree) drawText(R.education.degree, { size: 10, font: bold, gapAfter: 0 });
+          if (R.education.school) drawText(R.education.school, { size: 9.5, color: MUTED, gapAfter: 4 });
+        }
+
+        if (R.certifications.length) {
+          sectionHeader("Certifications");
+          for (const c of R.certifications) drawText(`- ${c}`, { size: 9.5, gapAfter: 1 });
+        }
 
         const bytes = await doc.save();
+        const slug = (R.name || "Resume").replace(/[^a-z0-9]/gi, "_");
         const filename = data.company
-          ? `Christopher_Kendrick_Resume_${data.company.replace(/[^a-z0-9]/gi, "_")}.pdf`
-          : "Christopher_Kendrick_Resume_Tailored.pdf";
+          ? `${slug}_Resume_${data.company.replace(/[^a-z0-9]/gi, "_")}.pdf`
+          : `${slug}_Resume.pdf`;
 
         const ab = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
         return new Response(ab, {

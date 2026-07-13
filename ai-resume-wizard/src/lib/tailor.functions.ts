@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { RESUME } from "./resume-data";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { MasterResume } from "./resume-data";
 
 const TailorInput = z.object({
   jobDescription: z.string().min(30).max(20000),
@@ -18,28 +19,37 @@ export type TailorResult = {
   coverLetter: string;
 };
 
-const SYSTEM = `You are an elite resume tailor for AI Deployment / Forward Deployed Engineer / Customer Engineer roles at frontier AI companies (OpenAI, Anthropic, Lovable, Cursor, etc.).
-
-Rules:
+const SYSTEM = `You are an elite resume tailor. Rules:
 - NEVER fabricate experience, employers, dates, or metrics. Only re-weight and reword what is already in the master resume.
 - Prefer active verbs and quantified outcomes.
-- Each bullet must lead with the action and end with the result.
-- Preserve the same number of bullets per role (keep the resume 2 pages).
-- Return ONLY valid JSON matching the requested schema. No markdown, no commentary.`;
+- Each bullet leads with the action and ends with the result.
+- Preserve the same number of bullets per role (keep resume ~2 pages).
+- Return ONLY valid JSON, no markdown, no commentary.`;
 
 export const tailorResume = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => TailorInput.parse(input))
-  .handler(async ({ data }): Promise<TailorResult> => {
+  .handler(async ({ data, context }): Promise<TailorResult> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
+
+    const { data: row, error } = await context.supabase
+      .from("resumes")
+      .select("data")
+      .eq("user_id", context.userId)
+      .eq("is_primary", true)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) throw new Error("No resume found. Visit /resume to add yours first.");
+    const master = row.data as unknown as MasterResume;
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const gateway = createLovableAiGatewayProvider(key);
 
     const masterJson = JSON.stringify(
       {
-        summary: RESUME.summary,
-        experience: RESUME.experience.map((e) => ({
+        summary: master.summary,
+        experience: (master.experience ?? []).map((e) => ({
           company: e.company,
           title: e.title,
           bullets: e.bullets,
@@ -48,6 +58,8 @@ export const tailorResume = createServerFn({ method: "POST" })
       null,
       2,
     );
+
+    const companyList = (master.experience ?? []).map((e) => `"${e.company}"`).join(", ");
 
     const prompt = `MASTER RESUME (do not add anything not in here):
 ${masterJson}
@@ -62,28 +74,21 @@ ${data.jobDescription}
 Return a JSON object with this exact shape:
 {
   "summary": "2-3 sentence tailored professional summary emphasizing what this JD asks for",
-  "bullets": [
-    { "company": "Mews PMS", "bullets": ["...", "..."] },
-    { "company": "PurpleCloud Technologies", "bullets": ["...", "..."] },
-    { "company": "Amadeus", "bullets": ["...", "..."] }
-  ],
-  "matchScore": 0-100 integer estimating how well this candidate matches the JD,
+  "bullets": [ { "company": "<one of ${companyList || "the master resume companies"}>", "bullets": ["...", "..."] } ],
+  "matchScore": 0-100 integer,
   "matchedKeywords": ["skill1", "skill2"],
   "missingKeywords": ["skill3", "skill4"],
   "coverLetter": "3-paragraph cover letter, professional but human, referencing 1 specific thing about this role/company"
 }
 
-Keep the same company order and same number of bullets per company as the master. Use the exact company names above.`;
+Include one entry in "bullets" per company in the master, in the same order, with the same number of bullets.`;
 
     const { text } = await generateText({
-      // Fast model — big prompts on gpt-5.5 can take 2+ min. Flash gets under 15s.
       model: gateway("google/gemini-3-flash-preview"),
       system: SYSTEM,
       prompt,
     });
 
-
-    // Extract JSON (strip any accidental code fences)
     const cleaned = text
       .trim()
       .replace(/^```json\s*/i, "")
@@ -94,7 +99,6 @@ Keep the same company order and same number of bullets per company as the master
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      // Try to find the first {...} block
       const match = cleaned.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("AI did not return valid JSON. Try again.");
       parsed = JSON.parse(match[0]);
