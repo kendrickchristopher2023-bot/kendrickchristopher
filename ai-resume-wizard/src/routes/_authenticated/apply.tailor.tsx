@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
+import { getMyResume } from "@/lib/resume.functions";
 
 export const Route = createFileRoute("/_authenticated/apply/tailor")({
   head: () => ({
