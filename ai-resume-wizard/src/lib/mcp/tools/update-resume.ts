@@ -25,14 +25,14 @@ export default defineTool({
     if (existing) {
       const { error } = await supabase
         .from("resumes")
-        .update({ data, updated_at: new Date().toISOString() })
+        .update({ data: data as never, updated_at: new Date().toISOString() })
         .eq("id", existing.id);
       if (error) return errorResult(error.message);
       return jsonResult({ ok: true, id: existing.id, mode: "updated" });
     }
     const { data: inserted, error } = await supabase
       .from("resumes")
-      .insert({ user_id: userId, data, is_primary: true })
+      .insert({ user_id: userId, data: data as never, is_primary: true })
       .select("id")
       .single();
     if (error) return errorResult(error.message);
