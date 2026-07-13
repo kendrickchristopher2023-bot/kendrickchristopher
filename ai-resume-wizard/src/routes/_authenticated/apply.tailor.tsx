@@ -217,14 +217,24 @@ function TailorPage() {
               {loading ? "Tailoring…" : "Tailor my resume"}
             </button>
             {result && (
-              <button
-                type="button"
-                onClick={onPdf}
-                disabled={pdfLoading}
-                className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
-              >
-                {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => download("pdf")}
+                  disabled={pdfLoading || docxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => download("docx")}
+                  disabled={pdfLoading || docxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {docxLoading ? "Building DOCX…" : "Download tailored DOCX"}
+                </button>
+              </>
             )}
           </div>
           {err && (
