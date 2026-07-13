@@ -33,13 +33,18 @@ const HISTORY_KEY = "ck.tailor.history.v1";
 
 function TailorPage() {
   const tailor = useServerFn(tailorResume);
-
+  const getResume = useServerFn(getMyResume);
+  const { data: resumeData } = useQuery({
+    queryKey: ["my-resume"],
+    queryFn: () => getResume(),
+  });
 
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [docxLoading, setDocxLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
