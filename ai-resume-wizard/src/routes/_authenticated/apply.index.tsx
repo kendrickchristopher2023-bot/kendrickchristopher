@@ -26,7 +26,7 @@ const TOOLS = [
   {
     to: "/apply/tailor" as const,
     title: "AI Resume Tailor",
-    desc: "Paste a JD, get a role-specific resume + cover letter + downloadable PDF/DOCX.",
+    desc: "Paste a job description, get a role-specific resume + cover letter + downloadable PDF/DOCX.",
     badge: "AI-powered",
   },
   {
