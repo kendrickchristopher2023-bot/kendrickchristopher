@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { callGateway, errorResult, jsonResult, requireAuth, supabaseAsUser } from "../_helpers";
+import { callGateway, checkUsageOrReturnError, errorResult, jsonResult, requireAuth, supabaseAsUser } from "../_helpers";
 
 const SYSTEM = `You are an elite resume tailor for AI/tech roles. Never fabricate experience, employers, dates, or metrics — only reweight and reword what's already in the user's resume. Prefer active verbs, quantified outcomes. Return ONLY valid JSON, no markdown.`;
 
