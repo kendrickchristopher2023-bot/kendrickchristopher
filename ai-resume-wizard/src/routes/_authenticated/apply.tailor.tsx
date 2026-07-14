@@ -174,7 +174,7 @@ function TailorPage() {
             className="mt-3 text-4xl sm:text-5xl font-bold tracking-tight text-foreground"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
-            Paste a JD. Get a tailored resume.
+            Paste a job description. Get a tailored resume.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Reweights and rewrites your existing bullets to match the role's language.
