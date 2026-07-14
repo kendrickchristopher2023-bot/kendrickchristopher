@@ -82,5 +82,23 @@ Return JSON: { "answers": [ { "q": "<question text>", "a": "<answer>" } ] }`;
       if (!m) throw new Error("AI did not return valid JSON.");
       parsed = JSON.parse(m[0]);
     }
-    return { answers: parsed.answers ?? [] };
+    const answers = parsed.answers ?? [];
+    // Persist so the browser-extension endpoint (and future devices) can read them.
+    await context.supabase
+      .from("profiles")
+      .update({ screener_answers: answers as never })
+      .eq("id", context.userId);
+    return { answers };
+  });
+
+export const getMyScreenerAnswers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ answers: ScreenerQA[] }> => {
+    const { data, error } = await context.supabase
+      .from("profiles")
+      .select("screener_answers")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    return { answers: (data?.screener_answers as ScreenerQA[] | null) ?? [] };
   });
