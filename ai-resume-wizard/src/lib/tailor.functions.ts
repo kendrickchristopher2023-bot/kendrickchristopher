@@ -176,6 +176,8 @@ export const batchTailorResume = createServerFn({ method: "POST" })
     const results: BatchTailorItemResult[] = [];
     for (const item of data.items) {
       try {
+        await enforceUsage(context.supabase, context.userId, "tailor");
+
         const prompt = `MASTER RESUME:
 ${masterJson}
 
