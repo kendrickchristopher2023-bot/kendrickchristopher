@@ -197,6 +197,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          free_resume_rewrite_used: boolean
           full_name: string | null
           id: string
           onboarded_at: string | null
@@ -207,6 +208,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          free_resume_rewrite_used?: boolean
           full_name?: string | null
           id: string
           onboarded_at?: string | null
@@ -217,6 +219,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          free_resume_rewrite_used?: boolean
           full_name?: string | null
           id?: string
           onboarded_at?: string | null

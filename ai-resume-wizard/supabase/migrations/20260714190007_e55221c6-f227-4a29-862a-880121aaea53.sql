@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS free_resume_rewrite_used boolean NOT NULL DEFAULT false;
