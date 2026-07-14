@@ -180,13 +180,14 @@ export const updateMatchStatus = createServerFn({ method: "POST" })
 export const refreshWatchedNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Admin-gate: only admins can trigger a full pool refresh from the UI
-    // (avoids abuse from any signed-in user).
-    const { data: isAdminRow } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin" as never,
-    });
-    if (!isAdminRow) throw new Error("Only admins can trigger a global refresh.");
+    // Admin-gate: only admins can trigger a full pool refresh from the UI.
+    const { data: role } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin" as never)
+      .maybeSingle();
+    if (!role) throw new Error("Only admins can trigger a global refresh.");
 
     const { runRefreshJobs } = await import("./jobs.refresh.server");
     return runRefreshJobs();
