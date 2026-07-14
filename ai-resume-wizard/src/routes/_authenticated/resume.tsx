@@ -141,7 +141,7 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
               to="/apply/tailor"
               className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
-              Tailor to a JD →
+              Tailor to a job description →
             </Link>
           </div>
         </div>
