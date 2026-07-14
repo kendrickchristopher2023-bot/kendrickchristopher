@@ -534,8 +534,8 @@ function BatchTailorDialog({
   return (
     <Modal onClose={onClose} title={`Batch tailor (${selectedMatches.length})`} wide>
       <p className="text-sm text-muted-foreground mb-3">
-        Paste the JD for each role. Results save to your tailor history — open each individually
-        after.
+        Paste the job description for each role. Results save to your tailor history — open each
+        individually after.
       </p>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {selectedMatches.map((m) => {
