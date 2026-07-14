@@ -81,6 +81,38 @@ function Index() {
   const [copied, setCopied] = useState(false);
   const email = RESUME.email;
   const { user } = useSession();
+  const navigate = useNavigate();
+
+  // Hard-refresh flash guard: if a Supabase session exists in localStorage on
+  // first client render, hide the portfolio immediately and resolve identity
+  // async. Non-owners get redirected; the owner (admin) sees the portfolio.
+  // SSR + signed-out clients render the portfolio normally.
+  const [hidden, setHidden] = useState(() => hasClientSession());
+  useEffect(() => {
+    if (!hidden) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!data.user) {
+        setHidden(false);
+        return;
+      }
+      try {
+        const res = await currentUserIsAdmin();
+        if (cancelled) return;
+        if (res.isAdmin) setHidden(false);
+        else navigate({ to: "/apply", replace: true });
+      } catch {
+        if (!cancelled) setHidden(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hidden, navigate]);
+
+
 
 
   const copyEmail = async () => {
