@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getMyUsage } from "@/lib/resume.functions";
+import { getRewriteEntitlement } from "@/lib/rewrite.functions";
 import { PLAN_CAPS, ACTION_LABEL, type UsageAction } from "@/lib/usage";
 import {
   listMyApiTokens,
@@ -99,6 +100,8 @@ function SettingsPage() {
           {q.isLoading && <p className="mt-4 text-xs text-muted-foreground">Loading…</p>}
         </section>
 
+        <RewriteEntitlementSection />
+
         <p className="mt-6 text-xs text-muted-foreground">
           Limits are enforced server-side. When a daily limit is hit, the app returns a
           "daily limit reached" message until midnight UTC.
@@ -107,6 +110,57 @@ function SettingsPage() {
         <BrowserExtensionSection />
       </div>
     </main>
+  );
+}
+
+function RewriteEntitlementSection() {
+  const entFn = useServerFn(getRewriteEntitlement);
+  const ent = useQuery({ queryKey: ["rewrite-entitlement"], queryFn: () => entFn() });
+  const status = ent.data;
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Resume rewrite</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            One included comprehensive rewrite of your whole resume, per plan.
+          </p>
+        </div>
+        {status && (
+          <span
+            className={
+              "shrink-0 rounded-full border px-3 py-1 text-xs font-medium " +
+              (status.allowed
+                ? "border-primary text-primary"
+                : "border-border text-muted-foreground")
+            }
+          >
+            {status.reason === "free_plan"
+              ? "Pro feature"
+              : status.allowed
+                ? "Available"
+                : "Used"}
+          </span>
+        )}
+      </div>
+      {status?.allowed && (
+        <p className="mt-3 text-sm">
+          <Link to="/apply/rewrite" className="text-primary hover:underline">
+            Open the rewrite tool →
+          </Link>
+        </p>
+      )}
+      {status?.reason === "already_used" && (
+        <p className="mt-3 text-sm text-muted-foreground">
+          You've used your included rewrite. Additional rewrites are a paid add-on.
+        </p>
+      )}
+      {status?.reason === "free_plan" && (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Available on the Pro plan.
+        </p>
+      )}
+    </section>
   );
 }
 

@@ -30,6 +30,12 @@ const TOOLS = [
     badge: "AI-powered",
   },
   {
+    to: "/apply/rewrite" as const,
+    title: "AI Resume Rewrite",
+    desc: "One-time comprehensive rewrite of your whole resume — stronger verbs, tighter phrasing, no fabrication. Pro only.",
+    badge: "Pro · One-time",
+  },
+  {
     to: "/apply/matches" as const,
     title: "Job Matches",
     desc: "Track roles you're targeting. One click to tailor for each.",
