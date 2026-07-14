@@ -260,6 +260,7 @@ export const getMyUsage = createServerFn({ method: "GET" })
         linkedin: (usage?.linkedin_count as number) ?? 0,
         referral_dm: (usage?.referral_dm_count as number) ?? 0,
         parse_resume: (usage?.parse_resume_count as number) ?? 0,
+        chat: (usage?.chat_count as number) ?? 0,
       },
     };
   });
