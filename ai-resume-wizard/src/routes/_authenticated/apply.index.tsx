@@ -235,8 +235,8 @@ ${R.email ? `Say hi: ${R.email}` : ""}`.trim();
       {stars.length > 0 && (
         <Section title="Interview story starters">
           <p className="text-sm text-muted-foreground mb-4">
-            Seeded from your top bullets. Flesh each one into a STAR (Situation, Task, Action,
-            Result) story before the interview.
+            Seeded from your top bullets. Flesh each one into a structured story
+            (Situation → Task → Action → Result) before the interview.
           </p>
           <div className="space-y-4">
             {stars.map((s, i) => (
