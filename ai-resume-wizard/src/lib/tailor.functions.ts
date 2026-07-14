@@ -36,15 +36,15 @@ export const tailorResume = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<TailorResult> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
+    await enforceUsage(context.supabase, context.userId, "tailor");
 
-    const { data: row, error } = await context.supabase
-      .from("resumes")
-      .select("data")
-      .eq("user_id", context.userId)
-      .eq("is_primary", true)
-      .maybeSingle();
+    const baseQ = context.supabase.from("resumes").select("data").eq("user_id", context.userId);
+    const { data: row, error } = data.resumeId
+      ? await baseQ.eq("id", data.resumeId).maybeSingle()
+      : await baseQ.eq("is_primary", true).maybeSingle();
     if (error) throw error;
     if (!row) throw new Error("No resume found. Visit /resume to add yours first.");
+
     const master = row.data as unknown as MasterResume;
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
