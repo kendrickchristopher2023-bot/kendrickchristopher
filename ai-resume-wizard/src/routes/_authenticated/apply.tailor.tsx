@@ -36,7 +36,7 @@ function TailorPage() {
   const getResume = useServerFn(getMyResume);
   const { data: resumeData } = useQuery({
     queryKey: ["my-resume"],
-    queryFn: () => getResume(),
+    queryFn: () => getResume({ data: {} }),
   });
 
   const [jd, setJd] = useState("");
