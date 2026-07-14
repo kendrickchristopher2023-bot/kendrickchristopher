@@ -19,6 +19,8 @@ import {
   type TailorSessionSummary,
 } from "@/lib/applications.functions";
 import { batchTailorResume } from "@/lib/tailor.functions";
+import { draftFollowup, listFollowupsDue, type FollowupCandidate } from "@/lib/followup.functions";
+
 
 export const Route = createFileRoute("/_authenticated/apply/matches")({
   head: () => ({
