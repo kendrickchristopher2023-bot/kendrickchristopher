@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { callGateway, requireAuth, textResult } from "../_helpers";
+import { callGateway, checkUsageOrReturnError, requireAuth, textResult } from "../_helpers";
 
 export default defineTool({
   name: "generate_referral_dm",
