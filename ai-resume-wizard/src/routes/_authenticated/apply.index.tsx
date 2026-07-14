@@ -79,7 +79,7 @@ function ApplyPage() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["my-resume"],
-    queryFn: () => getFn(),
+    queryFn: () => getFn({ data: {} }),
   });
 
   return (

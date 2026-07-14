@@ -29,7 +29,7 @@ function ResumePage() {
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["my-resume"],
-    queryFn: () => getFn(),
+    queryFn: () => getFn({ data: {} }),
   });
 
   if (isLoading) {
