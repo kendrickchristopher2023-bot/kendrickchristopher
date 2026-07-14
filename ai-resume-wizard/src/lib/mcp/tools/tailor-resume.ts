@@ -17,7 +17,10 @@ export default defineTool({
   annotations: { readOnlyHint: true, openWorldHint: true },
   handler: async ({ job_description, company, role }, ctx) => {
     requireAuth(ctx);
+    const capErr = await checkUsageOrReturnError(ctx, "tailor");
+    if (capErr) return capErr;
     const supabase = supabaseAsUser(ctx);
+
     const { data: resume, error } = await supabase
       .from("resumes")
       .select("data")
