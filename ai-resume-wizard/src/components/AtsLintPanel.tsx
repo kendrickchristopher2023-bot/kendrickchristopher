@@ -7,7 +7,7 @@ export function AtsLintPanel({ findings }: { findings: LintFinding[] }) {
     <div className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          ATS formatting check
+          Resume-screening compatibility check
         </p>
         <p className="text-xs text-muted-foreground">
           <span className="text-destructive font-semibold">{s.errors}</span> issues ·{" "}
