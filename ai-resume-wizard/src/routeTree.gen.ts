@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
 import { Route as ApiExtensionProfileRouteImport } from './routes/api.extension.profile'
 import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
+import { Route as AuthenticatedApplyRewriteRouteImport } from './routes/_authenticated/apply.rewrite'
 import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authenticated/apply.referrals'
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
@@ -146,6 +147,12 @@ const AuthenticatedApplyTailorRoute =
     path: '/tailor',
     getParentRoute: () => AuthenticatedApplyRoute,
   } as any)
+const AuthenticatedApplyRewriteRoute =
+  AuthenticatedApplyRewriteRouteImport.update({
+    id: '/rewrite',
+    path: '/rewrite',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
 const AuthenticatedApplyReferralsRoute =
   AuthenticatedApplyReferralsRouteImport.update({
     id: '/referrals',
@@ -224,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
@@ -286,6 +295,7 @@ export interface FileRoutesById {
   '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/_authenticated/apply/referrals': typeof AuthenticatedApplyReferralsRoute
+  '/_authenticated/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/apply/matches'
     | '/apply/metrics'
     | '/apply/referrals'
+    | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
     | '/apply/'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/apply/matches'
     | '/apply/metrics'
     | '/apply/referrals'
+    | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
     | '/apply'
@@ -379,6 +391,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/matches'
     | '/_authenticated/apply/metrics'
     | '/_authenticated/apply/referrals'
+    | '/_authenticated/apply/rewrite'
     | '/_authenticated/apply/tailor'
     | '/api/extension/profile'
     | '/_authenticated/apply/'
@@ -554,6 +567,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyTailorRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/_authenticated/apply/rewrite': {
+      id: '/_authenticated/apply/rewrite'
+      path: '/rewrite'
+      fullPath: '/apply/rewrite'
+      preLoaderRoute: typeof AuthenticatedApplyRewriteRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
     '/_authenticated/apply/referrals': {
       id: '/_authenticated/apply/referrals'
       path: '/referrals'
@@ -642,6 +662,7 @@ interface AuthenticatedApplyRouteChildren {
   AuthenticatedApplyMatchesRoute: typeof AuthenticatedApplyMatchesRoute
   AuthenticatedApplyMetricsRoute: typeof AuthenticatedApplyMetricsRoute
   AuthenticatedApplyReferralsRoute: typeof AuthenticatedApplyReferralsRoute
+  AuthenticatedApplyRewriteRoute: typeof AuthenticatedApplyRewriteRoute
   AuthenticatedApplyTailorRoute: typeof AuthenticatedApplyTailorRoute
   AuthenticatedApplyIndexRoute: typeof AuthenticatedApplyIndexRoute
 }
@@ -652,6 +673,7 @@ const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
   AuthenticatedApplyMatchesRoute: AuthenticatedApplyMatchesRoute,
   AuthenticatedApplyMetricsRoute: AuthenticatedApplyMetricsRoute,
   AuthenticatedApplyReferralsRoute: AuthenticatedApplyReferralsRoute,
+  AuthenticatedApplyRewriteRoute: AuthenticatedApplyRewriteRoute,
   AuthenticatedApplyTailorRoute: AuthenticatedApplyTailorRoute,
   AuthenticatedApplyIndexRoute: AuthenticatedApplyIndexRoute,
 }
