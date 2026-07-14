@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { callGateway, errorResult, requireAuth, supabaseAsUser, textResult } from "../_helpers";
+import { callGateway, checkUsageOrReturnError, errorResult, requireAuth, supabaseAsUser, textResult } from "../_helpers";
 
 export default defineTool({
   name: "interview_prep_star",
