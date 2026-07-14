@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import type { ToolContext } from "@lovable.dev/mcp-js";
 import type { Database } from "@/integrations/supabase/types";
+import { enforceUsage, UsageLimitError, type UsageAction } from "@/lib/usage";
+
 
 /**
  * Build a per-user Supabase client from the verified OAuth token so RLS
