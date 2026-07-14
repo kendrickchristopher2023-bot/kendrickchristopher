@@ -23,20 +23,6 @@ function hasClientSession(): boolean {
 
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
-      {
-        name: "description",
-        content:
-          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
-      },
-      { property: "og:title", content: "Christopher Kendrick — AI Deployment & Enablement Manager" },
-      {
-        property: "og:description",
-        content:
-          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
-      },
 export const Route = createFileRoute("/")({
   // Client-side gate. On the server there's no localStorage session, so this
   // is a no-op during SSR and the portfolio still renders for signed-out
