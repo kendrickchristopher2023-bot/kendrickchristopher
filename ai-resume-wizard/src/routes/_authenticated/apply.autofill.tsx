@@ -24,20 +24,27 @@ const CACHE_KEY = "aijk.screener.answers.v1";
 
 function AutofillPage() {
   const genFn = useServerFn(generateScreenerAnswers);
+  const getFn = useServerFn(getMyScreenerAnswers);
   const [company, setCompany] = useState("");
   const [extraContext, setExtraContext] = useState("");
   const [answers, setAnswers] = useState<ScreenerQA[]>([]);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  // Hydrate from the server (shared across devices + used by the browser extension).
+  const serverAnswers = useQuery({ queryKey: ["screener-answers"], queryFn: () => getFn() });
   useEffect(() => {
+    if (serverAnswers.data?.answers?.length) {
+      setAnswers(serverAnswers.data.answers);
+      return;
+    }
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) setAnswers(JSON.parse(cached));
     } catch {
       // ignore
     }
-  }, []);
+  }, [serverAnswers.data]);
 
   const gen = useMutation({
     mutationFn: () => genFn({ data: { extraContext: extraContext || undefined } }),
