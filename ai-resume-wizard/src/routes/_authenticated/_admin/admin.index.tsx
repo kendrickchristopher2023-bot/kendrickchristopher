@@ -43,6 +43,7 @@ function AdminDashboard() {
   const planFn = useServerFn(updateUserPlanAdmin);
   const accessFn = useServerFn(setUserAccessAdmin);
   const reviewFn = useServerFn(reviewAccessRequest);
+  const resendFn = useServerFn(resendAccessLink);
 
   const users = useQuery({ queryKey: ["admin", "users"], queryFn: () => usersFn() });
   const analytics = useQuery({
