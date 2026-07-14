@@ -60,11 +60,34 @@ type ToolNote = { name: string; ok: boolean; summary: string };
 
 export const Route = createFileRoute("/api/chat")({
   server: {
-    middleware: [requireSupabaseAuth],
     handlers: {
-      POST: async ({ request, context }) => {
+      POST: async ({ request }) => {
         const key = process.env.LOVABLE_API_KEY;
+        const SUPABASE_URL = process.env.SUPABASE_URL;
+        const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
         if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+        if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+          return new Response("Supabase not configured", { status: 500 });
+        }
+
+        const authHeader = request.headers.get("authorization") ?? "";
+        if (!authHeader.startsWith("Bearer ")) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const token = authHeader.slice(7).trim();
+        if (!token || token.split(".").length !== 3) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+          auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+        });
+        const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
+        if (claimsErr || !claims?.claims?.sub) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const userId = claims.claims.sub;
 
         let body: z.infer<typeof BodySchema>;
         try {
@@ -74,7 +97,17 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         try {
-          await enforceUsage(context.supabase, context.userId, "chat");
+          await enforceUsage(supabase, userId, "chat");
+        } catch (e) {
+          if (e instanceof UsageLimitError) {
+            return Response.json({
+              text: e.message,
+              tools: [],
+              limitReached: true,
+            });
+          }
+          throw e;
+        }
         } catch (e) {
           if (e instanceof UsageLimitError) {
             return Response.json({
