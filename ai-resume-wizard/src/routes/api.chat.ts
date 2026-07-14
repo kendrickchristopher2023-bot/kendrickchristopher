@@ -108,25 +108,15 @@ export const Route = createFileRoute("/api/chat")({
           }
           throw e;
         }
-        } catch (e) {
-          if (e instanceof UsageLimitError) {
-            return Response.json({
-              text: e.message,
-              tools: [],
-              limitReached: true,
-            });
-          }
-          throw e;
-        }
 
         const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
         const gateway = createLovableAiGatewayProvider(key);
 
         // Preload the user's primary resume once for tool grounding.
-        const { data: resumeRow } = await context.supabase
+        const { data: resumeRow } = await supabase
           .from("resumes")
           .select("data")
-          .eq("user_id", context.userId)
+          .eq("user_id", userId)
           .eq("is_primary", true)
           .maybeSingle();
         const resume = (resumeRow?.data ?? null) as MasterResume | null;
