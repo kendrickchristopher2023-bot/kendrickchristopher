@@ -169,11 +169,14 @@ function MatchesPage() {
           </div>
         )}
 
+        <FollowupsSection />
+
         <p className="mt-4 text-xs text-muted-foreground">
           Nothing here auto-submits an application. Links open the company's real posting; you
           review and submit yourself.
         </p>
       </div>
+
 
       {showAdd && <AddMatchDialog onClose={() => setShowAdd(false)} onSaved={invalidateAll} />}
       {showSuggest && <SuggestDialog onClose={() => setShowSuggest(false)} onAdded={invalidateAll} />}
