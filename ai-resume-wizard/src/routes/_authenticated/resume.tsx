@@ -147,6 +147,11 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
           </p>
         )}
 
+        <div className="mb-6">
+          <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
+        </div>
+
+
         <article className="bg-card text-card-foreground rounded-xl border border-border p-8 sm:p-12 shadow-sm">
           <header className="border-b border-border pb-6 mb-8">
             <h1
