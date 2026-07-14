@@ -1,0 +1,262 @@
+// POST /api/chat — grounded chat assistant.
+//
+// Reuses the same server-side logic as the app's tools (tailorResume,
+// generateInterviewPrep, draftFollowup). Enforces per-user daily caps
+// through the existing `chat` usage action.
+
+import { createFileRoute } from "@tanstack/react-router";
+import { generateText, tool, stepCountIs } from "ai";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceUsage, UsageLimitError } from "@/lib/usage";
+import type { MasterResume } from "@/lib/resume-data";
+
+const SYSTEM = `You are the in-app assistant for a personal AI job-search toolkit. You help one signed-in user prepare and manage their own job applications.
+
+WHAT THIS APP DOES (real features you can help with):
+- Tailor resume: rewrite the user's saved resume to match a specific job description, grounded ONLY in what's already true on their resume.
+- Cover letter: 3-paragraph letter for a specific job, based on the user's real experience.
+- Interview prep: structured stories in Situation → Task → Action → Result format, drawn from the user's real bullets.
+- Job matches: a private tracker of roles the user is targeting.
+- Application tracker: log applications and their stage (applied, response, screen, onsite, offer, rejected).
+- Application autofill: copy-paste answers for the screener questions most companies ask.
+- Referral DM: warm LinkedIn message asking someone for a 15-minute chat.
+- Follow-up drafts: short thank-you / status-check emails for applications the user already sent.
+- Multiple named resumes: the user can keep several and pick which is primary.
+- Browser extension: fills the user's name, contact info, and saved answers on a company's application page. Read-only. Does not submit.
+
+WHAT YOU MUST NEVER CLAIM OR DO:
+- You cannot submit an application on any external site.
+- You cannot fill out or click through an external company's application form.
+- You cannot bypass a CAPTCHA or any bot check.
+- You must refuse to help with anything designed to deceive a resume screener — hidden text, invisible white-on-white keywords, keyword stuffing that isn't tied to the user's real experience, or any other manipulation. Redirect the user to the legitimate tailoring tools instead.
+- You never invent employers, dates, titles, metrics, or experience the user doesn't already have.
+
+TONE:
+- Warm, direct, concrete. Under ~150 words per reply unless generating a long artifact from a tool.
+- Prefer using a tool over explaining the tool. If the user pastes a job description, call tailor_resume. If they ask for interview questions for a role, call interview_prep. If they want a follow-up email, call draft_followup.
+- If a tool errors (e.g. no resume on file, daily limit hit), tell the user plainly and point them at the right page.
+
+REDIRECTS FOR OTHER QUESTIONS:
+- For plan/usage/limits: point to /settings.
+- For managing resumes: point to /resumes.
+- For getting-started overview: point to /help/getting-started.
+- For anything else: reference /help/faq.`;
+
+const BodySchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant", "system"]),
+        content: z.string(),
+      }),
+    )
+    .min(1)
+    .max(40),
+});
+
+type ToolNote = { name: string; ok: boolean; summary: string };
+
+export const Route = createFileRoute("/api/chat")({
+  server: {
+    middleware: [requireSupabaseAuth],
+    handlers: {
+      POST: async ({ request, context }) => {
+        const key = process.env.LOVABLE_API_KEY;
+        if (!key) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
+
+        let body: z.infer<typeof BodySchema>;
+        try {
+          body = BodySchema.parse(await request.json());
+        } catch {
+          return new Response("Bad request", { status: 400 });
+        }
+
+        try {
+          await enforceUsage(context.supabase, context.userId, "chat");
+        } catch (e) {
+          if (e instanceof UsageLimitError) {
+            return Response.json({
+              text: e.message,
+              tools: [],
+              limitReached: true,
+            });
+          }
+          throw e;
+        }
+
+        const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
+        const gateway = createLovableAiGatewayProvider(key);
+
+        // Preload the user's primary resume once for tool grounding.
+        const { data: resumeRow } = await context.supabase
+          .from("resumes")
+          .select("data")
+          .eq("user_id", context.userId)
+          .eq("is_primary", true)
+          .maybeSingle();
+        const resume = (resumeRow?.data ?? null) as MasterResume | null;
+
+        const toolNotes: ToolNote[] = [];
+
+        const tailor = tool({
+          description:
+            "Tailor the user's saved primary resume to a job description. Returns a match score, matched/missing keywords, tailored summary, and per-company tailored bullets. Uses only what is already on the user's resume.",
+          inputSchema: z.object({
+            jobDescription: z.string().min(30).max(20000),
+            company: z.string().max(200).optional(),
+            role: z.string().max(200).optional(),
+          }),
+          execute: async ({ jobDescription, company, role }) => {
+            const { tailorResume } = await import("@/lib/tailor.functions");
+            try {
+              const r = await tailorResume({
+                data: { jobDescription, company: company ?? "", role: role ?? "" },
+              });
+              toolNotes.push({
+                name: "tailor_resume",
+                ok: true,
+                summary: `Match ${r.matchScore}/100 · ${r.matchedKeywords.length} keywords matched`,
+              });
+              return {
+                matchScore: r.matchScore,
+                matchedKeywords: r.matchedKeywords.slice(0, 20),
+                missingKeywords: r.missingKeywords.slice(0, 20),
+                summary: r.summary,
+                bullets: r.bullets,
+                coverLetter: r.coverLetter,
+              };
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Tailor failed";
+              toolNotes.push({ name: "tailor_resume", ok: false, summary: msg });
+              return { error: msg };
+            }
+          },
+        });
+
+        const coverLetter = tool({
+          description:
+            "Generate a 3-paragraph cover letter for a specific job description, grounded in the user's saved resume. Prefer tailor_resume when the user wants both a tailored resume and a letter.",
+          inputSchema: z.object({
+            jobDescription: z.string().min(30).max(20000),
+            company: z.string().max(200).optional(),
+            role: z.string().max(200).optional(),
+          }),
+          execute: async ({ jobDescription, company, role }) => {
+            const { tailorResume } = await import("@/lib/tailor.functions");
+            try {
+              const r = await tailorResume({
+                data: { jobDescription, company: company ?? "", role: role ?? "" },
+              });
+              toolNotes.push({
+                name: "generate_cover_letter",
+                ok: true,
+                summary: `Draft for ${role || "role"} at ${company || "company"}`,
+              });
+              return { coverLetter: r.coverLetter };
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Cover letter failed";
+              toolNotes.push({ name: "generate_cover_letter", ok: false, summary: msg });
+              return { error: msg };
+            }
+          },
+        });
+
+        const interviewPrep = tool({
+          description:
+            "Generate structured (Situation → Task → Action → Result) interview answers for a job description, grounded in the user's real experience.",
+          inputSchema: z.object({
+            jobDescription: z.string().min(30).max(20000),
+            company: z.string().max(200).optional(),
+            role: z.string().max(200).optional(),
+            questions: z.array(z.string()).max(10).optional(),
+          }),
+          execute: async ({ jobDescription, company, role, questions }) => {
+            const { generateInterviewPrep } = await import("@/lib/interview.functions");
+            try {
+              const r = await generateInterviewPrep({
+                data: {
+                  jobDescription,
+                  company: company ?? "",
+                  role: role ?? "",
+                  questions,
+                },
+              });
+              toolNotes.push({
+                name: "interview_prep",
+                ok: true,
+                summary: `${r.answers.length} structured answers saved`,
+              });
+              return { answers: r.answers, savedTo: "/apply/interview-prep" };
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Interview prep failed";
+              toolNotes.push({ name: "interview_prep", ok: false, summary: msg });
+              return { error: msg };
+            }
+          },
+        });
+
+        const followup = tool({
+          description:
+            "Draft a follow-up email (status check, thank-you, or nudge) the user can review, edit, and send themselves.",
+          inputSchema: z.object({
+            company: z.string().min(1).max(200),
+            role: z.string().min(1).max(200),
+            kind: z.enum(["status_check", "thank_you", "nudge"]).optional(),
+            days_since: z.number().int().min(0).max(365).optional(),
+            recipient_name: z.string().max(200).optional(),
+            notes: z.string().max(2000).optional(),
+          }),
+          execute: async (args) => {
+            const { draftFollowup } = await import("@/lib/followup.functions");
+            try {
+              const r = await draftFollowup({
+                data: {
+                  company: args.company,
+                  role: args.role,
+                  kind: args.kind ?? "status_check",
+                  days_since: args.days_since ?? 7,
+                  recipient_name: args.recipient_name ?? "",
+                  notes: args.notes ?? "",
+                },
+              });
+              toolNotes.push({
+                name: "draft_followup",
+                ok: true,
+                summary: `Draft for ${args.company}`,
+              });
+              return { subject: r.subject, body: r.body };
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Follow-up draft failed";
+              toolNotes.push({ name: "draft_followup", ok: false, summary: msg });
+              return { error: msg };
+            }
+          },
+        });
+
+        const grounding = resume
+          ? `\n\nSIGNED-IN USER'S PRIMARY RESUME (grounding — never invent beyond this):\nName: ${resume.name ?? "(unset)"}\nTitle: ${resume.title ?? "(unset)"}\nSummary: ${resume.summary ?? "(none)"}\nExperience: ${(resume.experience ?? []).map((e) => `${e.title} at ${e.company}`).join("; ") || "(none listed)"}`
+          : "\n\n(The user has not saved a resume yet. If they ask for tailoring, cover letters, or interview prep, tell them to visit /resume first.)";
+
+        try {
+          const result = await generateText({
+            model: gateway("google/gemini-3-flash-preview"),
+            system: SYSTEM + grounding,
+            messages: body.messages,
+            tools: { tailor_resume: tailor, generate_cover_letter: coverLetter, interview_prep: interviewPrep, draft_followup: followup },
+            stopWhen: stepCountIs(50),
+          });
+
+          return Response.json({
+            text: result.text,
+            tools: toolNotes,
+            limitReached: false,
+          });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "Chat failed";
+          return Response.json({ text: `Something went wrong: ${msg}`, tools: toolNotes, limitReached: false }, { status: 500 });
+        }
+      },
+    },
+  },
+});

@@ -18,6 +18,7 @@ import { Route as HelpGettingStartedRouteImport } from './routes/help.getting-st
 import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
+import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
@@ -80,6 +81,11 @@ const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
 const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
   id: '/api/resume-docx',
   path: '/api/resume-docx',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resume'
     | '/_authenticated/resumes'
     | '/_authenticated/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   RequestAccessRoute: typeof RequestAccessRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
   HelpFaqRoute: typeof HelpFaqRoute
@@ -442,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/api/resume-docx'
       fullPath: '/api/resume-docx'
       preLoaderRoute: typeof ApiResumeDocxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -647,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
   HelpFaqRoute: HelpFaqRoute,
