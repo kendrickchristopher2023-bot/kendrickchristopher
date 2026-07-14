@@ -35,10 +35,13 @@ import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authe
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
 import { Route as AuthenticatedApplyInterviewPrepRouteImport } from './routes/_authenticated/apply.interview-prep'
+import { Route as AuthenticatedApplyDiscoverRouteImport } from './routes/_authenticated/apply.discover'
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as ApiPublicHooksRefreshJobsRouteImport } from './routes/api/public/hooks/refresh-jobs'
+import { Route as ApiPublicHooksRankJobsRouteImport } from './routes/api/public/hooks/rank-jobs'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
 
 const RequestAccessRoute = RequestAccessRouteImport.update({
@@ -177,6 +180,12 @@ const AuthenticatedApplyInterviewPrepRoute =
     path: '/interview-prep',
     getParentRoute: () => AuthenticatedApplyRoute,
   } as any)
+const AuthenticatedApplyDiscoverRoute =
+  AuthenticatedApplyDiscoverRouteImport.update({
+    id: '/discover',
+    path: '/discover',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
 const AuthenticatedApplyAutofillRoute =
   AuthenticatedApplyAutofillRouteImport.update({
     id: '/autofill',
@@ -200,6 +209,17 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const ApiPublicHooksRefreshJobsRoute =
+  ApiPublicHooksRefreshJobsRouteImport.update({
+    id: '/api/public/hooks/refresh-jobs',
+    path: '/api/public/hooks/refresh-jobs',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRankJobsRoute = ApiPublicHooksRankJobsRouteImport.update({
+  id: '/api/public/hooks/rank-jobs',
+  path: '/api/public/hooks/rank-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminAdminInvitesRoute =
   AuthenticatedAdminAdminInvitesRouteImport.update({
     id: '/admin/invites',
@@ -227,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/discover': typeof AuthenticatedApplyDiscoverRoute
   '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -236,6 +257,8 @@ export interface FileRoutesByFullPath {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
+  '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -257,6 +280,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/discover': typeof AuthenticatedApplyDiscoverRoute
   '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -266,6 +290,8 @@ export interface FileRoutesByTo {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
+  '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -291,6 +317,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/_authenticated/apply/discover': typeof AuthenticatedApplyDiscoverRoute
   '/_authenticated/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -300,6 +327,8 @@ export interface FileRoutesById {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
+  '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -324,6 +353,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
+    | '/apply/discover'
     | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
@@ -333,6 +363,8 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/apply/'
     | '/admin/invites'
+    | '/api/public/hooks/rank-jobs'
+    | '/api/public/hooks/refresh-jobs'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -354,6 +386,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
+    | '/apply/discover'
     | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
@@ -363,6 +396,8 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/apply'
     | '/admin/invites'
+    | '/api/public/hooks/rank-jobs'
+    | '/api/public/hooks/refresh-jobs'
     | '/admin'
   id:
     | '__root__'
@@ -387,6 +422,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/apply/autofill'
+    | '/_authenticated/apply/discover'
     | '/_authenticated/apply/interview-prep'
     | '/_authenticated/apply/matches'
     | '/_authenticated/apply/metrics'
@@ -396,6 +432,8 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/invites'
+    | '/api/public/hooks/rank-jobs'
+    | '/api/public/hooks/refresh-jobs'
     | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -416,6 +454,8 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
+  ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
+  ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -602,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyInterviewPrepRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/_authenticated/apply/discover': {
+      id: '/_authenticated/apply/discover'
+      path: '/discover'
+      fullPath: '/apply/discover'
+      preLoaderRoute: typeof AuthenticatedApplyDiscoverRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
     '/_authenticated/apply/autofill': {
       id: '/_authenticated/apply/autofill'
       path: '/autofill'
@@ -629,6 +676,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/api/public/hooks/refresh-jobs': {
+      id: '/api/public/hooks/refresh-jobs'
+      path: '/api/public/hooks/refresh-jobs'
+      fullPath: '/api/public/hooks/refresh-jobs'
+      preLoaderRoute: typeof ApiPublicHooksRefreshJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/rank-jobs': {
+      id: '/api/public/hooks/rank-jobs'
+      path: '/api/public/hooks/rank-jobs'
+      fullPath: '/api/public/hooks/rank-jobs'
+      preLoaderRoute: typeof ApiPublicHooksRankJobsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_admin/admin/invites': {
       id: '/_authenticated/_admin/admin/invites'
@@ -658,6 +719,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedApplyRouteChildren {
   AuthenticatedApplyAutofillRoute: typeof AuthenticatedApplyAutofillRoute
+  AuthenticatedApplyDiscoverRoute: typeof AuthenticatedApplyDiscoverRoute
   AuthenticatedApplyInterviewPrepRoute: typeof AuthenticatedApplyInterviewPrepRoute
   AuthenticatedApplyMatchesRoute: typeof AuthenticatedApplyMatchesRoute
   AuthenticatedApplyMetricsRoute: typeof AuthenticatedApplyMetricsRoute
@@ -669,6 +731,7 @@ interface AuthenticatedApplyRouteChildren {
 
 const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
   AuthenticatedApplyAutofillRoute: AuthenticatedApplyAutofillRoute,
+  AuthenticatedApplyDiscoverRoute: AuthenticatedApplyDiscoverRoute,
   AuthenticatedApplyInterviewPrepRoute: AuthenticatedApplyInterviewPrepRoute,
   AuthenticatedApplyMatchesRoute: AuthenticatedApplyMatchesRoute,
   AuthenticatedApplyMetricsRoute: AuthenticatedApplyMetricsRoute,
@@ -718,6 +781,8 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
+  ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
+  ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
