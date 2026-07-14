@@ -175,6 +175,7 @@ export type Database = {
           data: Json
           id: string
           is_primary: boolean
+          name: string | null
           updated_at: string
           user_id: string
         }
@@ -183,6 +184,7 @@ export type Database = {
           data: Json
           id?: string
           is_primary?: boolean
+          name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -191,6 +193,7 @@ export type Database = {
           data?: Json
           id?: string
           is_primary?: boolean
+          name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -300,7 +303,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage: {
+        Args: { _action: string; _cap: number }
+        Returns: {
+          allowed: boolean
+          cap: number
+          used: number
+        }[]
+      }
     }
     Enums: {
       access_request_status: "pending" | "approved" | "denied"
