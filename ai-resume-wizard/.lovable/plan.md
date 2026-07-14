@@ -1,72 +1,70 @@
-# Connect Claude (and other AI clients) via MCP
+# Per-user job search kit — 5 upgrades
 
-Turn this app into an MCP server that Claude/ChatGPT/Codex can connect to. Because your data is private and per-user, we use OAuth: Claude signs in as you (through the app's existing login) and calls tools with your identity — RLS keeps everything scoped to your account. Same setup works for any future user.
+All work stays in the existing schema (`personal_matches`, `tailor_sessions`, `applications`, `resumes`). Zero new tables. Hard constraint respected: nothing auto-fills or auto-submits on external sites — every "apply" stays a link the human clicks; "Mark applied" only logs what the human did.
 
-## What Claude will be able to do
+## 1. Per-user matches (replaces hardcoded `MATCHES`)
 
-Tools exposed (all run as the signed-in user, RLS enforced):
+**New file:** `src/lib/matches.functions.ts` — `requireSupabaseAuth` server fns:
+- `listMatches()` — `select * from personal_matches where user_id = auth.uid() order by created_at desc`
+- `addMatch({ company, role, location?, tier?, role_url?, notes? })`
+- `updateMatch({ id, ...patch })`
+- `deleteMatch({ id })`
+- `suggestMatches({ prompt })` — loads user's primary resume, calls Lovable AI gateway (`google/gemini-3-flash-preview`), returns `{ suggestions: [{ company, role, location, careers_url, why }] }`. Returns suggestions only — does NOT insert. User clicks "Add" on each.
 
-1. `get_profile` — read your profile row
-2. `get_resume` — read your stored resume (structured + raw text)
-3. `update_resume` — replace/patch resume content
-4. `list_matches` / `add_match` / `update_match_status` — manage your private job matches
-5. `list_applications` / `add_application` / `update_application` — track applications
-6. `tailor_resume` — given a JD (text or URL), return a tailored resume + cover letter draft (reuses existing `tailor.functions.ts` + AI gateway)
-7. `generate_cover_letter` — cover letter for a JD using your resume
-8. `generate_referral_dm` — reuses `referral.functions.ts`
-9. `linkedin_optimize` — suggestions for your LinkedIn based on your resume + target role
-10. `interview_prep_star` — STAR answers from your resume + JD
-11. `draft_followup` — follow-up/thank-you email drafts for an application
+**Rewrite** `src/routes/_authenticated/apply.matches.tsx`:
+- Drop the hardcoded array. Use TanStack Query (`useSuspenseQuery` + `queryOptions`).
+- Table with checkboxes (batch select for tailor), inline edit/delete, "Add match" dialog, "AI suggest" panel that shows suggestions with per-row "Add" buttons.
+- Each row: existing role link → careers URL, "Tailor" button (single), and readiness badges (see #3).
 
-All read tools are marked `readOnlyHint`; mutation tools are not, and destructive updates get `destructiveHint`.
+## 2. Batch tailor
 
-## Build steps
+**New server fn** `batchTailor({ items: [{ match_id?, jd_text, company, role }] })` in `src/lib/tailor.functions.ts`:
+- Loops items sequentially, calls existing tailor logic, inserts a `tailor_sessions` row per item (`user_id`, `company`, `role`, `jd_text`, `tailored_resume`, `cover_letter`).
+- Returns `[{ session_id, company, role, matchScore, error? }]`.
 
-### 1. Dependencies
-- `bun add @lovable.dev/mcp-js zod`
-- Add `@lovable.dev/mcp-js` to `minimumReleaseAgeExcludes` in `bunfig.toml`.
+**UI:** on `/apply/matches`, "Tailor selected (N)" button opens a dialog with a textarea per selected row (paste JD), runs batch, shows per-row progress/status. Also a "Paste multiple JDs" mode where user separates with `---`.
 
-### 2. OAuth authorization server
-- Call `supabase--configure_oauth_server` to activate Supabase as the OAuth 2.1 authorization server with dynamic client registration (so Claude can self-register).
+Also update the existing single `/apply/tailor` page to persist to `tailor_sessions` in addition to localStorage (small tweak).
 
-### 3. Consent route
-- Create `src/routes/[.]lovable.oauth.consent.tsx` with `ssr: false`.
-- Uses the existing `supabase` browser client's `auth.oauth.getAuthorizationDetails/approveAuthorization/denyAuthorization`.
-- If not signed in → redirect to `/auth` preserving the full consent URL as `next`; `auth.tsx` must consume `next` after password login, in `emailRedirectTo`, and in any social `redirect_uri` (update `src/routes/auth.tsx` accordingly).
+## 3. Readiness dashboard (extends `/apply/matches`)
 
-### 4. MCP server module
-- `src/lib/mcp/index.ts` — `defineMcp` with `auth: auth.oauth.issuer({ issuer: 'https://<VITE_SUPABASE_PROJECT_ID>.supabase.co/auth/v1', acceptedAudiences: 'authenticated' })`.
-- One tool per file under `src/lib/mcp/tools/`, each building a per-user Supabase client from `ctx.getToken()` (so RLS runs as that user), reusing existing helpers from `src/lib/tailor.functions.ts`, `src/lib/referral.functions.ts`, `src/lib/ai-gateway.server.ts`.
-- Do NOT read env vars at module scope — read inside handlers.
-- Never use `supabaseAdmin` in MCP tools.
+Per row, compute from queries loaded once:
+- `tailor_sessions` where `company` matches → tailored ✅, cover_letter present → letter ✅, referral_dm present → referral ✅
+- `applications` where `company` + `role` match → applied ✅ (show stage badge)
 
-### 5. Vite plugin
-- Add `mcpPlugin()` from `@lovable.dev/mcp-js/stacks/tanstack/vite` to `vite.config.ts` plugins. Mount at `/mcp` (project is published publicly, so default path works). Do NOT hand-write generated routes.
+Show as compact badges. "Mark applied" button → opens small dialog (stage, jd_url, notes) → inserts/updates `applications` row. Purely a logger — no external submission.
 
-### 6. Manifest
-- Run `app_mcp_server--extract_mcp_manifest` after tools are wired to publish the catalog for Lovable's Agent Integrations panel.
+New server fns in `src/lib/applications.functions.ts`: `listApplications`, `upsertApplication`.
 
-### 7. Favicon
-- Add a simple favicon if missing (used as the connector icon).
+## 4. Per-user autofill (`/apply/autofill`)
 
-## How you'll connect Claude after publish
+Replace hardcoded `QA` array with AI-generated answers derived from the signed-in user's resume + profile:
+- New server fn `generateScreenerAnswers({ company? })` → loads user's resume, calls AI gateway with a fixed list of 12 standard screener questions, returns `{ q, a }[]` where `{{Company}}` placeholder is preserved.
+- Cache result in `tailor_sessions.interview_prep` keyed loosely, or just regenerate on demand with a "Regenerate" button. Simpler: store in a new small localStorage cache keyed by user id + hash of resume version; regenerate button explicit.
+- Page: on mount, if no cached answers, show "Generate my screener answers" CTA; after generation, same copy-button layout as today.
 
-1. Publish the app.
-2. In Claude Desktop → Settings → Connectors → Add custom connector → paste `https://excel-ai-resume.lovable.app/mcp`.
-3. Claude opens the OAuth flow → you sign in to your app → approve consent → Claude gets a user-scoped token.
-4. Ask Claude things like "tailor my resume to this JD…" — it calls your app's tools as you.
+## 5. ATS formatting lint
 
-Same flow works for ChatGPT (Custom GPT with MCP), Codex, Cursor.
+**New pure function** `src/lib/ats-lint.ts` — `lintResumeForAts(resume: MasterResume): { level: 'ok'|'warn'|'error', code, message }[]`. Checks:
+- Missing standard section headers (Summary, Experience, Education, Skills)
+- Contact info: ensure name/email/phone present at `resume.contact`, not only in a header/footer field
+- Bullets using non-standard bullet chars (▪◆★✦→ etc.) — recommend `•` or `-`
+- Bullets over ~40 words (parser-hostile run-on)
+- Empty experience/education arrays
+- Skills present and non-empty
 
-## What stays out of scope (this turn)
+Exports in `pdf-lib`/`docx` are already single-column per prior turn — add an assertion comment. No content manipulation, no keyword stuffing, no invisible-text tricks.
 
-- Interview prep, LinkedIn optimizer, follow-up drafts reuse the AI gateway with prompts inside the tool handlers — no new tables needed for v1. If you later want to store history (e.g., saved cover letters), we add tables then.
-- The invite-only gate still applies to the web UI. MCP consent is gated by app login, so only approved users can grant Claude access — matching your invite-only posture.
+**UI:** show lint results as a panel on `/resume` (top of page) and inside the tailor result view. Each finding: level badge + message + which field.
 
 ## Files touched
 
-- New: `src/lib/mcp/index.ts`, `src/lib/mcp/tools/*.ts` (~11 files), `src/routes/[.]lovable.oauth.consent.tsx`, maybe `public/favicon.ico`.
-- Edited: `vite.config.ts`, `bunfig.toml`, `package.json`, `src/routes/auth.tsx` (consume `next`).
-- Tool call: `supabase--configure_oauth_server`, then `app_mcp_server--extract_mcp_manifest`.
+- New: `src/lib/matches.functions.ts`, `src/lib/applications.functions.ts`, `src/lib/ats-lint.ts`, `src/lib/screener.functions.ts`, `src/components/AtsLintPanel.tsx`, `src/components/MatchRow.tsx` (or inline).
+- Edited: `src/routes/_authenticated/apply.matches.tsx` (major rewrite), `src/routes/_authenticated/apply.autofill.tsx` (rewrite), `src/routes/_authenticated/resume.tsx` (add lint panel), `src/lib/tailor.functions.ts` (add batchTailor + persist to tailor_sessions).
+- No schema migration needed.
 
-Approve and I'll build it.
+## Out of scope (per hard constraint)
+
+No browser extension, no headless form-filling, no ATS bypass, no invisible text, no external submission. "Apply" stays a link; "Mark applied" is a manual log.
+
+Proceed?

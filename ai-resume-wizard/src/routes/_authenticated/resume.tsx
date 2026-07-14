@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getMyResume, type MasterResume } from "@/lib/resume.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
+import { AtsLintPanel } from "@/components/AtsLintPanel";
+import { lintResumeForAts } from "@/lib/ats-lint";
 
 export const Route = createFileRoute("/_authenticated/resume")({
   head: () => ({
@@ -144,6 +146,11 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
             {err}
           </p>
         )}
+
+        <div className="mb-6">
+          <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
+        </div>
+
 
         <article className="bg-card text-card-foreground rounded-xl border border-border p-8 sm:p-12 shadow-sm">
           <header className="border-b border-border pb-6 mb-8">
