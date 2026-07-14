@@ -18,6 +18,7 @@ import { Route as HelpGettingStartedRouteImport } from './routes/help.getting-st
 import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
+import { Route as ApiExtractRouteImport } from './routes/api.extract'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
@@ -81,6 +82,11 @@ const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
 const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
   id: '/api/resume-docx',
   path: '/api/resume-docx',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExtractRoute = ApiExtractRouteImport.update({
+  id: '/api/extract',
+  path: '/api/extract',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -206,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/help/faq': typeof HelpFaqRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/resumes'
     | '/settings'
     | '/api/chat'
+    | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/resumes'
     | '/settings'
     | '/api/chat'
+    | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resumes'
     | '/_authenticated/settings'
     | '/api/chat'
+    | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/help/faq'
@@ -383,6 +395,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiExtractRoute: typeof ApiExtractRoute
   ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
   HelpFaqRoute: typeof HelpFaqRoute
@@ -455,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/api/resume-docx'
       fullPath: '/api/resume-docx'
       preLoaderRoute: typeof ApiResumeDocxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/extract': {
+      id: '/api/extract'
+      path: '/api/extract'
+      fullPath: '/api/extract'
+      preLoaderRoute: typeof ApiExtractRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -668,6 +688,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiExtractRoute: ApiExtractRoute,
   ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
   HelpFaqRoute: HelpFaqRoute,
