@@ -49,8 +49,8 @@ const TOOLS = [
   },
   {
     to: "/apply/interview-prep" as const,
-    title: "Interview Prep (STAR)",
-    desc: "Generate Situation/Task/Action/Result answers from your real experience for a target JD.",
+    title: "Interview Prep (Situation → Task → Action → Result)",
+    desc: "Structured-story answers built from your real experience for a target job description.",
     badge: "AI-powered",
   },
   {
