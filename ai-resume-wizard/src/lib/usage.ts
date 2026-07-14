@@ -13,7 +13,8 @@ export type UsageAction =
   | "interview_prep"
   | "linkedin"
   | "referral_dm"
-  | "parse_resume";
+  | "parse_resume"
+  | "chat";
 
 export type Plan = "free" | "pro" | "founder";
 
@@ -25,6 +26,7 @@ export const PLAN_CAPS: Record<Plan, Record<UsageAction, number>> = {
     linkedin: 10,
     referral_dm: 10,
     parse_resume: 5,
+    chat: 20,
   },
   pro: {
     tailor: 200,
@@ -33,6 +35,7 @@ export const PLAN_CAPS: Record<Plan, Record<UsageAction, number>> = {
     linkedin: 200,
     referral_dm: 200,
     parse_resume: 50,
+    chat: 300,
   },
   founder: {
     tailor: 200,
@@ -41,6 +44,7 @@ export const PLAN_CAPS: Record<Plan, Record<UsageAction, number>> = {
     linkedin: 200,
     referral_dm: 200,
     parse_resume: 50,
+    chat: 300,
   },
 };
 
@@ -51,6 +55,7 @@ export const ACTION_LABEL: Record<UsageAction, string> = {
   linkedin: "LinkedIn optimize",
   referral_dm: "Referral DM",
   parse_resume: "Resume parse",
+  chat: "Chat assistant",
 };
 
 export class UsageLimitError extends Error {

@@ -26,7 +26,7 @@ const TOOLS = [
   {
     to: "/apply/tailor" as const,
     title: "AI Resume Tailor",
-    desc: "Paste a JD, get a role-specific resume + cover letter + downloadable PDF/DOCX.",
+    desc: "Paste a job description, get a role-specific resume + cover letter + downloadable PDF/DOCX.",
     badge: "AI-powered",
   },
   {
@@ -49,8 +49,8 @@ const TOOLS = [
   },
   {
     to: "/apply/interview-prep" as const,
-    title: "Interview Prep (STAR)",
-    desc: "Generate Situation/Task/Action/Result answers from your real experience for a target JD.",
+    title: "Interview Prep (Situation → Task → Action → Result)",
+    desc: "Structured-story answers built from your real experience for a target job description.",
     badge: "AI-powered",
   },
   {
@@ -235,8 +235,8 @@ ${R.email ? `Say hi: ${R.email}` : ""}`.trim();
       {stars.length > 0 && (
         <Section title="Interview story starters">
           <p className="text-sm text-muted-foreground mb-4">
-            Seeded from your top bullets. Flesh each one into a STAR (Situation, Task, Action,
-            Result) story before the interview.
+            Seeded from your top bullets. Flesh each one into a structured story
+            (Situation → Task → Action → Result) before the interview.
           </p>
           <div className="space-y-4">
             {stars.map((s, i) => (

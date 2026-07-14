@@ -14,8 +14,11 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HelpGettingStartedRouteImport } from './routes/help.getting-started'
+import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
+import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
@@ -60,6 +63,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpGettingStartedRoute = HelpGettingStartedRouteImport.update({
+  id: '/help/getting-started',
+  path: '/help/getting-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpFaqRoute = HelpFaqRouteImport.update({
+  id: '/help/faq',
+  path: '/help/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
   id: '/api/tailored-resume',
   path: '/api/tailored-resume',
@@ -68,6 +81,11 @@ const ApiTailoredResumeRoute = ApiTailoredResumeRouteImport.update({
 const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
   id: '/api/resume-docx',
   path: '/api/resume-docx',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -187,8 +205,11 @@ export interface FileRoutesByFullPath {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/help/faq': typeof HelpFaqRoute
+  '/help/getting-started': typeof HelpGettingStartedRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
@@ -212,8 +233,11 @@ export interface FileRoutesByTo {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/help/faq': typeof HelpFaqRoute
+  '/help/getting-started': typeof HelpGettingStartedRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
@@ -241,8 +265,11 @@ export interface FileRoutesById {
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
+  '/help/faq': typeof HelpFaqRoute
+  '/help/getting-started': typeof HelpGettingStartedRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
@@ -269,8 +296,11 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
+    | '/help/faq'
+    | '/help/getting-started'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
@@ -294,8 +324,11 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
+    | '/help/faq'
+    | '/help/getting-started'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
@@ -322,8 +355,11 @@ export interface FileRouteTypes {
     | '/_authenticated/resume'
     | '/_authenticated/resumes'
     | '/_authenticated/settings'
+    | '/api/chat'
     | '/api/resume-docx'
     | '/api/tailored-resume'
+    | '/help/faq'
+    | '/help/getting-started'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/apply/autofill'
@@ -346,8 +382,11 @@ export interface RootRouteChildren {
   RequestAccessRoute: typeof RequestAccessRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
+  HelpFaqRoute: typeof HelpFaqRoute
+  HelpGettingStartedRoute: typeof HelpGettingStartedRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
@@ -390,6 +429,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help/getting-started': {
+      id: '/help/getting-started'
+      path: '/help/getting-started'
+      fullPath: '/help/getting-started'
+      preLoaderRoute: typeof HelpGettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/faq': {
+      id: '/help/faq'
+      path: '/help/faq'
+      fullPath: '/help/faq'
+      preLoaderRoute: typeof HelpFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tailored-resume': {
       id: '/api/tailored-resume'
       path: '/api/tailored-resume'
@@ -402,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/api/resume-docx'
       fullPath: '/api/resume-docx'
       preLoaderRoute: typeof ApiResumeDocxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -607,8 +667,11 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
+  HelpFaqRoute: HelpFaqRoute,
+  HelpGettingStartedRoute: HelpGettingStartedRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,

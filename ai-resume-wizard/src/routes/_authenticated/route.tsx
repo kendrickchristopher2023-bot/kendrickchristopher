@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatAssistant } from "@/components/ChatAssistant";
 
 // Integration-managed protected layout. ssr:false because Supabase stores the
 // session in localStorage, which the server can't read.
@@ -15,5 +16,10 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user };
   },
-  component: () => <Outlet />,
+  component: () => (
+    <>
+      <Outlet />
+      <ChatAssistant />
+    </>
+  ),
 });

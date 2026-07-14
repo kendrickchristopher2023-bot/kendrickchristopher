@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/apply/interview-prep")({
     meta: [
       { title: "Interview Prep — AI Job Kit" },
       { name: "robots", content: "noindex,nofollow" },
-      { name: "description", content: "STAR-format interview answers built from your real resume." },
+      { name: "description", content: "Structured-story (Situation → Task → Action → Result) interview answers built from your real resume." },
     ],
     links: [
       {
@@ -72,11 +72,11 @@ function InterviewPrepPage() {
         <header className="mt-8 border-b border-border pb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Interview Prep</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            STAR answers from your real experience.
+            Structured stories from your real experience.
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Paste a JD, get Situation/Task/Action/Result answers grounded in your resume. Edit,
-            save, and copy each one.
+            Paste a job description, get Situation → Task → Action → Result answers grounded in
+            your resume. Edit, save, and copy each one.
           </p>
         </header>
 
@@ -106,7 +106,7 @@ function InterviewPrepPage() {
             disabled={gen.isPending || jd.trim().length < 30}
             className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {gen.isPending ? "Generating…" : "Generate STAR answers"}
+            {gen.isPending ? "Generating…" : "Generate structured answers"}
           </button>
         </section>
 

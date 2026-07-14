@@ -258,7 +258,7 @@ function MetricsPage() {
               className="rounded border border-input bg-background px-3 py-2 text-sm"
             />
             <input
-              placeholder="JD URL (optional)"
+              placeholder="Job posting URL (optional)"
               value={form.jdUrl}
               onChange={(e) => setForm({ ...form, jdUrl: e.target.value })}
               className="rounded border border-input bg-background px-3 py-2 text-sm sm:col-span-2"

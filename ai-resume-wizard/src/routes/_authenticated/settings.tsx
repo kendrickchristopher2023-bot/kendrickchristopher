@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-const ACTIONS: UsageAction[] = ["tailor", "cover_letter", "interview_prep", "linkedin", "referral_dm", "parse_resume"];
+const ACTIONS: UsageAction[] = ["tailor", "cover_letter", "interview_prep", "linkedin", "referral_dm", "parse_resume", "chat"];
 
 function SettingsPage() {
   const usageFn = useServerFn(getMyUsage);

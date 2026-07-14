@@ -183,6 +183,10 @@ function Index() {
           <a href={`https://${RESUME.github}`} target="_blank" rel="noreferrer" className="hover:text-primary">{RESUME.github}</a>
           <br />
           <span className="mt-2 inline-block">
+            <Link to="/help/getting-started" className="text-primary hover:underline">Getting started</Link>
+            {" · "}
+            <Link to="/help/faq" className="text-primary hover:underline">FAQ</Link>
+            {" · "}
             Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
           </span>
         </footer>
