@@ -37,6 +37,42 @@ export const Route = createFileRoute("/")({
         content:
           "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
       },
+export const Route = createFileRoute("/")({
+  // Client-side gate. On the server there's no localStorage session, so this
+  // is a no-op during SSR and the portfolio still renders for signed-out
+  // visitors, crawlers, and social scrapers. On client-side navigation (e.g.
+  // magic-link → /auth → /) this runs before render and redirects non-owners
+  // straight to /apply with no flash.
+  beforeLoad: async () => {
+    if (!hasClientSession()) return;
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return; // stale token, treat as signed-out
+    try {
+      const res = await currentUserIsAdmin();
+      if (!res.isAdmin) throw redirect({ to: "/apply" });
+    } catch (err) {
+      // If the admin check itself throws a redirect, rethrow it. Otherwise
+      // (network hiccup, etc.) fall through to render — the component-level
+      // gate below will retry.
+      if (err && typeof err === "object" && "to" in (err as Record<string, unknown>)) {
+        throw err;
+      }
+    }
+  },
+  head: () => ({
+    meta: [
+      { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      {
+        name: "description",
+        content:
+          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
+      },
+      { property: "og:title", content: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      {
+        property: "og:description",
+        content:
+          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
