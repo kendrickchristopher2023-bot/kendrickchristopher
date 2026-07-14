@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { getMyResume, type MasterResume } from "@/lib/resume.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
+import { AtsLintPanel } from "@/components/AtsLintPanel";
+import { lintResumeForAts } from "@/lib/ats-lint";
 
 export const Route = createFileRoute("/_authenticated/resume")({
   head: () => ({
