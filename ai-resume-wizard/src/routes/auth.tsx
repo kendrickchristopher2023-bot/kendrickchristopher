@@ -30,7 +30,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "error" | "info"; text: string } | null>(null);
 
@@ -67,21 +66,8 @@ function AuthPage() {
     setBusy(true);
     setMsg(null);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/auth` },
-        });
-        if (error) throw error;
-        setMsg({
-          kind: "info",
-          text: "Account created. If email confirmation is required, check your inbox.",
-        });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err) {
       setMsg({
         kind: "error",
@@ -105,13 +91,15 @@ function AuthPage() {
           className="mt-6 text-3xl font-bold tracking-tight text-foreground"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          {mode === "signup" ? "Create account" : "Sign in"}
+          Sign in
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Access is invite-only.{" "}
+          Access is invite-only. If you haven't been approved yet,{" "}
           <a href="/request-access" className="text-primary hover:underline">
-            Request access →
+            request access
           </a>
+          . Approved users sign in with the magic link the admin sends, or with
+          Google / password below once their account has been created.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -147,8 +135,8 @@ function AuthPage() {
               type="password"
               required
               minLength={8}
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              placeholder="Password (min 8 chars)"
+              autoComplete="current-password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
@@ -158,7 +146,7 @@ function AuthPage() {
               disabled={busy}
               className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {busy ? "…" : mode === "signup" ? "Create account" : "Sign in"}
+              {busy ? "…" : "Sign in"}
             </button>
           </form>
 
@@ -173,16 +161,6 @@ function AuthPage() {
               {msg.text}
             </p>
           )}
-
-          <button
-            type="button"
-            onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-            className="w-full text-xs text-muted-foreground hover:text-foreground"
-          >
-            {mode === "signup"
-              ? "Have an account? Sign in"
-              : "Approved but no account yet? Create one"}
-          </button>
         </div>
       </div>
     </main>
