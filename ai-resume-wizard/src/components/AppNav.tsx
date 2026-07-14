@@ -13,6 +13,7 @@ type NavItem = {
 
 const ITEMS: NavItem[] = [
   { to: "/apply", label: "Application Kit" },
+  { to: "/apply/rewrite", label: "Rewrite" },
   { to: "/resume", label: "Resume" },
   { to: "/resumes", label: "Resume Tracks" },
   { to: "/settings", label: "Settings" },
