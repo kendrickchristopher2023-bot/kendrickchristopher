@@ -48,12 +48,31 @@ const TOOLS = [
     badge: "AI-powered",
   },
   {
+    to: "/apply/interview-prep" as const,
+    title: "Interview Prep (STAR)",
+    desc: "Generate Situation/Task/Action/Result answers from your real experience for a target JD.",
+    badge: "AI-powered",
+  },
+  {
     to: "/apply/metrics" as const,
     title: "Funnel Metrics",
     desc: "Log every application. See conversion applied → response → onsite → offer.",
     badge: "Tracker",
   },
+  {
+    to: "/resumes" as const,
+    title: "Resume Tracks",
+    desc: "Manage multiple named master resumes and pick which is primary.",
+    badge: "Manage",
+  },
+  {
+    to: "/settings" as const,
+    title: "Plan & Usage",
+    desc: "See your current tier and today's AI usage against your daily limits.",
+    badge: "Account",
+  },
 ];
+
 
 function ApplyPage() {
   const getFn = useServerFn(getMyResume);
