@@ -1,10 +1,49 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { RESUME } from "@/lib/resume-data";
 import { useSession, signOut } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
+import { currentUserIsAdmin } from "@/lib/admin.functions";
+
+// True on the client when Supabase has a persisted session in localStorage.
+// Used both by beforeLoad and by a synchronous render gate below.
+function hasClientSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch {
+    /* private mode / disabled storage */
+  }
+  return false;
+}
+
 
 
 export const Route = createFileRoute("/")({
+  // Client-side gate. On the server there's no localStorage session, so this
+  // is a no-op during SSR and the portfolio still renders for signed-out
+  // visitors, crawlers, and social scrapers. On client-side navigation (e.g.
+  // magic-link → /auth → /) this runs before render and redirects non-owners
+  // straight to /apply with no flash.
+  beforeLoad: async () => {
+    if (!hasClientSession()) return;
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return; // stale token, treat as signed-out
+    try {
+      const res = await currentUserIsAdmin();
+      if (!res.isAdmin) throw redirect({ to: "/apply" });
+    } catch (err) {
+      // If the admin check itself throws a redirect, rethrow it. Otherwise
+      // (network hiccup, etc.) fall through to render — the component-level
+      // gate below will retry.
+      if (err && typeof err === "object" && "to" in (err as Record<string, unknown>)) {
+        throw err;
+      }
+    }
+  },
   head: () => ({
     meta: [
       { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
@@ -42,6 +81,38 @@ function Index() {
   const [copied, setCopied] = useState(false);
   const email = RESUME.email;
   const { user } = useSession();
+  const navigate = useNavigate();
+
+  // Hard-refresh flash guard: if a Supabase session exists in localStorage on
+  // first client render, hide the portfolio immediately and resolve identity
+  // async. Non-owners get redirected; the owner (admin) sees the portfolio.
+  // SSR + signed-out clients render the portfolio normally.
+  const [hidden, setHidden] = useState(() => hasClientSession());
+  useEffect(() => {
+    if (!hidden) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!data.user) {
+        setHidden(false);
+        return;
+      }
+      try {
+        const res = await currentUserIsAdmin();
+        if (cancelled) return;
+        if (res.isAdmin) setHidden(false);
+        else navigate({ to: "/apply", replace: true });
+      } catch {
+        if (!cancelled) setHidden(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hidden, navigate]);
+
+
 
 
   const copyEmail = async () => {
@@ -57,6 +128,10 @@ function Index() {
   const mailtoHref = `mailto:${email}?subject=${encodeURIComponent(
     "Introduction — Christopher Kendrick",
   )}&body=${encodeURIComponent("Hi Christopher,\n\n")}`;
+
+  if (hidden) {
+    return <main className="min-h-screen bg-background" aria-hidden />;
+  }
 
   return (
     <main className="min-h-screen bg-background px-6 py-16 sm:py-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
