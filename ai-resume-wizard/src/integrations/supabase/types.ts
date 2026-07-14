@@ -276,6 +276,7 @@ export type Database = {
       }
       usage_daily: {
         Row: {
+          chat_count: number
           cover_letter_count: number
           day: string
           interview_prep_count: number
@@ -286,6 +287,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          chat_count?: number
           cover_letter_count?: number
           day?: string
           interview_prep_count?: number
@@ -296,6 +298,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          chat_count?: number
           cover_letter_count?: number
           day?: string
           interview_prep_count?: number
