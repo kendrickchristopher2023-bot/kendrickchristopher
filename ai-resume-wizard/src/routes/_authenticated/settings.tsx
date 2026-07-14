@@ -103,7 +103,140 @@ function SettingsPage() {
           Limits are enforced server-side. When a daily limit is hit, the app returns a
           "daily limit reached" message until midnight UTC.
         </p>
+
+        <BrowserExtensionSection />
       </div>
     </main>
+  );
+}
+
+function BrowserExtensionSection() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listMyApiTokens);
+  const createFn = useServerFn(createMyApiToken);
+  const revokeFn = useServerFn(revokeMyApiToken);
+
+  const [label, setLabel] = useState("Browser extension");
+  const [freshToken, setFreshToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const tokens = useQuery({ queryKey: ["api-tokens"], queryFn: () => listFn() });
+
+  const create = useMutation({
+    mutationFn: () => createFn({ data: { label: label || "Browser extension" } }),
+    onSuccess: (r) => {
+      setFreshToken(r.token);
+      setErr(null);
+      qc.invalidateQueries({ queryKey: ["api-tokens"] });
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Failed to generate token."),
+  });
+
+  const revoke = useMutation({
+    mutationFn: (id: string) => revokeFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-tokens"] }),
+  });
+
+  const copyToken = async () => {
+    if (!freshToken) return;
+    await navigator.clipboard.writeText(freshToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <section className="mt-8 rounded-lg border border-border bg-card p-6">
+      <h2 className="text-lg font-semibold">Browser extension</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Generate a personal access token so the companion extension can autofill job-application
+        forms with your saved profile. The extension only reads your data — it never submits
+        forms or bypasses CAPTCHAs.
+      </p>
+
+      {freshToken ? (
+        <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            Copy this token now
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This is the only time we'll show it. Paste it into the extension's settings — if you
+            lose it, revoke it and generate a new one.
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs">
+              {freshToken}
+            </code>
+            <button
+              onClick={copyToken}
+              className="rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
+            >
+              {copied ? "Copied ✓" : "Copy"}
+            </button>
+          </div>
+          <button
+            onClick={() => setFreshToken(null)}
+            className="mt-3 text-xs text-muted-foreground hover:text-foreground"
+          >
+            I've saved it — dismiss
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Label (e.g. Chrome — laptop)"
+            className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => create.mutate()}
+            disabled={create.isPending}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {create.isPending ? "Generating…" : "Generate token"}
+          </button>
+        </div>
+      )}
+      {err && <p className="mt-2 text-sm text-destructive">{err}</p>}
+
+      <div className="mt-6">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Active tokens
+        </p>
+        {tokens.isLoading && <p className="mt-2 text-xs text-muted-foreground">Loading…</p>}
+        {tokens.data && tokens.data.length === 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">No tokens yet.</p>
+        )}
+        {tokens.data && tokens.data.length > 0 && (
+          <ul className="mt-3 divide-y divide-border rounded-md border border-border">
+            {tokens.data.map((t: ApiTokenMeta) => (
+              <li key={t.id} className="flex items-center justify-between px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{t.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Created {new Date(t.created_at).toLocaleDateString()} · Last used{" "}
+                    {t.last_used_at ? new Date(t.last_used_at).toLocaleString() : "never"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => revoke.mutate(t.id)}
+                  disabled={revoke.isPending}
+                  className="ml-3 shrink-0 rounded-md border border-border px-3 py-1 text-xs font-medium text-destructive hover:bg-muted disabled:opacity-50"
+                >
+                  Revoke
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <p className="mt-4 text-xs text-muted-foreground">
+        Endpoint: <code>GET /api/extension/profile</code> — send{" "}
+        <code>Authorization: Bearer &lt;token&gt;</code>.
+      </p>
+    </section>
   );
 }
