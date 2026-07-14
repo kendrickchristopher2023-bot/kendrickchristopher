@@ -157,15 +157,63 @@ export type Database = {
           },
         ]
       }
+      job_listings: {
+        Row: {
+          company: string
+          created_at: string
+          description: string | null
+          fetched_at: string
+          id: string
+          location: string | null
+          posted_at: string | null
+          remote: boolean | null
+          role: string
+          source: string
+          source_id: string
+          url: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          description?: string | null
+          fetched_at?: string
+          id?: string
+          location?: string | null
+          posted_at?: string | null
+          remote?: boolean | null
+          role: string
+          source: string
+          source_id: string
+          url: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          description?: string | null
+          fetched_at?: string
+          id?: string
+          location?: string | null
+          posted_at?: string | null
+          remote?: boolean | null
+          role?: string
+          source?: string
+          source_id?: string
+          url?: string
+        }
+        Relationships: []
+      }
       personal_matches: {
         Row: {
           company: string
           created_at: string
           id: string
+          job_listing_id: string | null
           location: string | null
           notes: string | null
           role: string
           role_url: string | null
+          source: string
+          status: string
           tier: string | null
           user_id: string
         }
@@ -173,10 +221,13 @@ export type Database = {
           company: string
           created_at?: string
           id?: string
+          job_listing_id?: string | null
           location?: string | null
           notes?: string | null
           role: string
           role_url?: string | null
+          source?: string
+          status?: string
           tier?: string | null
           user_id: string
         }
@@ -184,14 +235,25 @@ export type Database = {
           company?: string
           created_at?: string
           id?: string
+          job_listing_id?: string | null
           location?: string | null
           notes?: string | null
           role?: string
           role_url?: string | null
+          source?: string
+          status?: string
           tier?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "personal_matches_job_listing_id_fkey"
+            columns: ["job_listing_id"]
+            isOneToOne: false
+            referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -358,6 +420,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      watched_companies: {
+        Row: {
+          added_by: string | null
+          company_name: string
+          created_at: string
+          id: string
+          last_fetch_count: number | null
+          last_fetch_status: string | null
+          last_fetched_at: string | null
+          slug: string
+          source: string
+        }
+        Insert: {
+          added_by?: string | null
+          company_name: string
+          created_at?: string
+          id?: string
+          last_fetch_count?: number | null
+          last_fetch_status?: string | null
+          last_fetched_at?: string | null
+          slug: string
+          source: string
+        }
+        Update: {
+          added_by?: string | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          last_fetch_count?: number | null
+          last_fetch_status?: string | null
+          last_fetched_at?: string | null
+          slug?: string
+          source?: string
         }
         Relationships: []
       }
