@@ -89,27 +89,9 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
     return { ok: true, magicLink: null };
   });
 
-export const grantAdminSelf = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    // Bootstrap: first authenticated user can claim admin if no admins exist.
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
-    const { count } = await supabaseAdmin
-      .from("user_roles")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "admin");
-    if ((count ?? 0) > 0) throw new Error("Admin already exists");
-    const { error } = await supabaseAdmin
-      .from("user_roles")
-      .upsert(
-        { user_id: context.userId, role: "admin" },
-        { onConflict: "user_id,role" },
-      );
-    if (error) throw error;
-    return { ok: true };
-  });
+// Admin is provisioned manually in the database — there is no self-serve
+// claim endpoint. Only the single owner account holds the `admin` role.
+
 
 export const currentUserIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -5,14 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 // already signed in when this runs.
 export const Route = createFileRoute("/_authenticated/_admin")({
   ssr: false,
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth" });
 
-    // Allow the bootstrap claim page through — it's the one place a
-    // non-admin must be able to reach so the first user can promote
-    // themselves.
-    if (location.pathname.startsWith("/admin/claim")) return;
 
     const { data, error } = await supabase
       .from("user_roles")
