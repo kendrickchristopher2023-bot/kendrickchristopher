@@ -36,6 +36,12 @@ const TOOLS = [
     badge: "Pro · One-time",
   },
   {
+    to: "/apply/discover" as const,
+    title: "Discover Jobs",
+    desc: "Live openings from company career pages (Greenhouse/Lever/Ashby/Remotive). Weekly AI ranks top 10 for you.",
+    badge: "Live feed",
+  },
+  {
     to: "/apply/matches" as const,
     title: "Job Matches",
     desc: "Track roles you're targeting. One click to tailor for each.",
