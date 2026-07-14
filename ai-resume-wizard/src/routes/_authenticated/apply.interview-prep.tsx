@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/apply/interview-prep")({
     meta: [
       { title: "Interview Prep — AI Job Kit" },
       { name: "robots", content: "noindex,nofollow" },
-      { name: "description", content: "STAR-format interview answers built from your real resume." },
+      { name: "description", content: "Structured-story (Situation → Task → Action → Result) interview answers built from your real resume." },
     ],
     links: [
       {
