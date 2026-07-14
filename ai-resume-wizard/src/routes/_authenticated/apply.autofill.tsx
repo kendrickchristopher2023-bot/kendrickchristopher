@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { generateScreenerAnswers, type ScreenerQA } from "@/lib/screener.functions";
+import { generateScreenerAnswers, getMyScreenerAnswers, type ScreenerQA } from "@/lib/screener.functions";
 
 export const Route = createFileRoute("/_authenticated/apply/autofill")({
   head: () => ({
