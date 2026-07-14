@@ -89,6 +89,13 @@ function AdminDashboard() {
       if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
     },
   });
+  const resend = useMutation({
+    mutationFn: (v: { id: string }) => resendFn({ data: v }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+      if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
+    },
+  });
 
   const filteredUsers = useMemo(() => {
     const list = users.data?.users ?? [];
