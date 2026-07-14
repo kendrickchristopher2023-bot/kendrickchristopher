@@ -129,6 +129,10 @@ function Index() {
     "Introduction — Christopher Kendrick",
   )}&body=${encodeURIComponent("Hi Christopher,\n\n")}`;
 
+  if (hidden) {
+    return <main className="min-h-screen bg-background" aria-hidden />;
+  }
+
   return (
     <main className="min-h-screen bg-background px-6 py-16 sm:py-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="mx-auto max-w-3xl">
