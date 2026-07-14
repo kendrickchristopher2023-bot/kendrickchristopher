@@ -1,7 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { RESUME } from "@/lib/resume-data";
 import { useSession, signOut } from "@/lib/session";
+import { supabase } from "@/integrations/supabase/client";
+import { currentUserIsAdmin } from "@/lib/admin.functions";
+
+// True on the client when Supabase has a persisted session in localStorage.
+// Used both by beforeLoad and by a synchronous render gate below.
+function hasClientSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
+    }
+  } catch {
+    /* private mode / disabled storage */
+  }
+  return false;
+}
+
 
 
 export const Route = createFileRoute("/")({
