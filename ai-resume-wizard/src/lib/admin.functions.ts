@@ -76,9 +76,16 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
             options: { redirectTo: `${origin}/auth` },
           });
         if (linkErr) throw linkErr;
+        await writeAudit(context.userId, "access_request.approved", null, {
+          access_request_id: data.id,
+          email: req.email,
+        });
         return { ok: true, magicLink: link.properties?.action_link ?? null };
       }
     }
+    await writeAudit(context.userId, `access_request.${status}`, null, {
+      access_request_id: data.id,
+    });
     return { ok: true, magicLink: null };
   });
 
