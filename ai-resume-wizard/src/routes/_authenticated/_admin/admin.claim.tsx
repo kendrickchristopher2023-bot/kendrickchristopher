@@ -29,7 +29,7 @@ function ClaimAdmin() {
             setBusy(true);
             try {
               await claim();
-              navigate({ to: "/admin/invites" });
+              navigate({ to: "/admin" });
             } catch (e) {
               setMsg(e instanceof Error ? e.message : "Failed");
               setBusy(false);

@@ -37,6 +37,7 @@ import { Route as AuthenticatedApplyInterviewPrepRouteImport } from './routes/_a
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
 import { Route as AuthenticatedAdminAdminClaimRouteImport } from './routes/_authenticated/_admin/admin.claim'
 
@@ -187,6 +188,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminAdminIndexRoute =
+  AuthenticatedAdminAdminIndexRouteImport.update({
+    id: '/admin/',
+    path: '/admin/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminAdminInvitesRoute =
   AuthenticatedAdminAdminInvitesRouteImport.update({
     id: '/admin/invites',
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -291,6 +300,7 @@ export interface FileRoutesById {
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/apply/'
     | '/admin/claim'
     | '/admin/invites'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/apply'
     | '/admin/claim'
     | '/admin/invites'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -384,6 +396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/claim'
     | '/_authenticated/_admin/admin/invites'
+    | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -603,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_admin/admin/': {
+      id: '/_authenticated/_admin/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/_admin/admin/invites': {
       id: '/_authenticated/_admin/admin/invites'
       path: '/admin/invites'
@@ -623,12 +643,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAdminClaimRoute: typeof AuthenticatedAdminAdminClaimRoute
   AuthenticatedAdminAdminInvitesRoute: typeof AuthenticatedAdminAdminInvitesRoute
+  AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminAdminClaimRoute: AuthenticatedAdminAdminClaimRoute,
     AuthenticatedAdminAdminInvitesRoute: AuthenticatedAdminAdminInvitesRoute,
+    AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
