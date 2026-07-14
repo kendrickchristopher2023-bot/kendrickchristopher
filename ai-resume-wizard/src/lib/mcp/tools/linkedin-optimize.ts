@@ -16,7 +16,10 @@ export default defineTool({
   annotations: { readOnlyHint: true, openWorldHint: true },
   handler: async ({ target_role, target_keywords, current_headline, current_about }, ctx) => {
     requireAuth(ctx);
+    const capErr = await checkUsageOrReturnError(ctx, "linkedin");
+    if (capErr) return capErr;
     const supabase = supabaseAsUser(ctx);
+
     const { data: resume, error } = await supabase.from("resumes").select("data").eq("is_primary", true).maybeSingle();
     if (error) return errorResult(error.message);
 
