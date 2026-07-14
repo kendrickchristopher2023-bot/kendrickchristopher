@@ -89,6 +89,39 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
     return { ok: true, magicLink: null };
   });
 
+export const resendAccessLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) =>
+    z.object({ id: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: req, error: reqErr } = await context.supabase
+      .from("access_requests")
+      .select("email, status")
+      .eq("id", data.id)
+      .single();
+    if (reqErr || !req) throw reqErr ?? new Error("Not found");
+
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const origin = process.env.APP_URL || "http://localhost:8080";
+    const { data: link, error: linkErr } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: req.email,
+        options: { redirectTo: `${origin}/auth` },
+      });
+    if (linkErr) throw linkErr;
+    await writeAudit(context.userId, "access_request.link_resent", null, {
+      access_request_id: data.id,
+      email: req.email,
+      prior_status: req.status,
+    });
+    return { ok: true, email: req.email, magicLink: link.properties?.action_link ?? null };
+  });
+
 // Admin is provisioned manually in the database — there is no self-serve
 // claim endpoint. Only the single owner account holds the `admin` role.
 
