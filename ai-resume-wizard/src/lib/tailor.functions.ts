@@ -10,7 +10,9 @@ const TailorInput = z.object({
   jobDescription: z.string().min(30).max(20000),
   company: z.string().max(120).optional().default(""),
   role: z.string().max(160).optional().default(""),
+  resumeId: z.string().uuid().optional(),
 });
+
 
 export type TailorResult = {
   summary: string;
