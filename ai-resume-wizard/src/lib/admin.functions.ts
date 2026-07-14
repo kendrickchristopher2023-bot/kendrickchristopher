@@ -13,7 +13,7 @@ async function writeAudit(
     admin_user_id: adminUserId,
     action,
     target_user_id: targetUserId,
-    details,
+    details: details as never,
   });
 }
 
