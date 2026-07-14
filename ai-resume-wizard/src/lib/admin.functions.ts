@@ -2,6 +2,21 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+async function writeAudit(
+  adminUserId: string,
+  action: string,
+  targetUserId: string | null,
+  details: Record<string, unknown>,
+) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("admin_audit_log").insert({
+    admin_user_id: adminUserId,
+    action,
+    target_user_id: targetUserId,
+    details,
+  });
+}
+
 async function assertAdmin(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase
     .from("user_roles")
