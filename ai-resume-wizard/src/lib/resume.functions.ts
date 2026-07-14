@@ -54,7 +54,7 @@ export const saveMyResume = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     if (data.id) {
-      const patch: Record<string, unknown> = {
+      const patch: { data: never; updated_at: string; name?: string | null } = {
         data: data.resume as never,
         updated_at: new Date().toISOString(),
       };
@@ -67,6 +67,7 @@ export const saveMyResume = createServerFn({ method: "POST" })
       if (error) throw error;
       return { ok: true, id: data.id };
     }
+
     // Legacy behavior: create/update primary when no id
     const { data: existing } = await context.supabase
       .from("resumes")
