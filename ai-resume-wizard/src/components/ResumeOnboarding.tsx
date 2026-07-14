@@ -57,6 +57,12 @@ export function ResumeOnboarding({ onSaved }: { onSaved: (r: MasterResume) => vo
           Paste your existing resume, LinkedIn "About" text, or a rough career summary. We'll
           structure it into a parser-friendly format you can review before saving.
         </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          New here? Read the{" "}
+          <a href="/help/getting-started" className="text-primary hover:underline">Getting Started guide</a>{" "}
+          or the{" "}
+          <a href="/help/faq" className="text-primary hover:underline">FAQ</a>.
+        </p>
         {!draft && (
           <>
             <textarea
