@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import type { ToolContext } from "@lovable.dev/mcp-js";
 import type { Database } from "@/integrations/supabase/types";
+import { enforceUsage, UsageLimitError, type UsageAction } from "@/lib/usage";
+
 
 /**
  * Build a per-user Supabase client from the verified OAuth token so RLS
@@ -51,4 +53,24 @@ export function jsonResult(obj: unknown) {
 
 export function errorResult(msg: string) {
   return { content: [{ type: "text" as const, text: msg }], isError: true };
+}
+
+/**
+ * Increment today's usage counter (RLS-scoped to signed-in MCP user) and
+ * reject when the plan's daily cap is hit. Call at the top of every AI tool.
+ * Returns an errorResult you should immediately return on limit-reached.
+ */
+export async function checkUsageOrReturnError(
+  ctx: ToolContext,
+  action: UsageAction,
+) {
+  const supabase = supabaseAsUser(ctx);
+  const userId = requireAuth(ctx);
+  try {
+    await enforceUsage(supabase, userId, action);
+    return null;
+  } catch (e) {
+    if (e instanceof UsageLimitError) return errorResult(e.message);
+    return errorResult(e instanceof Error ? e.message : "Usage check failed");
+  }
 }

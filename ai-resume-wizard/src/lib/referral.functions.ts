@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceUsage } from "./usage";
+
 
 const Input = z.object({
   personName: z.string().min(1).max(120),
@@ -10,13 +13,16 @@ const Input = z.object({
 });
 
 export const generateReferralDm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => Input.parse(raw))
-  .handler(async ({ data }): Promise<{ dm: string }> => {
+  .handler(async ({ data, context }): Promise<{ dm: string }> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
+    await enforceUsage(context.supabase, context.userId, "referral_dm");
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const gateway = createLovableAiGatewayProvider(key);
+
 
     const prompt = `Write a warm, specific LinkedIn DM from Christopher Kendrick (AI Deployment / Enablement Manager, 10+ yrs enterprise onboarding, builds Claude + Lovable automations) to ${data.personName} at ${data.company}${data.role ? ` about the ${data.role} role` : ""}.
 

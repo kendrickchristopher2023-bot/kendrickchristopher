@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MasterResume } from "./resume-data";
+import { enforceUsage } from "./usage";
+
 
 export type PersonalMatch = {
   id: string;
@@ -107,6 +109,9 @@ export const suggestMatches = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ suggestions: Suggestion[] }> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
+    // Suggest-matches shares the daily "tailor" budget (no separate counter column).
+    await enforceUsage(context.supabase, context.userId, "tailor");
+
 
     const { data: row } = await context.supabase
       .from("resumes")

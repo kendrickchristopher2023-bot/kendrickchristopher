@@ -19,6 +19,8 @@ import {
   type TailorSessionSummary,
 } from "@/lib/applications.functions";
 import { batchTailorResume } from "@/lib/tailor.functions";
+import { draftFollowup, listFollowupsDue, type FollowupCandidate } from "@/lib/followup.functions";
+
 
 export const Route = createFileRoute("/_authenticated/apply/matches")({
   head: () => ({
@@ -167,11 +169,14 @@ function MatchesPage() {
           </div>
         )}
 
+        <FollowupsSection />
+
         <p className="mt-4 text-xs text-muted-foreground">
           Nothing here auto-submits an application. Links open the company's real posting; you
           review and submit yourself.
         </p>
       </div>
+
 
       {showAdd && <AddMatchDialog onClose={() => setShowAdd(false)} onSaved={invalidateAll} />}
       {showSuggest && <SuggestDialog onClose={() => setShowSuggest(false)} onAdded={invalidateAll} />}
@@ -714,5 +719,139 @@ function Modal({
         {children}
       </div>
     </div>
+  );
+}
+
+function FollowupsSection() {
+  const listFn = useServerFn(listFollowupsDue);
+  const q = useQuery({ queryKey: ["followups-due"], queryFn: () => listFn() });
+  const [drafting, setDrafting] = useState<FollowupCandidate | null>(null);
+
+  if (q.isLoading || !q.data || q.data.length === 0) return null;
+
+  return (
+    <section className="mt-10">
+      <h2 className="text-lg font-semibold">Follow-ups due</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Applied 7+ days ago and still marked "applied". Draft a nudge — you copy and send it
+        yourself.
+      </p>
+      <ul className="mt-4 divide-y divide-border rounded-lg border border-border bg-card">
+        {q.data.map((f) => (
+          <li key={f.application_id} className="flex flex-wrap items-center gap-3 p-4">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium">
+                {f.company} — <span className="text-muted-foreground">{f.role}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Applied {f.days_since} days ago
+              </p>
+            </div>
+            <button
+              onClick={() => setDrafting(f)}
+              className="rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent"
+            >
+              Draft follow-up
+            </button>
+          </li>
+        ))}
+      </ul>
+      {drafting && <FollowupDraftDialog candidate={drafting} onClose={() => setDrafting(null)} />}
+    </section>
+  );
+}
+
+function FollowupDraftDialog({
+  candidate,
+  onClose,
+}: {
+  candidate: FollowupCandidate;
+  onClose: () => void;
+}) {
+  const draftFn = useServerFn(draftFollowup);
+  const [kind, setKind] = useState<"status_check" | "thank_you" | "nudge">("status_check");
+  const [recipient, setRecipient] = useState("");
+  const [notes, setNotes] = useState(candidate.notes ?? "");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const gen = useMutation({
+    mutationFn: () =>
+      draftFn({
+        data: {
+          application_id: candidate.application_id,
+          company: candidate.company,
+          role: candidate.role,
+          days_since: candidate.days_since,
+          kind,
+          recipient_name: recipient,
+          notes,
+        },
+      }),
+    onSuccess: (r) => {
+      setSubject(r.subject);
+      setBody(r.body);
+      setErr(null);
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
+  };
+
+  return (
+    <Modal onClose={onClose} title={`Follow-up — ${candidate.company}`} wide>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="text-sm">
+          Kind
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value as typeof kind)}
+            className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-sm"
+          >
+            <option value="status_check">Status check</option>
+            <option value="nudge">Gentle nudge</option>
+            <option value="thank_you">Thank-you</option>
+          </select>
+        </label>
+        <Field label="Recipient name (optional)" value={recipient} onChange={setRecipient} />
+      </div>
+      <div className="mt-3">
+        <Field label="Notes / anything to reference" value={notes} onChange={setNotes} textarea />
+      </div>
+      {err && <p className="mt-2 text-sm text-destructive">{err}</p>}
+      <button
+        onClick={() => gen.mutate()}
+        disabled={gen.isPending}
+        className="mt-3 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+      >
+        {gen.isPending ? "Drafting…" : subject ? "Regenerate" : "Draft"}
+      </button>
+      {subject && (
+        <div className="mt-5 rounded-lg border border-border bg-background p-4">
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full font-semibold bg-transparent border-0 focus:outline-none"
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={10}
+            className="mt-2 w-full rounded border border-input bg-background px-2 py-1 text-sm"
+          />
+          <div className="mt-2 flex justify-end">
+            <button onClick={copy} className="text-xs text-primary hover:underline">
+              Copy subject + body
+            </button>
+          </div>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        This only drafts text. You send it yourself.
+      </p>
+    </Modal>
   );
 }

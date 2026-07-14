@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { callGateway, errorResult, requireAuth, supabaseAsUser, textResult } from "../_helpers";
+import { callGateway, checkUsageOrReturnError, errorResult, requireAuth, supabaseAsUser, textResult } from "../_helpers";
 
 export default defineTool({
   name: "interview_prep_star",
@@ -14,7 +14,10 @@ export default defineTool({
   annotations: { readOnlyHint: true, openWorldHint: true },
   handler: async ({ job_description, questions }, ctx) => {
     requireAuth(ctx);
+    const capErr = await checkUsageOrReturnError(ctx, "interview_prep");
+    if (capErr) return capErr;
     const supabase = supabaseAsUser(ctx);
+
     const { data: resume, error } = await supabase.from("resumes").select("data").eq("is_primary", true).maybeSingle();
     if (error) return errorResult(error.message);
     if (!resume) return errorResult("No resume found. Call update_resume first.");

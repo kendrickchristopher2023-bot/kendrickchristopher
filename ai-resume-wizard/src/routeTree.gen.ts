@@ -16,6 +16,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
@@ -26,6 +28,7 @@ import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenti
 import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authenticated/apply.referrals'
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
+import { Route as AuthenticatedApplyInterviewPrepRouteImport } from './routes/_authenticated/apply.interview-prep'
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -65,6 +68,16 @@ const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
   id: '/api/resume-docx',
   path: '/api/resume-docx',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedResumesRoute = AuthenticatedResumesRouteImport.update({
+  id: '/resumes',
+  path: '/resumes',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
   id: '/resume',
@@ -121,6 +134,12 @@ const AuthenticatedApplyMatchesRoute =
     path: '/matches',
     getParentRoute: () => AuthenticatedApplyRoute,
   } as any)
+const AuthenticatedApplyInterviewPrepRoute =
+  AuthenticatedApplyInterviewPrepRouteImport.update({
+    id: '/interview-prep',
+    path: '/interview-prep',
+    getParentRoute: () => AuthenticatedApplyRoute,
+  } as any)
 const AuthenticatedApplyAutofillRoute =
   AuthenticatedApplyAutofillRouteImport.update({
     id: '/autofill',
@@ -160,11 +179,14 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/apply': typeof AuthenticatedApplyRouteWithChildren
   '/resume': typeof AuthenticatedResumeRoute
+  '/resumes': typeof AuthenticatedResumesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
@@ -181,11 +203,14 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/resume': typeof AuthenticatedResumeRoute
+  '/resumes': typeof AuthenticatedResumesRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
@@ -206,11 +231,14 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
+  '/_authenticated/resumes': typeof AuthenticatedResumesRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
+  '/_authenticated/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/_authenticated/apply/referrals': typeof AuthenticatedApplyReferralsRoute
@@ -230,11 +258,14 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/apply'
     | '/resume'
+    | '/resumes'
+    | '/settings'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
+    | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
     | '/apply/referrals'
@@ -251,11 +282,14 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/resume'
+    | '/resumes'
+    | '/settings'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
+    | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
     | '/apply/referrals'
@@ -275,11 +309,14 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/apply'
     | '/_authenticated/resume'
+    | '/_authenticated/resumes'
+    | '/_authenticated/settings'
     | '/api/resume-docx'
     | '/api/tailored-resume'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/apply/autofill'
+    | '/_authenticated/apply/interview-prep'
     | '/_authenticated/apply/matches'
     | '/_authenticated/apply/metrics'
     | '/_authenticated/apply/referrals'
@@ -354,6 +391,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiResumeDocxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/resumes': {
+      id: '/_authenticated/resumes'
+      path: '/resumes'
+      fullPath: '/resumes'
+      preLoaderRoute: typeof AuthenticatedResumesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/resume': {
       id: '/_authenticated/resume'
       path: '/resume'
@@ -424,6 +475,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyMatchesRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/_authenticated/apply/interview-prep': {
+      id: '/_authenticated/apply/interview-prep'
+      path: '/interview-prep'
+      fullPath: '/apply/interview-prep'
+      preLoaderRoute: typeof AuthenticatedApplyInterviewPrepRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
     '/_authenticated/apply/autofill': {
       id: '/_authenticated/apply/autofill'
       path: '/autofill'
@@ -480,6 +538,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedApplyRouteChildren {
   AuthenticatedApplyAutofillRoute: typeof AuthenticatedApplyAutofillRoute
+  AuthenticatedApplyInterviewPrepRoute: typeof AuthenticatedApplyInterviewPrepRoute
   AuthenticatedApplyMatchesRoute: typeof AuthenticatedApplyMatchesRoute
   AuthenticatedApplyMetricsRoute: typeof AuthenticatedApplyMetricsRoute
   AuthenticatedApplyReferralsRoute: typeof AuthenticatedApplyReferralsRoute
@@ -489,6 +548,7 @@ interface AuthenticatedApplyRouteChildren {
 
 const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
   AuthenticatedApplyAutofillRoute: AuthenticatedApplyAutofillRoute,
+  AuthenticatedApplyInterviewPrepRoute: AuthenticatedApplyInterviewPrepRoute,
   AuthenticatedApplyMatchesRoute: AuthenticatedApplyMatchesRoute,
   AuthenticatedApplyMetricsRoute: AuthenticatedApplyMetricsRoute,
   AuthenticatedApplyReferralsRoute: AuthenticatedApplyReferralsRoute,
@@ -503,12 +563,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRouteWithChildren
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
+  AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApplyRoute: AuthenticatedApplyRouteWithChildren,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
+  AuthenticatedResumesRoute: AuthenticatedResumesRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

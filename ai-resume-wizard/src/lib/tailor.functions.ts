@@ -3,12 +3,16 @@ import { generateText } from "ai";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MasterResume } from "./resume-data";
+import { enforceUsage } from "./usage";
+
 
 const TailorInput = z.object({
   jobDescription: z.string().min(30).max(20000),
   company: z.string().max(120).optional().default(""),
   role: z.string().max(160).optional().default(""),
+  resumeId: z.string().uuid().optional(),
 });
+
 
 export type TailorResult = {
   summary: string;
@@ -32,15 +36,15 @@ export const tailorResume = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<TailorResult> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
+    await enforceUsage(context.supabase, context.userId, "tailor");
 
-    const { data: row, error } = await context.supabase
-      .from("resumes")
-      .select("data")
-      .eq("user_id", context.userId)
-      .eq("is_primary", true)
-      .maybeSingle();
+    const baseQ = context.supabase.from("resumes").select("data").eq("user_id", context.userId);
+    const { data: row, error } = data.resumeId
+      ? await baseQ.eq("id", data.resumeId).maybeSingle()
+      : await baseQ.eq("is_primary", true).maybeSingle();
     if (error) throw error;
     if (!row) throw new Error("No resume found. Visit /resume to add yours first.");
+
     const master = row.data as unknown as MasterResume;
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
@@ -172,6 +176,8 @@ export const batchTailorResume = createServerFn({ method: "POST" })
     const results: BatchTailorItemResult[] = [];
     for (const item of data.items) {
       try {
+        await enforceUsage(context.supabase, context.userId, "tailor");
+
         const prompt = `MASTER RESUME:
 ${masterJson}
 
