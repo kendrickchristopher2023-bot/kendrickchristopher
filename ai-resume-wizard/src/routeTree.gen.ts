@@ -39,7 +39,6 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
-import { Route as AuthenticatedAdminAdminClaimRouteImport } from './routes/_authenticated/_admin/admin.claim'
 
 const RequestAccessRoute = RequestAccessRouteImport.update({
   id: '/request-access',
@@ -200,12 +199,6 @@ const AuthenticatedAdminAdminInvitesRoute =
     path: '/admin/invites',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminAdminClaimRoute =
-  AuthenticatedAdminAdminClaimRouteImport.update({
-    id: '/admin/claim',
-    path: '/admin/claim',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -234,7 +227,6 @@ export interface FileRoutesByFullPath {
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
-  '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -264,7 +256,6 @@ export interface FileRoutesByTo {
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
-  '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -298,7 +289,6 @@ export interface FileRoutesById {
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
-  '/_authenticated/_admin/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -331,7 +321,6 @@ export interface FileRouteTypes {
     | '/apply/tailor'
     | '/api/extension/profile'
     | '/apply/'
-    | '/admin/claim'
     | '/admin/invites'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -361,7 +350,6 @@ export interface FileRouteTypes {
     | '/apply/tailor'
     | '/api/extension/profile'
     | '/apply'
-    | '/admin/claim'
     | '/admin/invites'
     | '/admin'
   id:
@@ -394,7 +382,6 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/tailor'
     | '/api/extension/profile'
     | '/_authenticated/apply/'
-    | '/_authenticated/_admin/admin/claim'
     | '/_authenticated/_admin/admin/invites'
     | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
@@ -630,25 +617,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminInvitesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/_admin/admin/claim': {
-      id: '/_authenticated/_admin/admin/claim'
-      path: '/admin/claim'
-      fullPath: '/admin/claim'
-      preLoaderRoute: typeof AuthenticatedAdminAdminClaimRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
   }
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
-  AuthenticatedAdminAdminClaimRoute: typeof AuthenticatedAdminAdminClaimRoute
   AuthenticatedAdminAdminInvitesRoute: typeof AuthenticatedAdminAdminInvitesRoute
   AuthenticatedAdminAdminIndexRoute: typeof AuthenticatedAdminAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
-    AuthenticatedAdminAdminClaimRoute: AuthenticatedAdminAdminClaimRoute,
     AuthenticatedAdminAdminInvitesRoute: AuthenticatedAdminAdminInvitesRoute,
     AuthenticatedAdminAdminIndexRoute: AuthenticatedAdminAdminIndexRoute,
   }
