@@ -5,11 +5,12 @@
 // through the existing `chat` usage action.
 
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { enforceUsage, UsageLimitError } from "@/lib/usage";
 import type { MasterResume } from "@/lib/resume-data";
+import type { Database } from "@/integrations/supabase/types";
 
 const SYSTEM = `You are the in-app assistant for a personal AI job-search toolkit. You help one signed-in user prepare and manage their own job applications.
 
