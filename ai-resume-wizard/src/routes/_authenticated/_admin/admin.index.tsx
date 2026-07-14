@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   listAccessRequests,
   reviewAccessRequest,
+  resendAccessLink,
   listUsersAdmin,
   updateUserPlanAdmin,
   setUserAccessAdmin,
