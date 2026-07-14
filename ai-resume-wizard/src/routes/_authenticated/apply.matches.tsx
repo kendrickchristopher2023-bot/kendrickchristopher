@@ -646,7 +646,7 @@ function MarkAppliedDialog({
             ))}
           </select>
         </label>
-        <Field label="JD URL" value={jdUrl} onChange={setJdUrl} />
+        <Field label="Job posting URL" value={jdUrl} onChange={setJdUrl} />
         <Field label="Notes" value={notes} onChange={setNotes} textarea />
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancel</button>
