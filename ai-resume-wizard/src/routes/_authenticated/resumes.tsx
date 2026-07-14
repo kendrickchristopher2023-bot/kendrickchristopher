@@ -110,13 +110,13 @@ function ResumesPage() {
                       Set primary
                     </button>
                   )}
-                  <Link
-                    to="/resume"
-                    search={{ id: r.id } as never}
+                  <a
+                    href={`/resume?id=${r.id}`}
                     className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     View
-                  </Link>
+                  </a>
+
                   {!r.is_primary && (
                     <button
                       onClick={() => {
