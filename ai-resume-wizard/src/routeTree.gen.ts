@@ -24,6 +24,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
 import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
+import { Route as ApiExtensionProfileRouteImport } from './routes/api.extension.profile'
 import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
 import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authenticated/apply.referrals'
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
@@ -110,6 +111,11 @@ const AuthenticatedApplyIndexRoute = AuthenticatedApplyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedApplyRoute,
 } as any)
+const ApiExtensionProfileRoute = ApiExtensionProfileRouteImport.update({
+  id: '/api/extension/profile',
+  path: '/api/extension/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedApplyTailorRoute =
   AuthenticatedApplyTailorRouteImport.update({
     id: '/tailor',
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
   '/_authenticated/apply/referrals': typeof AuthenticatedApplyReferralsRoute
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
+  '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/claim': typeof AuthenticatedAdminAdminClaimRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/apply/metrics'
     | '/apply/referrals'
     | '/apply/tailor'
+    | '/api/extension/profile'
     | '/apply/'
     | '/admin/claim'
     | '/admin/invites'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/apply/metrics'
     | '/apply/referrals'
     | '/apply/tailor'
+    | '/api/extension/profile'
     | '/apply'
     | '/admin/claim'
     | '/admin/invites'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/metrics'
     | '/_authenticated/apply/referrals'
     | '/_authenticated/apply/tailor'
+    | '/api/extension/profile'
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/claim'
     | '/_authenticated/_admin/admin/invites'
@@ -338,6 +350,7 @@ export interface RootRouteChildren {
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -446,6 +459,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apply/'
       preLoaderRoute: typeof AuthenticatedApplyIndexRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/api/extension/profile': {
+      id: '/api/extension/profile'
+      path: '/api/extension/profile'
+      fullPath: '/api/extension/profile'
+      preLoaderRoute: typeof ApiExtensionProfileRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/apply/tailor': {
       id: '/_authenticated/apply/tailor'
@@ -591,6 +611,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiExtensionProfileRoute: ApiExtensionProfileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
