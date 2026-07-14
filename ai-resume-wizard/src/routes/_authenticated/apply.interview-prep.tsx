@@ -106,7 +106,7 @@ function InterviewPrepPage() {
             disabled={gen.isPending || jd.trim().length < 30}
             className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {gen.isPending ? "Generating…" : "Generate STAR answers"}
+            {gen.isPending ? "Generating…" : "Generate structured answers"}
           </button>
         </section>
 
