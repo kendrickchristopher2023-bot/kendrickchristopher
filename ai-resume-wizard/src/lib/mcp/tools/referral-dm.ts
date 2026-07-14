@@ -15,6 +15,9 @@ export default defineTool({
   annotations: { readOnlyHint: true, openWorldHint: true },
   handler: async ({ person_name, company, role, context }, ctx) => {
     requireAuth(ctx);
+    const capErr = await checkUsageOrReturnError(ctx, "referral_dm");
+    if (capErr) return capErr;
+
     const text = await callGateway(
       `Write a warm, specific LinkedIn DM to ${person_name} at ${company}${role ? ` about the ${role} role` : ""}.
 Rules:
