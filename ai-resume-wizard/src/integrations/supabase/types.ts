@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      api_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          last_used_at: string | null
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           applied_at: string
@@ -147,6 +174,7 @@ export type Database = {
           id: string
           onboarded_at: string | null
           plan: Database["public"]["Enums"]["plan_tier"]
+          screener_answers: Json
           updated_at: string
         }
         Insert: {
@@ -156,6 +184,7 @@ export type Database = {
           id: string
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
+          screener_answers?: Json
           updated_at?: string
         }
         Update: {
@@ -165,6 +194,7 @@ export type Database = {
           id?: string
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
+          screener_answers?: Json
           updated_at?: string
         }
         Relationships: []
