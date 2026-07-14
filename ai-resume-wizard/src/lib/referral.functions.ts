@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceUsage } from "./usage";
+
 
 const Input = z.object({
   personName: z.string().min(1).max(120),
