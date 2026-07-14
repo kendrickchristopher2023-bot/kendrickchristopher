@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   listAccessRequests,
   reviewAccessRequest,
+  resendAccessLink,
   listUsersAdmin,
   updateUserPlanAdmin,
   setUserAccessAdmin,
@@ -42,6 +43,7 @@ function AdminDashboard() {
   const planFn = useServerFn(updateUserPlanAdmin);
   const accessFn = useServerFn(setUserAccessAdmin);
   const reviewFn = useServerFn(reviewAccessRequest);
+  const resendFn = useServerFn(resendAccessLink);
 
   const users = useQuery({ queryKey: ["admin", "users"], queryFn: () => usersFn() });
   const analytics = useQuery({
@@ -83,6 +85,13 @@ function AdminDashboard() {
     },
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+      if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
+    },
+  });
+  const resend = useMutation({
+    mutationFn: (v: { id: string }) => resendFn({ data: v }),
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
       if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
     },
@@ -395,36 +404,48 @@ function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {r.status === "pending" && (
-                        <div className="inline-flex gap-2">
+                      <div className="inline-flex gap-2">
+                        {r.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() =>
+                                review.mutate({
+                                  id: r.id,
+                                  approve: true,
+                                  email: r.email,
+                                })
+                              }
+                              disabled={review.isPending}
+                              className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                review.mutate({
+                                  id: r.id,
+                                  approve: false,
+                                  email: r.email,
+                                })
+                              }
+                              disabled={review.isPending}
+                              className="rounded-md border border-input px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                            >
+                              Deny
+                            </button>
+                          </>
+                        )}
+                        {r.status !== "denied" && (
                           <button
-                            onClick={() =>
-                              review.mutate({
-                                id: r.id,
-                                approve: true,
-                                email: r.email,
-                              })
-                            }
-                            disabled={review.isPending}
-                            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() =>
-                              review.mutate({
-                                id: r.id,
-                                approve: false,
-                                email: r.email,
-                              })
-                            }
-                            disabled={review.isPending}
+                            onClick={() => resend.mutate({ id: r.id })}
+                            disabled={resend.isPending}
+                            title="Mint a fresh magic link (use if the previous one expired)"
                             className="rounded-md border border-input px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
                           >
-                            Deny
+                            Resend link
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
