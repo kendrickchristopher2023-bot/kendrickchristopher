@@ -12,16 +12,22 @@ type Msg = { role: "user" | "assistant"; content: string; tools?: { name: string
 const WELCOME: Msg = {
   role: "assistant",
   content:
-    "Hi — I'm your job-search assistant. Paste a job description and I'll tailor your resume, draft a cover letter, or prep interview stories. I can't submit any applications for you.",
+    "Hi — I'm your job-search assistant. Paste a job description and I'll tailor your resume, draft a cover letter, or prep interview stories. You can also attach a resume PDF or a screenshot of a job posting. I can't submit any applications for you.",
 };
+
+const ACCEPT =
+  ".pdf,.docx,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp";
 
 export function ChatAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [busyMsg, setBusyMsg] = useState("Thinking…");
   const [err, setErr] = useState<string | null>(null);
+  const [attached, setAttached] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -29,20 +35,60 @@ export function ChatAssistant() {
     }
   }, [messages, open]);
 
+  const getToken = async () => {
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token;
+    if (!token) throw new Error("Please sign in again.");
+    return token;
+  };
+
   const send = async () => {
     const text = input.trim();
-    if (!text || busy) return;
+    if ((!text && !attached) || busy) return;
     setInput("");
     setErr(null);
-    const nextMessages: Msg[] = [...messages, { role: "user", content: text }];
-    setMessages(nextMessages);
     setBusy(true);
+
     try {
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      if (!token) throw new Error("Please sign in again.");
+      const token = await getToken();
+      let userContent = text;
+
+      if (attached) {
+        setBusyMsg(`Extracting ${attached.name}…`);
+        const fd = new FormData();
+        fd.append("file", attached);
+        fd.append("mode", "text");
+        const xres = await fetch("/api/extract", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const xdata = (await xres.json().catch(() => ({}))) as { text?: string; error?: string };
+        if (!xres.ok || !xdata.text) {
+          throw new Error(xdata.error || `Couldn't read file (${xres.status})`);
+        }
+        const attachedBlock = `\n\n[Attached file: ${attached.name}]\n${xdata.text}`;
+        userContent = text ? `${text}${attachedBlock}` : `I've attached a file:${attachedBlock}`;
+      }
+
+      const nextMessages: Msg[] = [
+        ...messages,
+        {
+          role: "user",
+          content: attached
+            ? (text ? `${text}\n\n📎 ${attached.name}` : `📎 Attached ${attached.name}`)
+            : text,
+        },
+      ];
+      setMessages(nextMessages);
+      setAttached(null);
+      if (fileRef.current) fileRef.current.value = "";
+
+      setBusyMsg("Thinking…");
       const payload = {
-        messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+        // Send the extracted content to the model, not the emoji preview.
+        messages: nextMessages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))
+          .concat([{ role: "user", content: userContent }]),
       };
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -65,6 +111,7 @@ export function ChatAssistant() {
       setErr(e instanceof Error ? e.message : "Chat failed");
     } finally {
       setBusy(false);
+      setBusyMsg("Thinking…");
     }
   };
 
@@ -130,13 +177,48 @@ export function ChatAssistant() {
           </div>
         ))}
         {busy && (
-          <p className="text-xs italic text-muted-foreground">Thinking…</p>
+          <p className="text-xs italic text-muted-foreground">{busyMsg}</p>
         )}
         {err && <p className="text-xs text-destructive">{err}</p>}
       </div>
 
       <div className="border-t border-border p-3">
+        {attached && (
+          <div className="mb-2 flex items-center justify-between rounded-md bg-muted px-2 py-1 text-xs">
+            <span className="truncate">
+              📎 {attached.name} · {(attached.size / 1024).toFixed(0)} KB
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setAttached(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="ml-2 text-muted-foreground hover:text-foreground"
+              aria-label="Remove attachment"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept={ACCEPT}
+            onChange={(e) => setAttached(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            aria-label="Attach file"
+            title="Attach a PDF, DOCX, or image (up to 10MB)"
+            className="rounded-md border border-input px-2 text-sm text-foreground hover:bg-accent disabled:opacity-50"
+          >
+            📎
+          </button>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -153,14 +235,15 @@ export function ChatAssistant() {
           />
           <button
             onClick={send}
-            disabled={busy || !input.trim()}
+            disabled={busy || (!input.trim() && !attached)}
             className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
             Send
           </button>
         </div>
         <p className="mt-2 text-[10px] text-muted-foreground">
-          I can't submit or fill external applications. Answers use your saved resume.
+          I can't submit or fill external applications. Files stay in memory — only the
+          extracted text is used.
         </p>
       </div>
     </div>
