@@ -3,6 +3,8 @@ import { generateText } from "ai";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MasterResume } from "./resume-data";
+import { enforceUsage } from "./usage";
+
 
 const TailorInput = z.object({
   jobDescription: z.string().min(30).max(20000),
