@@ -272,7 +272,6 @@ function MatchRow({
         <td className="px-3 py-3 text-right whitespace-nowrap">
           <Link
             to="/apply/tailor"
-            search={{ company: match.company, role: match.role } as never}
             className="text-xs font-medium text-primary hover:underline"
           >
             Tailor
