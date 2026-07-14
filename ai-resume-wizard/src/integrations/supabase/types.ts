@@ -334,7 +334,7 @@ export type Database = {
     }
     Functions: {
       increment_usage: {
-        Args: { _action: string; _cap: number }
+        Args: { _action: string }
         Returns: {
           allowed: boolean
           cap: number

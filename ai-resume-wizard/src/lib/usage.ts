@@ -93,14 +93,18 @@ export async function enforceUsage(
 ): Promise<{ used: number; cap: number; plan: Plan }> {
   const plan = await getPlanFor(supabase, userId);
   const cap = PLAN_CAPS[plan][action];
+  // Cap is derived server-side inside increment_usage from profiles.plan;
+  // we no longer pass it from the client. PLAN_CAPS above must stay in sync
+  // with the CASE table in the increment_usage SQL function.
   const { data, error } = await supabase.rpc("increment_usage", {
     _action: action,
-    _cap: cap,
   });
   if (error) throw new Error(error.message);
   const row = Array.isArray(data) ? data[0] : data;
   const used = (row?.used as number) ?? 0;
+  const serverCap = (row?.cap as number) ?? cap;
   const allowed = (row?.allowed as boolean) ?? false;
-  if (!allowed) throw new UsageLimitError(action, used, cap);
-  return { used, cap, plan };
+  if (!allowed) throw new UsageLimitError(action, used, serverCap);
+  return { used, cap: serverCap, plan };
 }
+
