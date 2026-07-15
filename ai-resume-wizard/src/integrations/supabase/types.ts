@@ -307,34 +307,40 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          email_notifications: boolean
           free_resume_rewrite_used: boolean
           full_name: string | null
           id: string
           onboarded_at: string | null
           plan: Database["public"]["Enums"]["plan_tier"]
           screener_answers: Json
+          unsubscribe_token: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           email: string
+          email_notifications?: boolean
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id: string
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
           screener_answers?: Json
+          unsubscribe_token?: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string
+          email_notifications?: boolean
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id?: string
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
           screener_answers?: Json
+          unsubscribe_token?: string
           updated_at?: string
         }
         Relationships: []
