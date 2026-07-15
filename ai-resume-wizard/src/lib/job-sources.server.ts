@@ -110,7 +110,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
   }>;
   return (data ?? []).map((j) => {
     const loc = j.categories?.location ?? null;
-    return {
+    return withParsed({
       source: "lever",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -120,7 +120,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
       description: stripHtml(j.descriptionPlain ?? null),
       remote: looksRemote(loc, j.categories?.commitment),
       posted_at: j.createdAt ? new Date(j.createdAt).toISOString() : null,
-    };
+    });
   });
 }
 
