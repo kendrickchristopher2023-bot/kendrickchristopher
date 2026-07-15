@@ -13,17 +13,17 @@ export type ResumeMeta = {
   updated_at: string;
 };
 
-async function markOnboardedIfNeeded(
-  supabase: import("@supabase/supabase-js").SupabaseClient,
-  userId: string,
-) {
+async function markOnboardedIfNeeded(userId: string) {
+  // Server-side only: `onboarded_at` UPDATE is revoked from the authenticated role.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // First completion wins — never overwrite an existing timestamp.
-  await supabase
+  await supabaseAdmin
     .from("profiles")
     .update({ onboarded_at: new Date().toISOString() })
     .eq("id", userId)
     .is("onboarded_at", null);
 }
+
 
 export const listMyResumes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
