@@ -96,9 +96,11 @@ function DiscoverPage() {
 
   // Reset the stale confirmation banner whenever the applied filters change
   // so a "Refreshed X jobs" message doesn't hang around next to new results.
+  // NOTE: `page` is reset synchronously in submit()/clear() below — resetting it
+  // here in an effect caused a render where a new filter ran against a stale
+  // non-zero offset, briefly showing "Nothing matches" before self-correcting.
   useEffect(() => {
     setMsg(null);
-    setPage(0);
   }, [applied]);
 
   const jobsQ = useQuery({
@@ -161,8 +163,15 @@ function DiscoverPage() {
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
+    setPage(0);
     setApplied({ ...draft });
   };
+  const clear = () => {
+    setPage(0);
+    setDraft(EMPTY);
+    setApplied(EMPTY);
+  };
+
   const clear = () => {
     setDraft(EMPTY);
     setApplied(EMPTY);
