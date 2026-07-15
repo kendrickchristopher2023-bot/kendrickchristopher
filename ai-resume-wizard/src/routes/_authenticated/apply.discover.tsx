@@ -263,6 +263,49 @@ function DiscoverPage() {
             </select>
           </div>
 
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">Min salary (USD/yr)</label>
+              <input
+                type="number"
+                min={0}
+                max={1_000_000}
+                step={5000}
+                value={draft.salaryMin || ""}
+                onChange={(e) => setDraft({ ...draft, salaryMin: Number(e.target.value) || 0 })}
+                placeholder="e.g. 150000"
+                className="w-full rounded-md border border-input bg-background px-2 py-2 text-sm"
+              />
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={draft.salaryOnlyListed}
+                onChange={(e) => setDraft({ ...draft, salaryOnlyListed: e.target.checked })}
+              />
+              Only show jobs with a listed salary
+            </label>
+            <select
+              value={draft.experienceLevel}
+              onChange={(e) => setDraft({ ...draft, experienceLevel: e.target.value })}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {LEVEL_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={draft.levelOnlyClassified}
+                onChange={(e) => setDraft({ ...draft, levelOnlyClassified: e.target.checked })}
+                disabled={!draft.experienceLevel}
+              />
+              Exclude unclassified level
+            </label>
+          </div>
+
+
           <div className="flex flex-wrap items-center gap-2">
             <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <input
