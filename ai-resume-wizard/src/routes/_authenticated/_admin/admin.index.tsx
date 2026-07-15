@@ -44,6 +44,24 @@ function formatEasternDateTime(iso: string | null | undefined): string {
   return `${formatted} ET`;
 }
 
+function formatRelative(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "";
+  const diff = Date.now() - t;
+  if (diff < 0) return "just now";
+  const mins = Math.round(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.round(months / 12)}y ago`;
+}
+
 const FUNNEL_STAGES = [
   "applied",
   "response",
@@ -81,7 +99,13 @@ function AdminDashboard() {
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<
-    "joined_desc" | "joined_asc" | "login_desc" | "login_asc" | "login_never_first"
+    | "joined_desc"
+    | "joined_asc"
+    | "login_desc"
+    | "login_asc"
+    | "login_never_first"
+    | "active_desc"
+    | "active_asc"
   >("joined_desc");
   const [magic, setMagic] = useState<{
     email: string;
@@ -173,6 +197,16 @@ function AdminDashboard() {
         sorted.sort(
           (a, b) =>
             (t(a.last_sign_in_at) || -1) - (t(b.last_sign_in_at) || -1),
+        );
+        break;
+      case "active_desc":
+        sorted.sort((a, b) => t(b.last_active_at) - t(a.last_active_at));
+        break;
+      case "active_asc":
+        sorted.sort(
+          (a, b) =>
+            (t(a.last_active_at) || Number.MAX_SAFE_INTEGER) -
+            (t(b.last_active_at) || Number.MAX_SAFE_INTEGER),
         );
         break;
     }
@@ -297,9 +331,11 @@ function AdminDashboard() {
               >
                 <option value="joined_desc">Sort: Newest joined</option>
                 <option value="joined_asc">Sort: Oldest joined</option>
-                <option value="login_desc">Sort: Most-recently active</option>
-                <option value="login_asc">Sort: Least-recently active (never last)</option>
+                <option value="login_desc">Sort: Most-recently signed in</option>
+                <option value="login_asc">Sort: Least-recently signed in (never last)</option>
                 <option value="login_never_first">Sort: Never signed in first</option>
+                <option value="active_desc">Sort: Most-recently active</option>
+                <option value="active_asc">Sort: Least-recently active (never last)</option>
               </select>
               <input
                 value={search}
@@ -332,6 +368,21 @@ function AdminDashboard() {
                       </span>
                     </button>
                   </th>
+                  <th className="px-3 py-2 font-semibold">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSortBy((s) => (s === "active_desc" ? "active_asc" : "active_desc"))
+                      }
+                      className="inline-flex items-center gap-1 hover:text-foreground"
+                      title="Click to sort by last activity"
+                    >
+                      Last active (ET)
+                      <span className="text-muted-foreground">
+                        {sortBy === "active_desc" ? "↓" : sortBy === "active_asc" ? "↑" : "↕"}
+                      </span>
+                    </button>
+                  </th>
                   <th className="px-3 py-2 font-semibold">Resume</th>
                   <th className="px-3 py-2 font-semibold">Today</th>
                   <th className="px-3 py-2 font-semibold">Access</th>
@@ -340,14 +391,14 @@ function AdminDashboard() {
               <tbody className="divide-y divide-border">
                 {users.isLoading && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!users.isLoading && filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                       No users.
                     </td>
                   </tr>
@@ -393,6 +444,15 @@ function AdminDashboard() {
                     <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
                       {formatEasternDateTime(u.last_sign_in_at)}
                     </td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
+                      <div>{formatEasternDateTime(u.last_active_at)}</div>
+                      {u.last_active_at && (
+                        <div className="text-[10px] text-muted-foreground/70">
+                          {formatRelative(u.last_active_at)}
+                        </div>
+                      )}
+                    </td>
+
 
                     <td className="px-3 py-2 text-xs">
                       {u.has_primary_resume ? "✓" : "—"}
@@ -438,6 +498,16 @@ function AdminDashboard() {
           <p className="mt-2 text-xs text-muted-foreground">
             Metadata only — resume content, tailored output, and cover letters
             aren't shown here.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <span className="font-medium">Last login</span> is the last time
+            the user signed in (from auth). <span className="font-medium">Last active</span>{" "}
+            is bumped whenever an authenticated server call is made on their
+            behalf (Discover search, Matches, Tailor, saving a resume, etc.),
+            throttled to once every 5 minutes. Purely client-side interactions
+            that never hit the server (typing in a filter box, scrolling) are
+            not counted, so this is a coarse "still using the app" signal, not
+            precise session tracking.
           </p>
         </section>
 

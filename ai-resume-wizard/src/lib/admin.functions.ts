@@ -216,7 +216,7 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         supabaseAdmin
           .from("profiles")
-          .select("id, email, full_name, plan, created_at, onboarded_at")
+          .select("id, email, full_name, plan, created_at, onboarded_at, last_active_at")
           .order("created_at", { ascending: false }),
         supabaseAdmin
           .from("resumes")
@@ -259,6 +259,7 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         plan: p.plan,
         created_at: p.created_at,
         onboarded_at: p.onboarded_at,
+        last_active_at: p.last_active_at,
         last_sign_in_at: lastSignInByUser.get(p.id) ?? null,
         has_primary_resume: primaryByUser.has(p.id),
         usage_today: usageByUser.get(p.id) ?? 0,
