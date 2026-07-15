@@ -12,6 +12,10 @@ import { classifyLevel, parseSalaryText, toAnnual, type ExperienceLevel } from "
 export type RawJob = {
   source: string;
   source_id: string;
+  // Slug of the watched company that produced this row. Aggregate feeds
+  // (remotive/remoteok/jobicy/arbeitnow/themuse) leave this null — they
+  // aren't company-specific, so there's no owning slug to attribute.
+  source_slug: string | null;
   company: string;
   role: string;
   location: string | null;
@@ -30,6 +34,7 @@ export type RawJob = {
   salary_period: string | null;
   experience_level: ExperienceLevel | null;
 };
+
 
 // Optional structured hints a specific adapter can pass in. Anything absent
 // gets inferred from title/description text.
@@ -150,6 +155,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
     return withParsed({
       source: "greenhouse",
       source_id: `${slug}:${j.id}`,
+      source_slug: slug,
       company: companyName,
       role: j.title,
       location: loc,
@@ -158,6 +164,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
       remote: looksRemote(loc),
       posted_at: j.updated_at ?? null,
     });
+
   });
 }
 
@@ -178,6 +185,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
     return withParsed({
       source: "lever",
       source_id: `${slug}:${j.id}`,
+      source_slug: slug,
       company: companyName,
       role: j.text,
       location: loc,
@@ -186,6 +194,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
       remote: looksRemote(loc, j.categories?.commitment),
       posted_at: j.createdAt ? new Date(j.createdAt).toISOString() : null,
     });
+
   });
 }
 
@@ -236,6 +245,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       {
         source: "ashby",
         source_id: `${slug}:${j.id}`,
+        source_slug: slug,
         company: companyName,
         role: j.title,
         location: loc,
@@ -244,6 +254,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
         remote: !!j.isRemote || looksRemote(loc),
         posted_at: j.publishedDate ?? null,
       },
+
       {
         levelHint: j.employmentType ?? null,
         salary: salaryComp
@@ -283,6 +294,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       {
         source: "remotive",
         source_id: String(j.id),
+        source_slug: null,
         company: j.company_name,
         role: j.title,
         location: j.candidate_required_location ?? "Remote",
@@ -291,6 +303,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
         remote: true,
         posted_at: j.publication_date ?? null,
       },
+
       {
         levelHint: j.job_type ?? null,
         salary:
@@ -323,6 +336,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
       {
         source: "remoteok",
         source_id: String(j.id),
+        source_slug: null,
         company: (j.company as string) ?? "Unknown",
         role: (j.position as string) ?? (j.title as string) ?? "Role",
         location: loc,
@@ -331,6 +345,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
         remote: true,
         posted_at: (j.date as string) ?? null,
       },
+
       {
         salary: hasSalary
           ? { min: sMin, max: sMax, currency: "USD", period: "year" }
@@ -374,6 +389,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       {
         source: "jobicy",
         source_id: String(j.id),
+        source_slug: null,
         company: j.companyName,
         role: j.jobTitle,
         location: j.jobGeo ?? "Remote",
@@ -382,6 +398,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
         remote: true,
         posted_at: j.pubDate ?? null,
       },
+
       {
         levelHint: j.jobLevel ?? null,
         salary:
@@ -420,6 +437,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
     return withParsed({
       source: "arbeitnow",
       source_id: j.slug,
+      source_slug: null,
       company: j.company_name,
       role: j.title,
       location: loc,
@@ -428,6 +446,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
       remote: !!j.remote || looksRemote(loc, (j.tags ?? []).join(" ")),
       posted_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : null,
     });
+
   });
 }
 
@@ -480,6 +499,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
         out.push(withParsed({
           source: "themuse",
           source_id: String(j.id),
+          source_slug: null,
           company: j.company?.name ?? "Unknown",
           role: j.name,
           location: locName,
@@ -488,6 +508,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
           remote: looksRemote(locName),
           posted_at: j.publication_date ?? null,
         }));
+
       }
     } catch {
       // One metro failing shouldn't kill the batch.

@@ -203,6 +203,7 @@ export type Database = {
           search_vector: unknown
           source: string
           source_id: string
+          source_slug: string | null
           url: string
         }
         Insert: {
@@ -226,6 +227,7 @@ export type Database = {
           search_vector?: unknown
           source: string
           source_id: string
+          source_slug?: string | null
           url: string
         }
         Update: {
@@ -249,6 +251,7 @@ export type Database = {
           search_vector?: unknown
           source?: string
           source_id?: string
+          source_slug?: string | null
           url?: string
         }
         Relationships: []
@@ -323,6 +326,7 @@ export type Database = {
           created_at: string
           email: string
           email_notifications: boolean
+          enabled_feeds: string[] | null
           free_resume_rewrite_used: boolean
           full_name: string | null
           id: string
@@ -336,6 +340,7 @@ export type Database = {
           created_at?: string
           email: string
           email_notifications?: boolean
+          enabled_feeds?: string[] | null
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id: string
@@ -349,6 +354,7 @@ export type Database = {
           created_at?: string
           email?: string
           email_notifications?: boolean
+          enabled_feeds?: string[] | null
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id?: string
@@ -494,7 +500,7 @@ export type Database = {
       }
       watched_companies: {
         Row: {
-          added_by: string | null
+          added_by: string
           company_name: string
           created_at: string
           id: string
@@ -505,7 +511,7 @@ export type Database = {
           source: string
         }
         Insert: {
-          added_by?: string | null
+          added_by: string
           company_name: string
           created_at?: string
           id?: string
@@ -516,7 +522,7 @@ export type Database = {
           source: string
         }
         Update: {
-          added_by?: string | null
+          added_by?: string
           company_name?: string
           created_at?: string
           id?: string

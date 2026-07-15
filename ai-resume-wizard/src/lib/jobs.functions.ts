@@ -14,6 +14,7 @@ export type JobListing = {
   id: string;
   source: string;
   source_id: string;
+  source_slug: string | null;
   company: string;
   role: string;
   location: string | null;
@@ -32,18 +33,24 @@ export type JobListing = {
   experience_level: string | null;
 };
 
+
 export type WatchedCompany = {
   id: string;
   source: string;
   slug: string;
   company_name: string;
-  added_by: string | null;
+  added_by: string;
   last_fetched_at: string | null;
   last_fetch_status: string | null;
   last_fetch_count: number | null;
 };
 
 const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+
+// Aggregate (non-company-specific) feeds. These rows have source_slug = null
+// and are gated per-user by profiles.enabled_feeds (default = all on).
+export const AGGREGATE_FEEDS = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export type AggregateFeed = (typeof AGGREGATE_FEEDS)[number];
 
 // Escape a user string for safe inclusion in a PostgREST `.or()` filter value.
 // PostgREST parses `,` and `)` inside `.or(...)`, so anything user-supplied must
@@ -66,6 +73,57 @@ const EXPERIENCE_LEVELS = [
   "manager",
   "director+",
 ] as const;
+
+// Load the (watched_companies, enabled_feeds) that define this user's
+// personal Discover pool. Callers pass the tuples into
+// `applyUserPoolFilter` to scope any job_listings query.
+export async function loadUserPoolScope(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  userId: string,
+): Promise<{ watched: Array<{ source: string; slug: string }>; enabledFeeds: AggregateFeed[] }> {
+  const [w, p] = await Promise.all([
+    supabase
+      .from("watched_companies")
+      .select("source, slug")
+      .eq("added_by", userId),
+    supabase
+      .from("profiles")
+      .select("enabled_feeds")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+  const watched = ((w.data ?? []) as Array<{ source: string; slug: string }>).slice(0, 500);
+  const raw = (p.data?.enabled_feeds as string[] | null) ?? null;
+  const enabledFeeds: AggregateFeed[] = raw
+    ? (raw.filter((s) => (AGGREGATE_FEEDS as readonly string[]).includes(s)) as AggregateFeed[])
+    : [...AGGREGATE_FEEDS]; // default: all on
+  return { watched, enabledFeeds };
+}
+
+// Build the PostgREST `.or(...)` clause that restricts job_listings to the
+// user's visible pool. Returns null when the scope is empty (caller should
+// short-circuit and return zero rows with a friendly "add companies" hint).
+export function buildUserPoolOrClause(scope: {
+  watched: Array<{ source: string; slug: string }>;
+  enabledFeeds: AggregateFeed[];
+}): string | null {
+  const parts: string[] = [];
+  // De-dup watched (source, slug) — safety net; unique constraint already prevents this per user.
+  const seen = new Set<string>();
+  for (const w of scope.watched) {
+    const key = `${w.source}:${w.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // Slug validator restricts to [a-zA-Z0-9_-], so no escaping is needed.
+    parts.push(`and(source.eq.${w.source},source_slug.eq.${w.slug})`);
+  }
+  for (const f of scope.enabledFeeds) {
+    parts.push(`and(source.eq.${f},source_slug.is.null)`);
+  }
+  if (parts.length === 0) return null;
+  return parts.join(",");
+}
+
 
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -97,15 +155,44 @@ export const listJobListings = createServerFn({ method: "GET" })
       })
       .parse(input ?? {}),
   )
-  .handler(async ({ data, context }): Promise<{ rows: JobListing[]; total: number }> => {
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      rows: JobListing[];
+      total: number;
+      poolScope: {
+        watchedCount: number;
+        enabledFeeds: AggregateFeed[];
+        emptyPool: boolean;
+      };
+    }> => {
+    // Personal pool: only jobs from THIS user's watched companies + their
+    // enabled aggregate feeds. Empty scope → skip the query and return
+    // a zero-result payload with `emptyPool: true` so the UI can prompt
+    // the user to add companies instead of showing a stale "nothing matches".
+    const scope = await loadUserPoolScope(context.supabase, context.userId);
+    const poolOr = buildUserPoolOrClause(scope);
+    const scopeMeta = {
+      watchedCount: scope.watched.length,
+      enabledFeeds: scope.enabledFeeds,
+      emptyPool: poolOr === null,
+    };
+    if (poolOr === null) {
+      return { rows: [], total: 0, poolScope: scopeMeta };
+    }
+
     let q = context.supabase
       .from("job_listings")
       .select("*", { count: "exact" })
+      .or(poolOr)
       .order("posted_at", { ascending: false, nullsFirst: false })
       .range(data.offset ?? 0, (data.offset ?? 0) + (data.limit ?? 50) - 1);
 
     if (data.remoteOnly) q = q.eq("remote", true);
     if (data.source) q = q.eq("source", data.source);
+
 
     // Full-text search on role+company. Prefer the split role/company fields;
     // fall back to the legacy combined `q`.
@@ -201,8 +288,13 @@ export const listJobListings = createServerFn({ method: "GET" })
 
     const { data: rows, error, count } = await q;
     if (error) throw error;
-    return { rows: (rows ?? []) as JobListing[], total: count ?? (rows?.length ?? 0) };
+    return {
+      rows: (rows ?? []) as JobListing[],
+      total: count ?? (rows?.length ?? 0),
+      poolScope: scopeMeta,
+    };
   });
+
 
 export const listWatchedCompanies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -250,6 +342,42 @@ export const removeWatchedCompany = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+// Personal Discover feed preferences. Aggregate feeds default to ALL ON —
+// so a brand-new user with no watched companies still sees the general-board
+// pool instead of a blank page.
+export const getMyFeedPrefs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ enabledFeeds: AggregateFeed[] }> => {
+    const { data } = await context.supabase
+      .from("profiles")
+      .select("enabled_feeds")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const raw = (data?.enabled_feeds as string[] | null) ?? null;
+    const enabledFeeds: AggregateFeed[] = raw
+      ? (raw.filter((s) => (AGGREGATE_FEEDS as readonly string[]).includes(s)) as AggregateFeed[])
+      : [...AGGREGATE_FEEDS];
+    return { enabledFeeds };
+  });
+
+export const setMyFeedPrefs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ enabledFeeds: z.array(z.enum(AGGREGATE_FEEDS)) }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ enabledFeeds: AggregateFeed[] }> => {
+    // Store deduped to keep the row tidy.
+    const uniq = Array.from(new Set(data.enabledFeeds)) as AggregateFeed[];
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ enabled_feeds: uniq } as never)
+      .eq("id", context.userId);
+    if (error) throw error;
+    return { enabledFeeds: uniq };
+  });
+
+
 
 export const saveJobToMatches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

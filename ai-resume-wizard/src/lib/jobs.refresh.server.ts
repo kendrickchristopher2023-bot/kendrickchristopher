@@ -51,13 +51,42 @@ async function upsertChunks(rows: RawJob[]): Promise<{ inserted: number; error?:
 export async function runRefreshJobs(): Promise<Summary> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: watched, error } = await supabaseAdmin
+  const { data: watchedRaw, error } = await supabaseAdmin
     .from("watched_companies")
     .select("id, source, slug, company_name")
     // Aggregators handled below — skip any watched rows for them so we don't
     // double-fetch or require a bogus slug.
     .not("source", "in", "(remotive,remoteok,jobicy,arbeitnow,themuse)");
   if (error) throw error;
+
+  // Deduplicate (source, slug) across users: if two users both watch Stripe,
+  // fetch it once and let both benefit from the shared cache. `id` and
+  // `company_name` come from an arbitrary "winner" row — the ATS API is the
+  // source of truth for the company name, so this is safe.
+  const dedupMap = new Map<
+    string,
+    { ids: string[]; source: string; slug: string; company_name: string }
+  >();
+  for (const w of (watchedRaw ?? []) as Array<{
+    id: string;
+    source: string;
+    slug: string;
+    company_name: string;
+  }>) {
+    const key = `${w.source}:${w.slug}`;
+    const existing = dedupMap.get(key);
+    if (existing) {
+      existing.ids.push(w.id);
+    } else {
+      dedupMap.set(key, {
+        ids: [w.id],
+        source: w.source,
+        slug: w.slug,
+        company_name: w.company_name,
+      });
+    }
+  }
+  const watched = Array.from(dedupMap.values());
 
   const summary: Summary = {
     companiesTried: 0,
@@ -97,16 +126,13 @@ export async function runRefreshJobs(): Promise<Summary> {
     }),
   );
 
-  // ---- Per-company (parallel with concurrency cap) ----
-  const rows = (watched ?? []) as Array<{
-    id: string;
-    source: string;
-    slug: string;
-    company_name: string;
-  }>;
-  summary.companiesTried += rows.length;
+  // ---- Per-company (parallel with concurrency cap), one fetch per unique
+  // (source, slug); result is mirrored to every user's watched row so per-row
+  // last_fetched_at/status stay accurate.
+  summary.companiesTried += watched.length;
 
-  await runWithConcurrency(rows, CONCURRENCY, async (w) => {
+
+  await runWithConcurrency(watched, CONCURRENCY, async (w) => {
     let jobs: RawJob[] = [];
     try {
       jobs = await fetchOne(w.source, w.slug, w.company_name);
@@ -115,6 +141,7 @@ export async function runRefreshJobs(): Promise<Summary> {
       summary.companiesFailed += 1;
       bump(w.source, { failed: 1 });
       summary.errors.push({ source: w.source, slug: w.slug, error: msg });
+      // Mirror the error status onto every user's row for this (source, slug).
       await supabaseAdmin
         .from("watched_companies")
         .update({
@@ -122,7 +149,7 @@ export async function runRefreshJobs(): Promise<Summary> {
           last_fetch_status: `error: ${msg.slice(0, 200)}`,
           last_fetch_count: 0,
         } as never)
-        .eq("id", w.id);
+        .in("id", w.ids);
       return;
     }
 
@@ -136,6 +163,7 @@ export async function runRefreshJobs(): Promise<Summary> {
     summary.companiesOk += 1;
     bump(w.source, { ok: 1, jobs: inserted });
 
+    // Mirror the successful status onto every user's row for this (source, slug).
     await supabaseAdmin
       .from("watched_companies")
       .update({
@@ -143,8 +171,9 @@ export async function runRefreshJobs(): Promise<Summary> {
         last_fetch_status: "ok",
         last_fetch_count: jobs.length,
       } as never)
-      .eq("id", w.id);
+      .in("id", w.ids);
   });
+
 
   return summary;
 }

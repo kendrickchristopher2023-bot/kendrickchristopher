@@ -74,19 +74,37 @@ export async function rankJobsForUser({
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("LOVABLE_API_KEY not configured");
 
+  // Scope the pool to the user's watched companies + their enabled feeds,
+  // matching Discover's visibility. Without this, the weekly ranker would
+  // suggest matches from companies the user never chose.
+  const { loadUserPoolScope, buildUserPoolOrClause } = await import("./jobs.functions");
+  const scope = await loadUserPoolScope(supabase, userId);
+  const poolOr = buildUserPoolOrClause(scope);
+  if (poolOr === null) {
+    return {
+      candidatesConsidered: 0,
+      shortlisted: 0,
+      inserted: 0,
+      skippedExisting: 0,
+      message: "You have no watched companies and no enabled feeds — add some on the Discover page first.",
+    };
+  }
+
   // Only look at jobs fetched in the last 21 days
   const cutoff = new Date(Date.now() - 21 * 86_400_000).toISOString();
   const { data: pool, error } = await supabase
     .from("job_listings")
-    .select("id, company, role, location, url, description, remote, posted_at, fetched_at, source, source_id")
+    .select("id, company, role, location, url, description, remote, posted_at, fetched_at, source, source_id, source_slug")
+    .or(poolOr)
     .gte("fetched_at", cutoff)
     .order("posted_at", { ascending: false, nullsFirst: false })
     .limit(500);
   if (error) throw error;
   const jobs = (pool ?? []) as JobListing[];
   if (jobs.length === 0) {
-    return { candidatesConsidered: 0, shortlisted: 0, inserted: 0, skippedExisting: 0, message: "Pool is empty — run refresh first." };
+    return { candidatesConsidered: 0, shortlisted: 0, inserted: 0, skippedExisting: 0, message: "Pool is empty — add more watched companies or refresh." };
   }
+
 
   const kw = resumeKeywords(resume);
   const scored = jobs
