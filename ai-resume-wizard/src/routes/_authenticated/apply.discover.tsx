@@ -164,7 +164,9 @@ function DiscoverPage() {
 
   const rows = jobsQ.data?.rows ?? [];
   const total = jobsQ.data?.total ?? 0;
+  const poolScope = jobsQ.data?.poolScope;
   const hasMore = (page + 1) * PAGE_SIZE < total;
+
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
