@@ -165,8 +165,9 @@ function RewritePage() {
             <div className="rounded-lg border border-border bg-card p-6">
               <h2 className="text-lg font-semibold">Ready to rewrite</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                This uses your one included rewrite for the {ent.data.plan} plan. Nothing is
-                saved until you review the result and click Save.
+                {ent.data.reason === "founder_unlimited"
+                  ? "Founder plan — unlimited rewrites. Nothing is saved until you review the result and click Save."
+                  : `This uses your one included rewrite for the ${ent.data.plan} plan. Nothing is saved until you review the result and click Save.`}
               </p>
               <button
                 type="button"
