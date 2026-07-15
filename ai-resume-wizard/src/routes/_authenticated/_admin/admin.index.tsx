@@ -99,7 +99,13 @@ function AdminDashboard() {
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<
-    "joined_desc" | "joined_asc" | "login_desc" | "login_asc" | "login_never_first"
+    | "joined_desc"
+    | "joined_asc"
+    | "login_desc"
+    | "login_asc"
+    | "login_never_first"
+    | "active_desc"
+    | "active_asc"
   >("joined_desc");
   const [magic, setMagic] = useState<{
     email: string;
