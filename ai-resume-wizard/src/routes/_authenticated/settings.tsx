@@ -116,6 +116,51 @@ function SettingsPage() {
   );
 }
 
+function NotificationsSection() {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getMyNotificationPrefs);
+  const setFn = useServerFn(setMyNotificationPrefs);
+  const q = useQuery({ queryKey: ["notification-prefs"], queryFn: () => getFn() });
+  const m = useMutation({
+    mutationFn: (email_notifications: boolean) => setFn({ data: { email_notifications } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notification-prefs"] }),
+  });
+  const on = q.data?.email_notifications ?? true;
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold">Email notifications</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Email me a weekly digest of new matches and follow-up reminders.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          disabled={q.isLoading || m.isPending}
+          onClick={() => m.mutate(!on)}
+          className={
+            "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 " +
+            (on ? "bg-primary" : "bg-muted")
+          }
+        >
+          <span
+            className={
+              "inline-block h-5 w-5 transform rounded-full bg-background transition-transform " +
+              (on ? "translate-x-5" : "translate-x-0.5")
+            }
+          />
+        </button>
+      </div>
+      {m.isError && (
+        <p className="mt-2 text-sm text-destructive">Couldn't update preferences.</p>
+      )}
+    </section>
+  );
+}
+
 function RewriteEntitlementSection() {
   const entFn = useServerFn(getRewriteEntitlement);
   const ent = useQuery({ queryKey: ["rewrite-entitlement"], queryFn: () => entFn() });
