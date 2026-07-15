@@ -15,6 +15,10 @@ export type PersonalMatch = {
   role_url: string | null;
   notes: string | null;
   created_at: string;
+  zip_code: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
 };
 
 export const listMatches = createServerFn({ method: "GET" })
@@ -36,7 +40,24 @@ const MatchInput = z.object({
   tier: z.string().max(50).optional().nullable(),
   role_url: z.string().url().optional().nullable().or(z.literal("")),
   notes: z.string().max(2000).optional().nullable(),
+  zip_code: z.string().max(20).optional().nullable(),
+  city: z.string().max(120).optional().nullable(),
+  state: z.string().max(120).optional().nullable(),
+  country: z.string().max(120).optional().nullable(),
 });
+
+function normalizeLocPatch(data: z.infer<typeof MatchInput>) {
+  return {
+    location: data.location || null,
+    tier: data.tier || null,
+    role_url: data.role_url || null,
+    notes: data.notes || null,
+    zip_code: data.zip_code || null,
+    city: data.city || null,
+    state: data.state || null,
+    country: data.country || null,
+  };
+}
 
 export const addMatch = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -46,14 +67,11 @@ export const addMatch = createServerFn({ method: "POST" })
       user_id: context.userId,
       company: data.company,
       role: data.role,
-      location: data.location || null,
-      tier: data.tier || null,
-      role_url: data.role_url || null,
-      notes: data.notes || null,
+      ...normalizeLocPatch(data),
     };
     const { data: row, error } = await context.supabase
       .from("personal_matches")
-      .insert(payload)
+      .insert(payload as never)
       .select("*")
       .single();
     if (error) throw error;
@@ -104,12 +122,29 @@ const SUGGEST_SYSTEM = `You are a job search researcher. Propose real companies 
 export const suggestMatches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ prompt: z.string().min(3).max(2000) }).parse(input),
+    z
+      .object({
+        prompt: z.string().max(2000).optional().default(""),
+        city: z.string().max(120).optional(),
+        state: z.string().max(120).optional(),
+        country: z.string().max(120).optional(),
+        zip_code: z.string().max(20).optional(),
+        radius_miles: z.number().int().min(0).max(500).optional(),
+      })
+      .refine(
+        (v) =>
+          (v.prompt && v.prompt.trim().length >= 3) ||
+          v.city ||
+          v.state ||
+          v.country ||
+          v.zip_code,
+        { message: "Provide a prompt or at least one location field." },
+      )
+      .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ suggestions: Suggestion[] }> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
-    // Suggest-matches shares the daily "tailor" budget (no separate counter column).
     await enforceUsage(context.supabase, context.userId, "tailor");
 
 
@@ -133,6 +168,16 @@ export const suggestMatches = createServerFn({ method: "POST" })
         })
       : "(no resume on file — infer from prompt only)";
 
+    const locationBlock = [
+      data.city && `city: ${data.city}`,
+      data.state && `state/region: ${data.state}`,
+      data.country && `country: ${data.country}`,
+      data.zip_code &&
+        `zip: ${data.zip_code}${data.radius_miles ? ` (within ${data.radius_miles} miles)` : ""}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const { generateText } = await import("ai");
     const gateway = createLovableAiGatewayProvider(key);
@@ -140,8 +185,8 @@ export const suggestMatches = createServerFn({ method: "POST" })
     const prompt = `CANDIDATE:
 ${resumeSnippet}
 
-USER PROMPT (industries/locations/level):
-${data.prompt}
+${locationBlock ? `TARGET LOCATION (structured):\n${locationBlock}\n\n` : ""}USER PROMPT (industries/level/other):
+${data.prompt || "(none — use structured location + resume)"}
 
 Return JSON exactly:
 {
@@ -149,7 +194,7 @@ Return JSON exactly:
     { "company": "string", "role": "string", "location": "string", "careers_url": "https://...", "why": "1 sentence why this fits" }
   ]
 }
-Return 10-15 diverse suggestions.`;
+Prefer companies with offices or remote-eligible roles in the target location when one is provided. Return 10-15 diverse suggestions.`;
 
     const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
