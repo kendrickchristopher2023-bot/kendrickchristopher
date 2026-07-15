@@ -254,7 +254,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
   };
   return (data.data ?? []).map((j) => {
     const loc = j.location ?? null;
-    return {
+    return withParsed({
       source: "arbeitnow",
       source_id: j.slug,
       company: j.company_name,
@@ -264,7 +264,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
       description: stripHtml(j.description ?? null),
       remote: !!j.remote || looksRemote(loc, (j.tags ?? []).join(" ")),
       posted_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : null,
-    };
+    });
   });
 }
 
