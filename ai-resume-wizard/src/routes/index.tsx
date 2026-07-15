@@ -262,6 +262,8 @@ function Index() {
             {" · "}
             <Link to="/help/faq" className="text-primary hover:underline">FAQ</Link>
             {" · "}
+            <Link to="/legal" className="text-primary hover:underline">Terms &amp; Privacy</Link>
+            {" · "}
             Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
           </span>
         </footer>
