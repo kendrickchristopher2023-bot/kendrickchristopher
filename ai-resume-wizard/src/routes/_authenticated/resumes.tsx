@@ -26,11 +26,14 @@ function ResumesPage() {
   const createFn = useServerFn(createNamedResume);
   const setPrimFn = useServerFn(setPrimaryResume);
   const delFn = useServerFn(deleteResume);
+  const renameFn = useServerFn(renameResume);
   const q = useQuery({ queryKey: ["my-resumes"], queryFn: () => listFn() });
 
   const [name, setName] = useState("");
   const [clone, setClone] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const invalidate = () => qc.invalidateQueries({ queryKey: ["my-resumes"] });
 
   const create = useMutation({
@@ -45,6 +48,10 @@ function ResumesPage() {
   const del = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: invalidate,
+  });
+  const rename = useMutation({
+    mutationFn: (v: { id: string; name: string }) => renameFn({ data: v }),
+    onSuccess: () => { setEditingId(null); setEditName(""); invalidate(); },
   });
 
   return (
