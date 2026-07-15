@@ -37,13 +37,18 @@ export type WatchedCompany = {
   source: string;
   slug: string;
   company_name: string;
-  added_by: string | null;
+  added_by: string;
   last_fetched_at: string | null;
   last_fetch_status: string | null;
   last_fetch_count: number | null;
 };
 
 const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+
+// Aggregate (non-company-specific) feeds. These rows have source_slug = null
+// and are gated per-user by profiles.enabled_feeds (default = all on).
+export const AGGREGATE_FEEDS = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export type AggregateFeed = (typeof AGGREGATE_FEEDS)[number];
 
 // Escape a user string for safe inclusion in a PostgREST `.or()` filter value.
 // PostgREST parses `,` and `)` inside `.or(...)`, so anything user-supplied must
@@ -66,6 +71,57 @@ const EXPERIENCE_LEVELS = [
   "manager",
   "director+",
 ] as const;
+
+// Load the (watched_companies, enabled_feeds) that define this user's
+// personal Discover pool. Callers pass the tuples into
+// `applyUserPoolFilter` to scope any job_listings query.
+export async function loadUserPoolScope(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  userId: string,
+): Promise<{ watched: Array<{ source: string; slug: string }>; enabledFeeds: AggregateFeed[] }> {
+  const [w, p] = await Promise.all([
+    supabase
+      .from("watched_companies")
+      .select("source, slug")
+      .eq("added_by", userId),
+    supabase
+      .from("profiles")
+      .select("enabled_feeds")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+  const watched = ((w.data ?? []) as Array<{ source: string; slug: string }>).slice(0, 500);
+  const raw = (p.data?.enabled_feeds as string[] | null) ?? null;
+  const enabledFeeds: AggregateFeed[] = raw
+    ? (raw.filter((s) => (AGGREGATE_FEEDS as readonly string[]).includes(s)) as AggregateFeed[])
+    : [...AGGREGATE_FEEDS]; // default: all on
+  return { watched, enabledFeeds };
+}
+
+// Build the PostgREST `.or(...)` clause that restricts job_listings to the
+// user's visible pool. Returns null when the scope is empty (caller should
+// short-circuit and return zero rows with a friendly "add companies" hint).
+export function buildUserPoolOrClause(scope: {
+  watched: Array<{ source: string; slug: string }>;
+  enabledFeeds: AggregateFeed[];
+}): string | null {
+  const parts: string[] = [];
+  // De-dup watched (source, slug) — safety net; unique constraint already prevents this per user.
+  const seen = new Set<string>();
+  for (const w of scope.watched) {
+    const key = `${w.source}:${w.slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // Slug validator restricts to [a-zA-Z0-9_-], so no escaping is needed.
+    parts.push(`and(source.eq.${w.source},source_slug.eq.${w.slug})`);
+  }
+  for (const f of scope.enabledFeeds) {
+    parts.push(`and(source.eq.${f},source_slug.is.null)`);
+  }
+  if (parts.length === 0) return null;
+  return parts.join(",");
+}
+
 
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
