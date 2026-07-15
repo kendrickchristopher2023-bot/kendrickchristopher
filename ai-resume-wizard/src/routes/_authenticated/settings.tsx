@@ -137,9 +137,11 @@ function RewriteEntitlementSection() {
           >
             {status.reason === "free_plan"
               ? "Pro feature"
-              : status.allowed
-                ? "Available"
-                : "Used"}
+              : status.reason === "founder_unlimited"
+                ? "Unlimited (founder)"
+                : status.allowed
+                  ? "Available"
+                  : "Used"}
           </span>
         )}
       </div>
@@ -158,6 +160,11 @@ function RewriteEntitlementSection() {
       {status?.reason === "free_plan" && (
         <p className="mt-3 text-sm text-muted-foreground">
           Available on the Pro plan.
+        </p>
+      )}
+      {status?.reason === "founder_unlimited" && (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Founder plan — rewrite as many times as you want.
         </p>
       )}
     </section>
