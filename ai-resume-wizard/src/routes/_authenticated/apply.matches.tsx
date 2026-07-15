@@ -444,7 +444,18 @@ function Chip({ on, label }: { on: boolean; label: string }) {
 
 function AddMatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const addFn = useServerFn(addMatch);
-  const [form, setForm] = useState({ company: "", role: "", location: "", tier: "", role_url: "", notes: "" });
+  const [form, setForm] = useState({
+    company: "",
+    role: "",
+    location: "",
+    tier: "",
+    role_url: "",
+    notes: "",
+    zip_code: "",
+    city: "",
+    state: "",
+    country: "",
+  });
   const [err, setErr] = useState<string | null>(null);
   const m = useMutation({
     mutationFn: () => addFn({ data: form as never }),
@@ -459,7 +470,13 @@ function AddMatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
       <div className="space-y-3">
         <Field label="Company" value={form.company} onChange={(v) => setForm({ ...form, company: v })} />
         <Field label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} />
-        <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+        <Field label="Location (free-text, for display)" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+          <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+          <Field label="ZIP" value={form.zip_code} onChange={(v) => setForm({ ...form, zip_code: v })} />
+          <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
+        </div>
         <Field label="Tier (A/B/C)" value={form.tier} onChange={(v) => setForm({ ...form, tier: v })} />
         <Field label="Role URL" value={form.role_url} onChange={(v) => setForm({ ...form, role_url: v })} />
         <Field label="Notes" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} textarea />
