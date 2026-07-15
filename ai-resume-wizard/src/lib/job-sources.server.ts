@@ -261,6 +261,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
 
 // ---------- Remotive ----------
 // https://remotive.com/api/remote-jobs (aggregator — one call, all listings)
+// `salary` is a free-text field like "$80k - $100k" — best-effort parse.
 export async function fetchRemotive(): Promise<RawJob[]> {
   const url = `https://remotive.com/api/remote-jobs?limit=200`;
   const data = (await fetchJson(url)) as {
@@ -272,45 +273,77 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       url: string;
       description?: string;
       publication_date?: string;
+      salary?: string;
+      job_type?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => withParsed({
-    source: "remotive",
-    source_id: String(j.id),
-    company: j.company_name,
-    role: j.title,
-    location: j.candidate_required_location ?? "Remote",
-    url: j.url,
-    description: stripHtml(j.description ?? null),
-    remote: true,
-    posted_at: j.publication_date ?? null,
-  }));
+  return (data.jobs ?? []).map((j) => {
+    const parsedSalary = j.salary ? parseSalaryText(j.salary) : null;
+    return withParsed(
+      {
+        source: "remotive",
+        source_id: String(j.id),
+        company: j.company_name,
+        role: j.title,
+        location: j.candidate_required_location ?? "Remote",
+        url: j.url,
+        description: stripHtml(j.description ?? null),
+        remote: true,
+        posted_at: j.publication_date ?? null,
+      },
+      {
+        levelHint: j.job_type ?? null,
+        salary:
+          parsedSalary && parsedSalary.max != null
+            ? {
+                min: parsedSalary.min,
+                max: parsedSalary.max,
+                currency: parsedSalary.currency ?? "USD",
+                period: parsedSalary.period ?? "year",
+              }
+            : null,
+      },
+    );
+  });
 }
 
 // ---------- RemoteOK ----------
 // https://remoteok.com/api  (first item is a legend row; skip it)
+// Provides numeric salary_min / salary_max in USD/year but many rows are 0.
 export async function fetchRemoteOK(): Promise<RawJob[]> {
   const url = `https://remoteok.com/api`;
   const raw = (await fetchJson(url)) as Array<Record<string, unknown>>;
   const items = (raw ?? []).filter((r) => r && typeof (r as { id?: unknown }).id !== "undefined");
   return items.map((j) => {
     const loc = (j.location as string | undefined) || "Remote";
-    return withParsed({
-      source: "remoteok",
-      source_id: String(j.id),
-      company: (j.company as string) ?? "Unknown",
-      role: (j.position as string) ?? (j.title as string) ?? "Role",
-      location: loc,
-      url: (j.url as string) ?? (j.apply_url as string) ?? "",
-      description: stripHtml((j.description as string) ?? null),
-      remote: true,
-      posted_at: (j.date as string) ?? null,
-    });
+    const sMin = typeof j.salary_min === "number" ? j.salary_min : null;
+    const sMax = typeof j.salary_max === "number" ? j.salary_max : null;
+    const hasSalary = (sMin != null && sMin > 0) || (sMax != null && sMax > 0);
+    return withParsed(
+      {
+        source: "remoteok",
+        source_id: String(j.id),
+        company: (j.company as string) ?? "Unknown",
+        role: (j.position as string) ?? (j.title as string) ?? "Role",
+        location: loc,
+        url: (j.url as string) ?? (j.apply_url as string) ?? "",
+        description: stripHtml((j.description as string) ?? null),
+        remote: true,
+        posted_at: (j.date as string) ?? null,
+      },
+      {
+        salary: hasSalary
+          ? { min: sMin, max: sMax, currency: "USD", period: "year" }
+          : null,
+      },
+    );
   }).filter((j) => j.url);
 }
 
 // ---------- Jobicy ----------
 // https://jobicy.com/api/v2/remote-jobs  (keyless; supports ?geo=usa&count=50)
+// Best structured salary of the free feeds: salaryMin/Max/Currency/Period +
+// jobLevel ("Senior", "Entry-Level, Junior", etc.).
 export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
   const url = `https://jobicy.com/api/v2/remote-jobs?count=${count}&geo=${encodeURIComponent(geo)}`;
   const data = (await fetchJson(url)) as {
@@ -323,19 +356,46 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       jobExcerpt?: string;
       jobDescription?: string;
       pubDate?: string;
+      salaryMin?: number | string | null;
+      salaryMax?: number | string | null;
+      salaryCurrency?: string | null;
+      salaryPeriod?: string | null;
+      jobLevel?: string | null;
     }>;
   };
-  return (data.jobs ?? []).map((j) => withParsed({
-    source: "jobicy",
-    source_id: String(j.id),
-    company: j.companyName,
-    role: j.jobTitle,
-    location: j.jobGeo ?? "Remote",
-    url: j.url,
-    description: stripHtml(j.jobDescription ?? j.jobExcerpt ?? null),
-    remote: true,
-    posted_at: j.pubDate ?? null,
-  }));
+  return (data.jobs ?? []).map((j) => {
+    const num = (v: unknown) => {
+      const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    const sMin = num(j.salaryMin);
+    const sMax = num(j.salaryMax);
+    return withParsed(
+      {
+        source: "jobicy",
+        source_id: String(j.id),
+        company: j.companyName,
+        role: j.jobTitle,
+        location: j.jobGeo ?? "Remote",
+        url: j.url,
+        description: stripHtml(j.jobDescription ?? j.jobExcerpt ?? null),
+        remote: true,
+        posted_at: j.pubDate ?? null,
+      },
+      {
+        levelHint: j.jobLevel ?? null,
+        salary:
+          sMin != null || sMax != null
+            ? {
+                min: sMin,
+                max: sMax,
+                currency: j.salaryCurrency ?? "USD",
+                period: j.salaryPeriod ?? "year",
+              }
+            : null,
+      },
+    );
+  });
 }
 
 // ---------- Arbeitnow ----------
