@@ -109,6 +109,23 @@ export const deleteMatch = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// US-only ZIP radius lookup. Returns the set of ZIP codes within `radius_miles`
+// of the given ZIP, using an embedded offline dataset (no external API).
+export const nearbyZipCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        zip: z.string().min(3).max(20),
+        radius_miles: z.number().int().min(0).max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<{ zips: string[] }> => {
+    const { nearbyZips } = await import("./zipcodes.server");
+    return { zips: nearbyZips(data.zip, data.radius_miles) };
+  });
+
 export type Suggestion = {
   company: string;
   role: string;
