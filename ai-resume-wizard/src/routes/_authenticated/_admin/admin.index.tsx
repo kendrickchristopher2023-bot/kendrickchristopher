@@ -368,6 +368,21 @@ function AdminDashboard() {
                       </span>
                     </button>
                   </th>
+                  <th className="px-3 py-2 font-semibold">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSortBy((s) => (s === "active_desc" ? "active_asc" : "active_desc"))
+                      }
+                      className="inline-flex items-center gap-1 hover:text-foreground"
+                      title="Click to sort by last activity"
+                    >
+                      Last active (ET)
+                      <span className="text-muted-foreground">
+                        {sortBy === "active_desc" ? "↓" : sortBy === "active_asc" ? "↑" : "↕"}
+                      </span>
+                    </button>
+                  </th>
                   <th className="px-3 py-2 font-semibold">Resume</th>
                   <th className="px-3 py-2 font-semibold">Today</th>
                   <th className="px-3 py-2 font-semibold">Access</th>
@@ -376,14 +391,14 @@ function AdminDashboard() {
               <tbody className="divide-y divide-border">
                 {users.isLoading && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!users.isLoading && filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                       No users.
                     </td>
                   </tr>
