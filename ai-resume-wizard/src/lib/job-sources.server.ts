@@ -12,6 +12,10 @@ import { classifyLevel, parseSalaryText, toAnnual, type ExperienceLevel } from "
 export type RawJob = {
   source: string;
   source_id: string;
+  // Slug of the watched company that produced this row. Aggregate feeds
+  // (remotive/remoteok/jobicy/arbeitnow/themuse) leave this null — they
+  // aren't company-specific, so there's no owning slug to attribute.
+  source_slug: string | null;
   company: string;
   role: string;
   location: string | null;
@@ -30,6 +34,7 @@ export type RawJob = {
   salary_period: string | null;
   experience_level: ExperienceLevel | null;
 };
+
 
 // Optional structured hints a specific adapter can pass in. Anything absent
 // gets inferred from title/description text.
