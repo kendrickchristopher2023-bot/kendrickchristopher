@@ -199,6 +199,16 @@ function AdminDashboard() {
             (t(a.last_sign_in_at) || -1) - (t(b.last_sign_in_at) || -1),
         );
         break;
+      case "active_desc":
+        sorted.sort((a, b) => t(b.last_active_at) - t(a.last_active_at));
+        break;
+      case "active_asc":
+        sorted.sort(
+          (a, b) =>
+            (t(a.last_active_at) || Number.MAX_SAFE_INTEGER) -
+            (t(b.last_active_at) || Number.MAX_SAFE_INTEGER),
+        );
+        break;
     }
     return sorted;
   }, [users.data, search, sortBy]);
