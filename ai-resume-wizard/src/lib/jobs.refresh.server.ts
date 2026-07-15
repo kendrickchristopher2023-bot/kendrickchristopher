@@ -2,7 +2,7 @@
 // upsert normalized rows into public.job_listings.
 // Called from both the daily pg_cron webhook and the admin "Refresh now" button.
 
-import { fetchOne, type RawJob } from "./job-sources.server";
+import { fetchAllAggregators, fetchOne, type RawJob } from "./job-sources.server";
 
 type Summary = {
   companiesTried: number;
