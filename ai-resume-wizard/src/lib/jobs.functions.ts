@@ -267,6 +267,76 @@ export const refreshWatchedNow = createServerFn({ method: "POST" })
     return runRefreshJobs();
   });
 
+// One-off backfill: strip HTML tags and decode entities on every existing
+// job_listings row. Safe to re-run — idempotent (clean text stays clean).
+export const backfillJobDescriptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: role } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin" as never)
+      .maybeSingle();
+    if (!role) throw new Error("Admins only.");
+
+    const { stripHtmlInline, stripHtmlToText } = await import("./strip-html");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const PAGE = 500;
+    let from = 0;
+    let scanned = 0;
+    let updated = 0;
+    // Loop until we've walked the whole table. Using range() + id ordering
+    // for stable pagination.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabaseAdmin
+        .from("job_listings")
+        .select("id, role, company, location, description")
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      scanned += data.length;
+
+      for (const row of data as Array<{
+        id: string;
+        role: string;
+        company: string;
+        location: string | null;
+        description: string | null;
+      }>) {
+        const newRole = stripHtmlInline(row.role) ?? row.role;
+        const newCompany = stripHtmlInline(row.company) ?? row.company;
+        const newLoc = stripHtmlInline(row.location);
+        const newDesc = stripHtmlToText(row.description);
+        if (
+          newRole !== row.role ||
+          newCompany !== row.company ||
+          newLoc !== row.location ||
+          newDesc !== row.description
+        ) {
+          const { error: upErr } = await supabaseAdmin
+            .from("job_listings")
+            .update({
+              role: newRole,
+              company: newCompany,
+              location: newLoc,
+              description: newDesc,
+            } as never)
+            .eq("id", row.id);
+          if (upErr) throw upErr;
+          updated += 1;
+        }
+      }
+
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return { scanned, updated };
+  });
+
 export const autoRankForCurrentUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
