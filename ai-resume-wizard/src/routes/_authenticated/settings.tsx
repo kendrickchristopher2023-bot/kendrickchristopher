@@ -101,6 +101,8 @@ function SettingsPage() {
           {q.isLoading && <p className="mt-4 text-xs text-muted-foreground">Loading…</p>}
         </section>
 
+        <NotificationsSection />
+
         <RewriteEntitlementSection />
 
         <p className="mt-6 text-xs text-muted-foreground">
