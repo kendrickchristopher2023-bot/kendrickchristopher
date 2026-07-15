@@ -142,7 +142,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location ?? null;
-    return {
+    return withParsed({
       source: "ashby",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -152,7 +152,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       description: stripHtml(j.descriptionPlain ?? null),
       remote: !!j.isRemote || looksRemote(loc),
       posted_at: j.publishedDate ?? null,
-    };
+    });
   });
 }
 
