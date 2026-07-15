@@ -49,7 +49,7 @@ const WeeklyDigestEmail = ({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        {matches.length} new matches, {followups.length} follow-ups due.
+        {`${matches.length} new matches, ${followups.length} follow-ups due.`}
       </Preview>
       <Body style={main}>
         <Container style={container}>
