@@ -154,7 +154,7 @@ function ApplyPage() {
             <DerivedCopy resume={data.resume} />
 
             <Section title="Manage">
-              <Link to="/resume" search={{}} className="text-sm text-primary hover:underline">
+              <Link to="/resume" className="text-sm text-primary hover:underline">
                 Edit your resume →
               </Link>
             </Section>
