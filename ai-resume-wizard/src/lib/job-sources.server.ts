@@ -7,6 +7,7 @@
 
 import { parseLocation } from "./location-parse";
 import { stripHtmlInline, stripHtmlToText } from "./strip-html";
+import { classifyLevel, parseSalaryText, toAnnual, type ExperienceLevel } from "./job-classify";
 
 export type RawJob = {
   source: string;
@@ -21,13 +22,39 @@ export type RawJob = {
   description: string | null;
   remote: boolean;
   posted_at: string | null; // ISO
+  // Salary is stored annualized in native currency; original period is kept
+  // for display. All fields null when the feed provided nothing usable.
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  experience_level: ExperienceLevel | null;
 };
 
-function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
+// Optional structured hints a specific adapter can pass in. Anything absent
+// gets inferred from title/description text.
+type Hints = {
+  levelHint?: string | null;
+  salary?: {
+    min: number | null;
+    max: number | null;
+    currency: string | null;
+    period: string | null;
+  } | null;
+};
+
+type Base = Omit<
+  RawJob,
+  | "city" | "region" | "country"
+  | "salary_min" | "salary_max" | "salary_currency" | "salary_period"
+  | "experience_level"
+>;
+
+function withParsed(base: Base, hints: Hints = {}): RawJob {
   // Sanitize every string field that could carry raw HTML or entities from a
   // third-party feed. Descriptions get the multi-line stripper; short fields
   // get the inline stripper so a stray tag never lands in the DB.
-  const cleaned: Omit<RawJob, "city" | "region" | "country"> = {
+  const cleaned: Base = {
     ...base,
     role: stripHtmlInline(base.role) ?? base.role,
     company: stripHtmlInline(base.company) ?? base.company,
@@ -35,7 +62,44 @@ function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
     description: stripHtmlToText(base.description),
   };
   const p = parseLocation(cleaned.location);
-  return { ...cleaned, city: p.city, region: p.region, country: p.country };
+
+  // Salary: prefer the adapter-supplied structured hint. Fall back to parsing
+  // the description text so pay-transparency ranges buried in the body still
+  // count. We annualize so filters compare apples to apples.
+  let salaryMin: number | null = null;
+  let salaryMax: number | null = null;
+  let salaryCurrency: string | null = null;
+  let salaryPeriod: string | null = null;
+  if (hints.salary && (hints.salary.min != null || hints.salary.max != null)) {
+    const a = toAnnual(hints.salary.min, hints.salary.max, hints.salary.period);
+    salaryMin = a.min;
+    salaryMax = a.max;
+    salaryCurrency = hints.salary.currency;
+    salaryPeriod = a.period;
+  } else if (cleaned.description) {
+    const parsed = parseSalaryText(cleaned.description);
+    if (parsed.max != null && parsed.period) {
+      const a = toAnnual(parsed.min, parsed.max, parsed.period);
+      salaryMin = a.min;
+      salaryMax = a.max;
+      salaryCurrency = parsed.currency;
+      salaryPeriod = a.period;
+    }
+  }
+
+  const level = classifyLevel(cleaned.role, hints.levelHint ?? null);
+
+  return {
+    ...cleaned,
+    city: p.city,
+    region: p.region,
+    country: p.country,
+    salary_min: salaryMin,
+    salary_max: salaryMax,
+    salary_currency: salaryCurrency,
+    salary_period: salaryPeriod,
+    experience_level: level,
+  };
 }
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
@@ -127,8 +191,11 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
 
 // ---------- Ashby ----------
 // https://api.ashbyhq.com/posting-api/job-board/{slug}
+// includeCompensation=true returns a `compensation` object per posting with
+// structured salary tiers. We take the first Salary component's min/max/
+// currency/interval; equity/bonus components are ignored for filter purposes.
 export async function fetchAshby(slug: string, companyName: string): Promise<RawJob[]> {
-  const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}?includeCompensation=false`;
+  const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}?includeCompensation=true`;
   const data = (await fetchJson(url)) as {
     jobs?: Array<{
       id: string;
@@ -138,27 +205,63 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       descriptionPlain?: string;
       publishedDate?: string;
       isRemote?: boolean;
+      employmentType?: string;
       secondaryLocations?: Array<{ location?: string }>;
+      compensation?: {
+        summaryComponents?: Array<{
+          compensationType?: string;
+          interval?: string;
+          currencyCode?: string | null;
+          minValue?: number | null;
+          maxValue?: number | null;
+        }>;
+      };
     }>;
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location ?? null;
-    return withParsed({
-      source: "ashby",
-      source_id: `${slug}:${j.id}`,
-      company: companyName,
-      role: j.title,
-      location: loc,
-      url: j.jobUrl,
-      description: stripHtml(j.descriptionPlain ?? null),
-      remote: !!j.isRemote || looksRemote(loc),
-      posted_at: j.publishedDate ?? null,
-    });
+    const salaryComp = j.compensation?.summaryComponents?.find(
+      (c) => c.compensationType === "Salary" && (c.minValue != null || c.maxValue != null),
+    );
+    const intervalToPeriod = (i?: string) => {
+      if (!i) return null;
+      const u = i.toUpperCase();
+      if (u.includes("HOUR")) return "hour";
+      if (u.includes("MONTH")) return "month";
+      if (u.includes("WEEK")) return "week";
+      if (u.includes("DAY")) return "day";
+      return "year"; // "1 YEAR"
+    };
+    return withParsed(
+      {
+        source: "ashby",
+        source_id: `${slug}:${j.id}`,
+        company: companyName,
+        role: j.title,
+        location: loc,
+        url: j.jobUrl,
+        description: stripHtml(j.descriptionPlain ?? null),
+        remote: !!j.isRemote || looksRemote(loc),
+        posted_at: j.publishedDate ?? null,
+      },
+      {
+        levelHint: j.employmentType ?? null,
+        salary: salaryComp
+          ? {
+              min: salaryComp.minValue ?? null,
+              max: salaryComp.maxValue ?? null,
+              currency: salaryComp.currencyCode ?? null,
+              period: intervalToPeriod(salaryComp.interval),
+            }
+          : null,
+      },
+    );
   });
 }
 
 // ---------- Remotive ----------
 // https://remotive.com/api/remote-jobs (aggregator — one call, all listings)
+// `salary` is a free-text field like "$80k - $100k" — best-effort parse.
 export async function fetchRemotive(): Promise<RawJob[]> {
   const url = `https://remotive.com/api/remote-jobs?limit=200`;
   const data = (await fetchJson(url)) as {
@@ -170,45 +273,77 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       url: string;
       description?: string;
       publication_date?: string;
+      salary?: string;
+      job_type?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => withParsed({
-    source: "remotive",
-    source_id: String(j.id),
-    company: j.company_name,
-    role: j.title,
-    location: j.candidate_required_location ?? "Remote",
-    url: j.url,
-    description: stripHtml(j.description ?? null),
-    remote: true,
-    posted_at: j.publication_date ?? null,
-  }));
+  return (data.jobs ?? []).map((j) => {
+    const parsedSalary = j.salary ? parseSalaryText(j.salary) : null;
+    return withParsed(
+      {
+        source: "remotive",
+        source_id: String(j.id),
+        company: j.company_name,
+        role: j.title,
+        location: j.candidate_required_location ?? "Remote",
+        url: j.url,
+        description: stripHtml(j.description ?? null),
+        remote: true,
+        posted_at: j.publication_date ?? null,
+      },
+      {
+        levelHint: j.job_type ?? null,
+        salary:
+          parsedSalary && parsedSalary.max != null
+            ? {
+                min: parsedSalary.min,
+                max: parsedSalary.max,
+                currency: parsedSalary.currency ?? "USD",
+                period: parsedSalary.period ?? "year",
+              }
+            : null,
+      },
+    );
+  });
 }
 
 // ---------- RemoteOK ----------
 // https://remoteok.com/api  (first item is a legend row; skip it)
+// Provides numeric salary_min / salary_max in USD/year but many rows are 0.
 export async function fetchRemoteOK(): Promise<RawJob[]> {
   const url = `https://remoteok.com/api`;
   const raw = (await fetchJson(url)) as Array<Record<string, unknown>>;
   const items = (raw ?? []).filter((r) => r && typeof (r as { id?: unknown }).id !== "undefined");
   return items.map((j) => {
     const loc = (j.location as string | undefined) || "Remote";
-    return withParsed({
-      source: "remoteok",
-      source_id: String(j.id),
-      company: (j.company as string) ?? "Unknown",
-      role: (j.position as string) ?? (j.title as string) ?? "Role",
-      location: loc,
-      url: (j.url as string) ?? (j.apply_url as string) ?? "",
-      description: stripHtml((j.description as string) ?? null),
-      remote: true,
-      posted_at: (j.date as string) ?? null,
-    });
+    const sMin = typeof j.salary_min === "number" ? j.salary_min : null;
+    const sMax = typeof j.salary_max === "number" ? j.salary_max : null;
+    const hasSalary = (sMin != null && sMin > 0) || (sMax != null && sMax > 0);
+    return withParsed(
+      {
+        source: "remoteok",
+        source_id: String(j.id),
+        company: (j.company as string) ?? "Unknown",
+        role: (j.position as string) ?? (j.title as string) ?? "Role",
+        location: loc,
+        url: (j.url as string) ?? (j.apply_url as string) ?? "",
+        description: stripHtml((j.description as string) ?? null),
+        remote: true,
+        posted_at: (j.date as string) ?? null,
+      },
+      {
+        salary: hasSalary
+          ? { min: sMin, max: sMax, currency: "USD", period: "year" }
+          : null,
+      },
+    );
   }).filter((j) => j.url);
 }
 
 // ---------- Jobicy ----------
 // https://jobicy.com/api/v2/remote-jobs  (keyless; supports ?geo=usa&count=50)
+// Best structured salary of the free feeds: salaryMin/Max/Currency/Period +
+// jobLevel ("Senior", "Entry-Level, Junior", etc.).
 export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
   const url = `https://jobicy.com/api/v2/remote-jobs?count=${count}&geo=${encodeURIComponent(geo)}`;
   const data = (await fetchJson(url)) as {
@@ -221,19 +356,46 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       jobExcerpt?: string;
       jobDescription?: string;
       pubDate?: string;
+      salaryMin?: number | string | null;
+      salaryMax?: number | string | null;
+      salaryCurrency?: string | null;
+      salaryPeriod?: string | null;
+      jobLevel?: string | null;
     }>;
   };
-  return (data.jobs ?? []).map((j) => withParsed({
-    source: "jobicy",
-    source_id: String(j.id),
-    company: j.companyName,
-    role: j.jobTitle,
-    location: j.jobGeo ?? "Remote",
-    url: j.url,
-    description: stripHtml(j.jobDescription ?? j.jobExcerpt ?? null),
-    remote: true,
-    posted_at: j.pubDate ?? null,
-  }));
+  return (data.jobs ?? []).map((j) => {
+    const num = (v: unknown) => {
+      const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    const sMin = num(j.salaryMin);
+    const sMax = num(j.salaryMax);
+    return withParsed(
+      {
+        source: "jobicy",
+        source_id: String(j.id),
+        company: j.companyName,
+        role: j.jobTitle,
+        location: j.jobGeo ?? "Remote",
+        url: j.url,
+        description: stripHtml(j.jobDescription ?? j.jobExcerpt ?? null),
+        remote: true,
+        posted_at: j.pubDate ?? null,
+      },
+      {
+        levelHint: j.jobLevel ?? null,
+        salary:
+          sMin != null || sMax != null
+            ? {
+                min: sMin,
+                max: sMax,
+                currency: j.salaryCurrency ?? "USD",
+                period: j.salaryPeriod ?? "year",
+              }
+            : null,
+      },
+    );
+  });
 }
 
 // ---------- Arbeitnow ----------

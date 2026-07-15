@@ -255,7 +255,7 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
 
         <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           {R.lastUpdated && <span>Last updated {R.lastUpdated}</span>}
-          <Link to="/resume" className="text-primary hover:underline">
+          <Link to="/resume" search={{}} className="text-primary hover:underline">
             Manage
           </Link>
         </footer>

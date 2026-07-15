@@ -188,6 +188,7 @@ export type Database = {
           country: string | null
           created_at: string
           description: string | null
+          experience_level: string | null
           fetched_at: string
           id: string
           location: string | null
@@ -195,6 +196,10 @@ export type Database = {
           region: string | null
           remote: boolean | null
           role: string
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
+          salary_period: string | null
           search_vector: unknown
           source: string
           source_id: string
@@ -206,6 +211,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          experience_level?: string | null
           fetched_at?: string
           id?: string
           location?: string | null
@@ -213,6 +219,10 @@ export type Database = {
           region?: string | null
           remote?: boolean | null
           role: string
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_period?: string | null
           search_vector?: unknown
           source: string
           source_id: string
@@ -224,6 +234,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          experience_level?: string | null
           fetched_at?: string
           id?: string
           location?: string | null
@@ -231,6 +242,10 @@ export type Database = {
           region?: string | null
           remote?: boolean | null
           role?: string
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_period?: string | null
           search_vector?: unknown
           source?: string
           source_id?: string

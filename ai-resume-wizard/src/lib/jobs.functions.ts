@@ -25,6 +25,11 @@ export type JobListing = {
   remote: boolean;
   posted_at: string | null;
   fetched_at: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  experience_level: string | null;
 };
 
 export type WatchedCompany = {
@@ -52,6 +57,16 @@ function toWebsearch(q: string): string {
   return q.replace(/[\\'"]/g, " ").trim();
 }
 
+const EXPERIENCE_LEVELS = [
+  "intern",
+  "entry",
+  "mid",
+  "senior",
+  "lead",
+  "manager",
+  "director+",
+] as const;
+
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -69,6 +84,14 @@ export const listJobListings = createServerFn({ method: "GET" })
         radius_miles: z.number().int().min(0).max(500).optional(),
         remoteOnly: z.boolean().optional(),
         source: z.enum(KNOWN_SOURCES).optional(),
+        // Salary filter: annualized USD. Rows with unknown salary are INCLUDED
+        // by default; set salary_only_listed=true to opt in to the narrow view.
+        salary_min: z.number().int().min(0).max(10_000_000).optional(),
+        salary_only_listed: z.boolean().optional(),
+        // Experience filter: rows without a classified level are INCLUDED by
+        // default. Set level_only_classified=true to require a match.
+        experience_level: z.enum(EXPERIENCE_LEVELS).optional(),
+        level_only_classified: z.boolean().optional(),
         limit: z.number().int().min(1).max(200).optional(),
         offset: z.number().int().min(0).max(50_000).optional(),
       })
@@ -132,6 +155,38 @@ export const listJobListings = createServerFn({ method: "GET" })
       if (data.country && data.country.trim()) {
         const c = escapeForOr(data.country);
         q = q.or(`country.ilike.${c},location.ilike.%${c}%`);
+      }
+    }
+
+    // Salary: hide unknowns only when the user explicitly opts in. Salary is
+    // stored annualized in native currency, so we compare against USD/null-
+    // currency rows to avoid mixing scales (a €150k row won't be matched by
+    // a $150k threshold — that's fine, we treat it as "unknown for filter").
+    if (data.salary_only_listed) {
+      q = q.not("salary_max", "is", null);
+    }
+    if (data.salary_min && data.salary_min > 0) {
+      const min = data.salary_min;
+      if (data.salary_only_listed) {
+        q = q.gte("salary_max", min);
+        q = q.or(`salary_currency.eq.USD,salary_currency.is.null`);
+      } else {
+        // Include rows with unknown salary OR (known salary that meets threshold
+        // AND currency compatible with USD comparison).
+        q = q.or(
+          `salary_max.is.null,and(salary_max.gte.${min},or(salary_currency.eq.USD,salary_currency.is.null))`,
+        );
+      }
+    }
+
+    // Experience: same include-unknown-by-default behavior.
+    if (data.experience_level) {
+      if (data.level_only_classified) {
+        q = q.eq("experience_level", data.experience_level);
+      } else {
+        q = q.or(
+          `experience_level.eq.${data.experience_level},experience_level.is.null`,
+        );
       }
     }
 
@@ -336,6 +391,83 @@ export const backfillJobDescriptions = createServerFn({ method: "POST" })
     }
     return { scanned, updated };
   });
+
+
+
+// Backfill experience_level and salary_* on existing rows. Idempotent —
+// only rewrites when the derived value would change and only fills nulls
+// for salary (never overwrites structured feed data).
+export const backfillJobClassifiers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: role } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin" as never)
+      .maybeSingle();
+    if (!role) throw new Error("Admins only.");
+
+    const { classifyLevel, parseSalaryText, toAnnual } = await import("./job-classify");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const PAGE = 500;
+    let from = 0;
+    let scanned = 0;
+    let levelSet = 0;
+    let salarySet = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabaseAdmin
+        .from("job_listings")
+        .select("id, role, description, experience_level, salary_max")
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      scanned += data.length;
+
+      for (const row of data as Array<{
+        id: string;
+        role: string;
+        description: string | null;
+        experience_level: string | null;
+        salary_max: number | null;
+      }>) {
+        const patch: Record<string, unknown> = {};
+        if (!row.experience_level) {
+          const lvl = classifyLevel(row.role);
+          if (lvl) {
+            patch.experience_level = lvl;
+            levelSet += 1;
+          }
+        }
+        if (row.salary_max == null && row.description) {
+          const p = parseSalaryText(row.description);
+          if (p.max != null && p.period) {
+            const a = toAnnual(p.min, p.max, p.period);
+            patch.salary_min = a.min;
+            patch.salary_max = a.max;
+            patch.salary_currency = p.currency ?? "USD";
+            patch.salary_period = a.period;
+            salarySet += 1;
+          }
+        }
+        if (Object.keys(patch).length > 0) {
+          const { error: upErr } = await supabaseAdmin
+            .from("job_listings")
+            .update(patch as never)
+            .eq("id", row.id);
+          if (upErr) throw upErr;
+        }
+      }
+
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return { scanned, levelSet, salarySet };
+  });
+
 
 export const autoRankForCurrentUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

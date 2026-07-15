@@ -36,6 +36,12 @@ type Filters = {
   radius: number;
   remoteOnly: boolean;
   source: string;
+  // Salary: annual USD; 0 = no filter. `onlyListed` opts into the narrow view.
+  salaryMin: number;
+  salaryOnlyListed: boolean;
+  // Experience level; "" = no filter. `onlyClassified` requires an exact match.
+  experienceLevel: string;
+  levelOnlyClassified: boolean;
 };
 
 const EMPTY: Filters = {
@@ -48,7 +54,22 @@ const EMPTY: Filters = {
   radius: 25,
   remoteOnly: false,
   source: "",
+  salaryMin: 0,
+  salaryOnlyListed: false,
+  experienceLevel: "",
+  levelOnlyClassified: false,
 };
+
+const LEVEL_OPTIONS = [
+  { value: "", label: "Any experience level" },
+  { value: "intern", label: "Intern" },
+  { value: "entry", label: "Entry / Junior" },
+  { value: "mid", label: "Mid" },
+  { value: "senior", label: "Senior" },
+  { value: "lead", label: "Lead / Staff / Principal" },
+  { value: "manager", label: "Manager" },
+  { value: "director+", label: "Director / VP+" },
+];
 
 function DiscoverPage() {
   const qc = useQueryClient();
@@ -90,6 +111,10 @@ function DiscoverPage() {
           radius_miles: applied.zip ? applied.radius : undefined,
           remoteOnly: applied.remoteOnly || undefined,
           source: (applied.source || undefined) as never,
+          salary_min: applied.salaryMin > 0 ? applied.salaryMin : undefined,
+          salary_only_listed: applied.salaryOnlyListed || undefined,
+          experience_level: (applied.experienceLevel || undefined) as never,
+          level_only_classified: applied.levelOnlyClassified || undefined,
           limit: PAGE_SIZE,
           offset: page * PAGE_SIZE,
         },
@@ -238,6 +263,49 @@ function DiscoverPage() {
             </select>
           </div>
 
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">Min salary (USD/yr)</label>
+              <input
+                type="number"
+                min={0}
+                max={1_000_000}
+                step={5000}
+                value={draft.salaryMin || ""}
+                onChange={(e) => setDraft({ ...draft, salaryMin: Number(e.target.value) || 0 })}
+                placeholder="e.g. 150000"
+                className="w-full rounded-md border border-input bg-background px-2 py-2 text-sm"
+              />
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={draft.salaryOnlyListed}
+                onChange={(e) => setDraft({ ...draft, salaryOnlyListed: e.target.checked })}
+              />
+              Only show jobs with a listed salary
+            </label>
+            <select
+              value={draft.experienceLevel}
+              onChange={(e) => setDraft({ ...draft, experienceLevel: e.target.value })}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {LEVEL_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={draft.levelOnlyClassified}
+                onChange={(e) => setDraft({ ...draft, levelOnlyClassified: e.target.checked })}
+                disabled={!draft.experienceLevel}
+              />
+              Exclude unclassified level
+            </label>
+          </div>
+
+
           <div className="flex flex-wrap items-center gap-2">
             <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <input
@@ -306,7 +374,16 @@ function DiscoverPage() {
           </div>
         ) : (
           <>
-            <ul className="mt-8 divide-y divide-border rounded-lg border border-border">
+            {(applied.salaryMin > 0 || applied.experienceLevel) && (
+              <CoverageNote
+                rows={rows}
+                salaryFilterActive={applied.salaryMin > 0}
+                levelFilterActive={!!applied.experienceLevel}
+                onlyListedSalary={applied.salaryOnlyListed}
+                onlyClassifiedLevel={applied.levelOnlyClassified}
+              />
+            )}
+            <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
               {rows.map((j) => (
                 <JobRow key={j.id} job={j} saved={savedIds.has(j.id)} onSave={() => save.mutate(j.id)} />
               ))}
@@ -376,10 +453,20 @@ function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSav
             </span>
           )}
         </div>
-        <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {job.location && <span>{job.location}</span>}
           {posted && <span>{posted}</span>}
           <span className="uppercase tracking-wider">{job.source}</span>
+          {job.experience_level && (
+            <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium capitalize">
+              {job.experience_level}
+            </span>
+          )}
+          {job.salary_max != null && (
+            <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+              {formatSalary(job)}
+            </span>
+          )}
         </div>
         {job.description && (
           <>
@@ -528,3 +615,58 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+// Format annualized salary in the row's native currency. Because we store
+// annualized numbers, the "/yr" is implied — we still show the original
+// period as a caveat when it wasn't yearly at ingest.
+function formatSalary(j: JobListing): string {
+  if (j.salary_max == null) return "";
+  const cur = j.salary_currency ?? "USD";
+  const sym = cur === "EUR" ? "€" : cur === "GBP" ? "£" : "$";
+  const fmt = (n: number) => (n >= 1000 ? `${sym}${Math.round(n / 1000)}k` : `${sym}${n}`);
+  const range =
+    j.salary_min != null && j.salary_min !== j.salary_max
+      ? `${fmt(j.salary_min)}–${fmt(j.salary_max)}`
+      : fmt(j.salary_max);
+  const suffix = j.salary_period && j.salary_period !== "year" ? ` (${j.salary_period})` : "/yr";
+  return `${range}${suffix}`;
+}
+
+// Honest count of how many rows on this page actually have data for the
+// filters that are active, vs. how many are included-but-unlisted. The
+// numbers are per-page, not global — but they immediately answer "is the
+// filter finding anything or am I mostly looking at unlisted rows?".
+function CoverageNote(props: {
+  rows: JobListing[];
+  salaryFilterActive: boolean;
+  levelFilterActive: boolean;
+  onlyListedSalary: boolean;
+  onlyClassifiedLevel: boolean;
+}) {
+  const total = props.rows.length;
+  if (total === 0) return null;
+  const withSalary = props.rows.filter((r) => r.salary_max != null).length;
+  const withLevel = props.rows.filter((r) => r.experience_level != null).length;
+  const parts: string[] = [];
+  if (props.salaryFilterActive) {
+    parts.push(
+      props.onlyListedSalary
+        ? `${withSalary} with listed salary (unlisted excluded).`
+        : `${withSalary} of ${total} on this page have a listed salary — the other ${total - withSalary} are included because their salary is unknown.`,
+    );
+  }
+  if (props.levelFilterActive) {
+    parts.push(
+      props.onlyClassifiedLevel
+        ? `${withLevel} with a classified experience level (unclassified excluded).`
+        : `${withLevel} of ${total} on this page have a classified experience level — the other ${total - withLevel} are included because their level is unknown.`,
+    );
+  }
+  if (parts.length === 0) return null;
+  return (
+    <div className="mt-8 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+      {parts.join(" ")}
+    </div>
+  );
+}
+
