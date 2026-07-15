@@ -7,6 +7,7 @@
 
 import { parseLocation } from "./location-parse";
 import { stripHtmlInline, stripHtmlToText } from "./strip-html";
+import { classifyLevel, parseSalaryText, toAnnual, type ExperienceLevel } from "./job-classify";
 
 export type RawJob = {
   source: string;
@@ -21,13 +22,39 @@ export type RawJob = {
   description: string | null;
   remote: boolean;
   posted_at: string | null; // ISO
+  // Salary is stored annualized in native currency; original period is kept
+  // for display. All fields null when the feed provided nothing usable.
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  experience_level: ExperienceLevel | null;
 };
 
-function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
+// Optional structured hints a specific adapter can pass in. Anything absent
+// gets inferred from title/description text.
+type Hints = {
+  levelHint?: string | null;
+  salary?: {
+    min: number | null;
+    max: number | null;
+    currency: string | null;
+    period: string | null;
+  } | null;
+};
+
+type Base = Omit<
+  RawJob,
+  | "city" | "region" | "country"
+  | "salary_min" | "salary_max" | "salary_currency" | "salary_period"
+  | "experience_level"
+>;
+
+function withParsed(base: Base, hints: Hints = {}): RawJob {
   // Sanitize every string field that could carry raw HTML or entities from a
   // third-party feed. Descriptions get the multi-line stripper; short fields
   // get the inline stripper so a stray tag never lands in the DB.
-  const cleaned: Omit<RawJob, "city" | "region" | "country"> = {
+  const cleaned: Base = {
     ...base,
     role: stripHtmlInline(base.role) ?? base.role,
     company: stripHtmlInline(base.company) ?? base.company,
@@ -35,7 +62,44 @@ function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
     description: stripHtmlToText(base.description),
   };
   const p = parseLocation(cleaned.location);
-  return { ...cleaned, city: p.city, region: p.region, country: p.country };
+
+  // Salary: prefer the adapter-supplied structured hint. Fall back to parsing
+  // the description text so pay-transparency ranges buried in the body still
+  // count. We annualize so filters compare apples to apples.
+  let salaryMin: number | null = null;
+  let salaryMax: number | null = null;
+  let salaryCurrency: string | null = null;
+  let salaryPeriod: string | null = null;
+  if (hints.salary && (hints.salary.min != null || hints.salary.max != null)) {
+    const a = toAnnual(hints.salary.min, hints.salary.max, hints.salary.period);
+    salaryMin = a.min;
+    salaryMax = a.max;
+    salaryCurrency = hints.salary.currency;
+    salaryPeriod = a.period;
+  } else if (cleaned.description) {
+    const parsed = parseSalaryText(cleaned.description);
+    if (parsed.max != null && parsed.period) {
+      const a = toAnnual(parsed.min, parsed.max, parsed.period);
+      salaryMin = a.min;
+      salaryMax = a.max;
+      salaryCurrency = parsed.currency;
+      salaryPeriod = a.period;
+    }
+  }
+
+  const level = classifyLevel(cleaned.role, hints.levelHint ?? null);
+
+  return {
+    ...cleaned,
+    city: p.city,
+    region: p.region,
+    country: p.country,
+    salary_min: salaryMin,
+    salary_max: salaryMax,
+    salary_currency: salaryCurrency,
+    salary_period: salaryPeriod,
+    experience_level: level,
+  };
 }
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
