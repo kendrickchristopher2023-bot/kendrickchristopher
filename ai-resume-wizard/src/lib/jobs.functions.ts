@@ -122,7 +122,15 @@ export const listJobListings = createServerFn({ method: "GET" })
 
     // Structured location. Zip radius resolves offline to a set of (city, region)
     // pairs; when present it overrides city/region so results stay coherent.
-    if (data.zip && (data.radius_miles ?? 0) > 0) {
+    //
+    // Remote-overrides-location: a remote job matches any location by definition,
+    // AND ~30% of remote rows in the pool have NULL city (adapters don't always
+    // set it). If the user checked "Remote only", skip the city/region/country/
+    // zip .or() filters entirely so the count matches what remote=true returns.
+    // The UI shows a hint that location filters are ignored in remote-only mode.
+    if (data.remoteOnly) {
+      // no location predicate — every remote row qualifies regardless of city
+    } else if (data.zip && (data.radius_miles ?? 0) > 0) {
       const { nearbyZips, lookupZip } = await import("./zipcodes.server");
       const zips = nearbyZips(data.zip, data.radius_miles!).slice(0, 500);
       const cities = new Set<string>();
@@ -157,6 +165,7 @@ export const listJobListings = createServerFn({ method: "GET" })
         q = q.or(`country.ilike.${c},location.ilike.%${c}%`);
       }
     }
+
 
     // Salary: hide unknowns only when the user explicitly opts in. Salary is
     // stored annualized in native currency, so we compare against USD/null-

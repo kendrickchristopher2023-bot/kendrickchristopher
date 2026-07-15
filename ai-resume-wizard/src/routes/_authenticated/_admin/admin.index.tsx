@@ -25,6 +25,25 @@ export const Route = createFileRoute("/_authenticated/_admin/admin/")({
 });
 
 const PLANS = ["free", "pro", "founder"] as const;
+
+// Format an ISO timestamp in US Eastern time with an explicit "ET" suffix.
+// Uses toLocaleString with timeZone so DST is handled automatically.
+function formatEasternDateTime(iso: string | null | undefined): string {
+  if (!iso) return "Never";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const formatted = d.toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${formatted} ET`;
+}
+
 const FUNNEL_STAGES = [
   "applied",
   "response",
@@ -61,12 +80,16 @@ function AdminDashboard() {
   });
 
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<
+    "joined_desc" | "joined_asc" | "login_desc" | "login_asc" | "login_never_first"
+  >("joined_desc");
   const [magic, setMagic] = useState<{
     email: string;
     link: string;
     emailSent: boolean;
     emailError: string | null;
   } | null>(null);
+
 
   const changePlan = useMutation({
     mutationFn: (v: { userId: string; plan: (typeof PLANS)[number] }) =>
@@ -117,14 +140,45 @@ function AdminDashboard() {
 
   const filteredUsers = useMemo(() => {
     const list = users.data?.users ?? [];
-    if (!search.trim()) return list;
-    const q = search.toLowerCase();
-    return list.filter(
-      (u) =>
-        u.email.toLowerCase().includes(q) ||
-        (u.full_name ?? "").toLowerCase().includes(q),
-    );
-  }, [users.data, search]);
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? list.filter(
+          (u) =>
+            u.email.toLowerCase().includes(q) ||
+            (u.full_name ?? "").toLowerCase().includes(q),
+        )
+      : list;
+    const t = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case "joined_desc":
+        sorted.sort((a, b) => t(b.created_at) - t(a.created_at));
+        break;
+      case "joined_asc":
+        sorted.sort((a, b) => t(a.created_at) - t(b.created_at));
+        break;
+      case "login_desc":
+        // Never-signed-in last.
+        sorted.sort((a, b) => t(b.last_sign_in_at) - t(a.last_sign_in_at));
+        break;
+      case "login_asc":
+        // Least-recently-active first; never-signed-in last.
+        sorted.sort(
+          (a, b) =>
+            (t(a.last_sign_in_at) || Number.MAX_SAFE_INTEGER) -
+            (t(b.last_sign_in_at) || Number.MAX_SAFE_INTEGER),
+        );
+        break;
+      case "login_never_first":
+        sorted.sort(
+          (a, b) =>
+            (t(a.last_sign_in_at) || -1) - (t(b.last_sign_in_at) || -1),
+        );
+        break;
+    }
+    return sorted;
+  }, [users.data, search, sortBy]);
+
 
   const maxUsage = Math.max(
     1,
@@ -232,14 +286,28 @@ function AdminDashboard() {
 
         {/* Users */}
         <section>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">Users</h2>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search email or name"
-              className="w-64 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                title="Sort users"
+              >
+                <option value="joined_desc">Sort: Newest joined</option>
+                <option value="joined_asc">Sort: Oldest joined</option>
+                <option value="login_desc">Sort: Most-recently active</option>
+                <option value="login_asc">Sort: Least-recently active (never last)</option>
+                <option value="login_never_first">Sort: Never signed in first</option>
+              </select>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search email or name"
+                className="w-64 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+              />
+            </div>
           </div>
           <div className="mt-3 overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-sm">
@@ -249,6 +317,21 @@ function AdminDashboard() {
                   <th className="px-3 py-2 font-semibold">Plan</th>
                   <th className="px-3 py-2 font-semibold">Joined</th>
                   <th className="px-3 py-2 font-semibold">Onboarded</th>
+                  <th className="px-3 py-2 font-semibold">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSortBy((s) => (s === "login_desc" ? "login_asc" : "login_desc"))
+                      }
+                      className="inline-flex items-center gap-1 hover:text-foreground"
+                      title="Click to sort by last sign-in"
+                    >
+                      Last login (ET)
+                      <span className="text-muted-foreground">
+                        {sortBy === "login_desc" ? "↓" : sortBy === "login_asc" ? "↑" : "↕"}
+                      </span>
+                    </button>
+                  </th>
                   <th className="px-3 py-2 font-semibold">Resume</th>
                   <th className="px-3 py-2 font-semibold">Today</th>
                   <th className="px-3 py-2 font-semibold">Access</th>
@@ -257,18 +340,19 @@ function AdminDashboard() {
               <tbody className="divide-y divide-border">
                 {users.isLoading && (
                   <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 )}
                 {!users.isLoading && filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
                       No users.
                     </td>
                   </tr>
                 )}
+
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className={u.banned ? "opacity-60" : ""}>
                     <td className="px-3 py-2">
@@ -306,6 +390,10 @@ function AdminDashboard() {
                         ? new Date(u.onboarded_at).toLocaleDateString()
                         : "—"}
                     </td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
+                      {formatEasternDateTime(u.last_sign_in_at)}
+                    </td>
+
                     <td className="px-3 py-2 text-xs">
                       {u.has_primary_resume ? "✓" : "—"}
                     </td>

@@ -60,16 +60,20 @@ const EMPTY: Filters = {
   levelOnlyClassified: false,
 };
 
+// NOTE: The classifier never assigns "mid" — it's the implicit default when no
+// seniority marker is present, so filtering for "mid" would either match nothing
+// (only-classified) or duplicate the include-unknown behavior of every other
+// level. We omit it from the dropdown rather than ship a dead option.
 const LEVEL_OPTIONS = [
   { value: "", label: "Any experience level" },
   { value: "intern", label: "Intern" },
   { value: "entry", label: "Entry / Junior" },
-  { value: "mid", label: "Mid" },
   { value: "senior", label: "Senior" },
   { value: "lead", label: "Lead / Staff / Principal" },
   { value: "manager", label: "Manager" },
   { value: "director+", label: "Director / VP+" },
 ];
+
 
 function DiscoverPage() {
   const qc = useQueryClient();
@@ -92,9 +96,11 @@ function DiscoverPage() {
 
   // Reset the stale confirmation banner whenever the applied filters change
   // so a "Refreshed X jobs" message doesn't hang around next to new results.
+  // NOTE: `page` is reset synchronously in submit()/clear() below — resetting it
+  // here in an effect caused a render where a new filter ran against a stale
+  // non-zero offset, briefly showing "Nothing matches" before self-correcting.
   useEffect(() => {
     setMsg(null);
-    setPage(0);
   }, [applied]);
 
   const jobsQ = useQuery({
@@ -157,12 +163,17 @@ function DiscoverPage() {
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
+    setPage(0);
     setApplied({ ...draft });
   };
   const clear = () => {
+    setPage(0);
     setDraft(EMPTY);
     setApplied(EMPTY);
   };
+
+
+
 
   return (
     <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -320,6 +331,13 @@ function DiscoverPage() {
               />
               Remote only
             </label>
+            {draft.remoteOnly &&
+              (draft.city || draft.region || draft.country || draft.zip) && (
+                <span className="text-xs text-muted-foreground italic">
+                  Location filters ignored — remote jobs match any location.
+                </span>
+              )}
+
             <button
               type="submit"
               className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90"
