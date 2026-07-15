@@ -191,8 +191,11 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
 
 // ---------- Ashby ----------
 // https://api.ashbyhq.com/posting-api/job-board/{slug}
+// includeCompensation=true returns a `compensation` object per posting with
+// structured salary tiers. We take the first Salary component's min/max/
+// currency/interval; equity/bonus components are ignored for filter purposes.
 export async function fetchAshby(slug: string, companyName: string): Promise<RawJob[]> {
-  const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}?includeCompensation=false`;
+  const url = `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}?includeCompensation=true`;
   const data = (await fetchJson(url)) as {
     jobs?: Array<{
       id: string;
@@ -202,22 +205,57 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       descriptionPlain?: string;
       publishedDate?: string;
       isRemote?: boolean;
+      employmentType?: string;
       secondaryLocations?: Array<{ location?: string }>;
+      compensation?: {
+        summaryComponents?: Array<{
+          compensationType?: string;
+          interval?: string;
+          currencyCode?: string | null;
+          minValue?: number | null;
+          maxValue?: number | null;
+        }>;
+      };
     }>;
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location ?? null;
-    return withParsed({
-      source: "ashby",
-      source_id: `${slug}:${j.id}`,
-      company: companyName,
-      role: j.title,
-      location: loc,
-      url: j.jobUrl,
-      description: stripHtml(j.descriptionPlain ?? null),
-      remote: !!j.isRemote || looksRemote(loc),
-      posted_at: j.publishedDate ?? null,
-    });
+    const salaryComp = j.compensation?.summaryComponents?.find(
+      (c) => c.compensationType === "Salary" && (c.minValue != null || c.maxValue != null),
+    );
+    const intervalToPeriod = (i?: string) => {
+      if (!i) return null;
+      const u = i.toUpperCase();
+      if (u.includes("HOUR")) return "hour";
+      if (u.includes("MONTH")) return "month";
+      if (u.includes("WEEK")) return "week";
+      if (u.includes("DAY")) return "day";
+      return "year"; // "1 YEAR"
+    };
+    return withParsed(
+      {
+        source: "ashby",
+        source_id: `${slug}:${j.id}`,
+        company: companyName,
+        role: j.title,
+        location: loc,
+        url: j.jobUrl,
+        description: stripHtml(j.descriptionPlain ?? null),
+        remote: !!j.isRemote || looksRemote(loc),
+        posted_at: j.publishedDate ?? null,
+      },
+      {
+        levelHint: j.employmentType ?? null,
+        salary: salaryComp
+          ? {
+              min: salaryComp.minValue ?? null,
+              max: salaryComp.maxValue ?? null,
+              currency: salaryComp.currencyCode ?? null,
+              period: intervalToPeriod(salaryComp.interval),
+            }
+          : null,
+      },
+    );
   });
 }
 
