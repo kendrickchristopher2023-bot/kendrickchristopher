@@ -80,6 +80,18 @@ function TailorPage() {
     setHistory(loadHistory());
   }, []);
 
+  // Prefill from a Job Matches row when arriving with ?matchId=…
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || !prefillQ.data) return;
+    const p = prefillQ.data;
+    setCompany((c) => c || p.company || "");
+    setRole((r) => r || p.role || "");
+    if (p.jobDescription) setJd((j) => j || p.jobDescription || "");
+    setPrefilled(true);
+  }, [prefillQ.data, prefilled]);
+
+
 
 
   const saveHistory = (entry: HistoryEntry) => {
