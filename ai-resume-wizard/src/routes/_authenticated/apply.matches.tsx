@@ -513,6 +513,10 @@ function EditMatchInline({
     tier: match.tier ?? "",
     role_url: match.role_url ?? "",
     notes: match.notes ?? "",
+    zip_code: match.zip_code ?? "",
+    city: match.city ?? "",
+    state: match.state ?? "",
+    country: match.country ?? "",
   });
   const m = useMutation({
     mutationFn: () => updateFn({ data: { id: match.id, ...form } as never }),
@@ -522,8 +526,12 @@ function EditMatchInline({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <Field label="Company" value={form.company} onChange={(v) => setForm({ ...form, company: v })} />
       <Field label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} />
-      <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+      <Field label="Location (display)" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
       <Field label="Tier" value={form.tier} onChange={(v) => setForm({ ...form, tier: v })} />
+      <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+      <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+      <Field label="ZIP" value={form.zip_code} onChange={(v) => setForm({ ...form, zip_code: v })} />
+      <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
       <Field label="Role URL" value={form.role_url} onChange={(v) => setForm({ ...form, role_url: v })} />
       <Field label="Notes" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} />
       <div className="sm:col-span-2 flex justify-end gap-2">
