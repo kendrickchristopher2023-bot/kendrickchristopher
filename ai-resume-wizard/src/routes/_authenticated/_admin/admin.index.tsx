@@ -499,6 +499,16 @@ function AdminDashboard() {
             Metadata only — resume content, tailored output, and cover letters
             aren't shown here.
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            <span className="font-medium">Last login</span> is the last time
+            the user signed in (from auth). <span className="font-medium">Last active</span>{" "}
+            is bumped whenever an authenticated server call is made on their
+            behalf (Discover search, Matches, Tailor, saving a resume, etc.),
+            throttled to once every 5 minutes. Purely client-side interactions
+            that never hit the server (typing in a filter box, scrolling) are
+            not counted, so this is a coarse "still using the app" signal, not
+            precise session tracking.
+          </p>
         </section>
 
         {/* Access requests */}
