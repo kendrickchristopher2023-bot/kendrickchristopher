@@ -294,6 +294,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       {
         source: "remotive",
         source_id: String(j.id),
+        source_slug: null,
         company: j.company_name,
         role: j.title,
         location: j.candidate_required_location ?? "Remote",
@@ -302,6 +303,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
         remote: true,
         posted_at: j.publication_date ?? null,
       },
+
       {
         levelHint: j.job_type ?? null,
         salary:
