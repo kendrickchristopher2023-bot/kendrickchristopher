@@ -1,15 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import {
   generateInterviewPrep,
   listInterviewSessions,
   saveInterviewAnswers,
   type StarAnswer,
 } from "@/lib/interview.functions";
+import { getMatchPrefill } from "@/lib/matches.functions";
+
+const prepSearchSchema = z.object({
+  matchId: fallback(z.string().uuid().optional(), undefined),
+});
 
 export const Route = createFileRoute("/_authenticated/apply/interview-prep")({
+  validateSearch: zodValidator(prepSearchSchema),
   head: () => ({
     meta: [
       { title: "Interview Prep — AI Job Kit" },
@@ -30,7 +38,15 @@ function InterviewPrepPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listInterviewSessions);
   const genFn = useServerFn(generateInterviewPrep);
+  const prefillFn = useServerFn(getMatchPrefill);
+  const { matchId } = Route.useSearch();
   const sessionsQ = useQuery({ queryKey: ["interview-sessions"], queryFn: () => listFn() });
+  const prefillQ = useQuery({
+    queryKey: ["match-prefill", matchId],
+    queryFn: () => prefillFn({ data: { matchId: matchId! } }),
+    enabled: !!matchId,
+    staleTime: 60_000,
+  });
 
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -38,6 +54,17 @@ function InterviewPrepPage() {
   const [questions, setQuestions] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || !prefillQ.data) return;
+    const p = prefillQ.data;
+    setCompany((c) => c || p.company || "");
+    setRole((r) => r || p.role || "");
+    if (p.jobDescription) setJd((j) => j || p.jobDescription || "");
+    setPrefilled(true);
+  }, [prefillQ.data, prefilled]);
+
 
   const gen = useMutation({
     mutationFn: () =>

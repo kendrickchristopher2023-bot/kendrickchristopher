@@ -2,10 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { getMyResume } from "@/lib/resume.functions";
+import { getMatchPrefill } from "@/lib/matches.functions";
+
+const tailorSearchSchema = z.object({
+  matchId: fallback(z.string().uuid().optional(), undefined),
+});
 
 export const Route = createFileRoute("/_authenticated/apply/tailor")({
+  validateSearch: zodValidator(tailorSearchSchema),
   head: () => ({
     meta: [
       { title: "AI Resume Tailor — Christopher Kendrick" },
@@ -34,10 +42,19 @@ const HISTORY_KEY = "ck.tailor.history.v1";
 function TailorPage() {
   const tailor = useServerFn(tailorResume);
   const getResume = useServerFn(getMyResume);
+  const prefillFn = useServerFn(getMatchPrefill);
+  const { matchId } = Route.useSearch();
   const { data: resumeData } = useQuery({
     queryKey: ["my-resume"],
     queryFn: () => getResume({ data: {} }),
   });
+  const prefillQ = useQuery({
+    queryKey: ["match-prefill", matchId],
+    queryFn: () => prefillFn({ data: { matchId: matchId! } }),
+    enabled: !!matchId,
+    staleTime: 60_000,
+  });
+
 
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
@@ -62,6 +79,18 @@ function TailorPage() {
   useEffect(() => {
     setHistory(loadHistory());
   }, []);
+
+  // Prefill from a Job Matches row when arriving with ?matchId=…
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || !prefillQ.data) return;
+    const p = prefillQ.data;
+    setCompany((c) => c || p.company || "");
+    setRole((r) => r || p.role || "");
+    if (p.jobDescription) setJd((j) => j || p.jobDescription || "");
+    setPrefilled(true);
+  }, [prefillQ.data, prefilled]);
+
 
 
 
