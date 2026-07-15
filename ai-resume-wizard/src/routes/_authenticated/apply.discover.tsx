@@ -374,7 +374,16 @@ function DiscoverPage() {
           </div>
         ) : (
           <>
-            <ul className="mt-8 divide-y divide-border rounded-lg border border-border">
+            {(applied.salaryMin > 0 || applied.experienceLevel) && (
+              <CoverageNote
+                rows={rows}
+                salaryFilterActive={applied.salaryMin > 0}
+                levelFilterActive={!!applied.experienceLevel}
+                onlyListedSalary={applied.salaryOnlyListed}
+                onlyClassifiedLevel={applied.levelOnlyClassified}
+              />
+            )}
+            <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
               {rows.map((j) => (
                 <JobRow key={j.id} job={j} saved={savedIds.has(j.id)} onSave={() => save.mutate(j.id)} />
               ))}
