@@ -102,6 +102,11 @@ function MatchesPage() {
     const st = fState.trim().toLowerCase();
     const co = fCountry.trim().toLowerCase();
     return allMatches.filter((m) => {
+      if (fRemoteOnly) {
+        const loc = (m.location ?? "").toLowerCase();
+        const notes = (m.notes ?? "").toLowerCase();
+        if (!/\bremote\b/.test(loc) && !/\bremote\b/.test(notes)) return false;
+      }
       if (c && (m.city ?? "").toLowerCase() !== c) return false;
       if (st && (m.state ?? "").toLowerCase() !== st) return false;
       if (co && (m.country ?? "").toLowerCase() !== co) return false;
@@ -111,9 +116,9 @@ function MatchesPage() {
       }
       return true;
     });
-  }, [allMatches, fCity, fState, fCountry, nearbySet]);
+  }, [allMatches, fCity, fState, fCountry, nearbySet, fRemoteOnly]);
   const anyFilter =
-    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim();
+    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim() || fRemoteOnly;
 
   return (
     <main
