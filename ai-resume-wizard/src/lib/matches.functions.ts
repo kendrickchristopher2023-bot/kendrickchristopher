@@ -19,7 +19,70 @@ export type PersonalMatch = {
   city: string | null;
   state: string | null;
   country: string | null;
+  job_listing_id: string | null;
 };
+
+export type MatchPrefill = {
+  company: string;
+  role: string;
+  jobDescription: string | null;
+  source: "job_listing" | "tailor_session" | null;
+};
+
+export const getMatchPrefill = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ matchId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<MatchPrefill | null> => {
+    const { data: match, error } = await context.supabase
+      .from("personal_matches")
+      .select("company, role, job_listing_id")
+      .eq("id", data.matchId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!match) return null;
+
+    let jd: string | null = null;
+    let source: MatchPrefill["source"] = null;
+
+    if (match.job_listing_id) {
+      const { data: jl } = await context.supabase
+        .from("job_listings")
+        .select("description")
+        .eq("id", match.job_listing_id)
+        .maybeSingle();
+      if (jl?.description && jl.description.trim().length >= 30) {
+        jd = jl.description;
+        source = "job_listing";
+      }
+    }
+
+    if (!jd) {
+      const { data: sess } = await context.supabase
+        .from("tailor_sessions")
+        .select("jd_text, created_at")
+        .eq("user_id", context.userId)
+        .ilike("company", match.company)
+        .ilike("role", match.role)
+        .not("jd_text", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (sess?.jd_text && sess.jd_text.trim().length >= 30) {
+        jd = sess.jd_text;
+        source = "tailor_session";
+      }
+    }
+
+    return {
+      company: match.company,
+      role: match.role,
+      jobDescription: jd,
+      source,
+    };
+  });
 
 export const listMatches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
