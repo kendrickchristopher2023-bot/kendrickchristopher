@@ -499,6 +499,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
         out.push(withParsed({
           source: "themuse",
           source_id: String(j.id),
+          source_slug: null,
           company: j.company?.name ?? "Unknown",
           role: j.name,
           location: locName,
@@ -507,6 +508,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
           remote: looksRemote(locName),
           posted_at: j.publication_date ?? null,
         }));
+
       }
     } catch {
       // One metro failing shouldn't kill the batch.
