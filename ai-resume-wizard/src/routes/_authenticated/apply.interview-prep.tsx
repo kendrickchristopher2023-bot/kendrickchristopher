@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import {
   generateInterviewPrep,
@@ -13,11 +12,11 @@ import {
 import { getMatchPrefill } from "@/lib/matches.functions";
 
 const prepSearchSchema = z.object({
-  matchId: fallback(z.string().uuid().optional(), undefined),
+  matchId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/apply/interview-prep")({
-  validateSearch: zodValidator(prepSearchSchema),
+  validateSearch: prepSearchSchema,
   head: () => ({
     meta: [
       { title: "Interview Prep — AI Job Kit" },
