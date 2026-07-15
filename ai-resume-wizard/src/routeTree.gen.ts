@@ -41,6 +41,7 @@ import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authen
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicHooksRefreshJobsRouteImport } from './routes/api/public/hooks/refresh-jobs'
 import { Route as ApiPublicHooksRankJobsRouteImport } from './routes/api/public/hooks/rank-jobs'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
@@ -215,6 +216,12 @@ const AuthenticatedAdminAdminIndexRoute =
     path: '/admin/',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRefreshJobsRoute =
   ApiPublicHooksRefreshJobsRouteImport.update({
     id: '/api/public/hooks/refresh-jobs',
@@ -266,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -300,6 +308,7 @@ export interface FileRoutesByTo {
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -338,6 +347,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/transactional/preview'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -409,6 +420,7 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/transactional/preview'
     | '/admin'
   id:
     | '__root__'
@@ -446,6 +458,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/transactional/preview'
     | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -469,6 +482,7 @@ export interface RootRouteChildren {
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -697,6 +711,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-jobs': {
       id: '/api/public/hooks/refresh-jobs'
       path: '/api/public/hooks/refresh-jobs'
@@ -804,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
