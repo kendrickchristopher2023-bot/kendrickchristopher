@@ -42,10 +42,19 @@ const HISTORY_KEY = "ck.tailor.history.v1";
 function TailorPage() {
   const tailor = useServerFn(tailorResume);
   const getResume = useServerFn(getMyResume);
+  const prefillFn = useServerFn(getMatchPrefill);
+  const { matchId } = Route.useSearch();
   const { data: resumeData } = useQuery({
     queryKey: ["my-resume"],
     queryFn: () => getResume({ data: {} }),
   });
+  const prefillQ = useQuery({
+    queryKey: ["match-prefill", matchId],
+    queryFn: () => prefillFn({ data: { matchId: matchId! } }),
+    enabled: !!matchId,
+    staleTime: 60_000,
+  });
+
 
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
