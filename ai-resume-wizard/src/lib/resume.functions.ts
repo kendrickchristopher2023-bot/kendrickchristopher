@@ -128,6 +128,21 @@ export const createNamedResume = createServerFn({ method: "POST" })
     return { ok: true, id: inserted.id };
   });
 
+export const renameResume = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; name: string }) =>
+    z.object({ id: z.string().uuid(), name: z.string().min(1).max(120) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("resumes")
+      .update({ name: data.name, updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const setPrimaryResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) =>
