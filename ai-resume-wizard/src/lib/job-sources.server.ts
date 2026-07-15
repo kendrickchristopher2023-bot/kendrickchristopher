@@ -336,6 +336,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
       {
         source: "remoteok",
         source_id: String(j.id),
+        source_slug: null,
         company: (j.company as string) ?? "Unknown",
         role: (j.position as string) ?? (j.title as string) ?? "Role",
         location: loc,
@@ -344,6 +345,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
         remote: true,
         posted_at: (j.date as string) ?? null,
       },
+
       {
         salary: hasSalary
           ? { min: sMin, max: sMax, currency: "USD", period: "year" }
