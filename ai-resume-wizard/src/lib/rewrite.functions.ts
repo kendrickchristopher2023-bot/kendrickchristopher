@@ -7,7 +7,7 @@ export type RewriteEntitlement = {
   plan: "free" | "pro" | "founder";
   used: boolean;
   allowed: boolean;
-  reason: "ok" | "free_plan" | "already_used";
+  reason: "ok" | "free_plan" | "already_used" | "founder_unlimited";
 };
 
 async function loadEntitlement(
@@ -25,6 +25,7 @@ async function loadEntitlement(
     | "pro"
     | "founder";
   const used = !!data?.free_resume_rewrite_used;
+  if (plan === "founder") return { plan, used, allowed: true, reason: "founder_unlimited" };
   if (plan === "free") return { plan, used, allowed: false, reason: "free_plan" };
   if (used) return { plan, used, allowed: false, reason: "already_used" };
   return { plan, used, allowed: true, reason: "ok" };
