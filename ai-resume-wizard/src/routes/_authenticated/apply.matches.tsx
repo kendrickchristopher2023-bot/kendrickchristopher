@@ -74,9 +74,45 @@ function MatchesPage() {
     });
   };
 
-  const matches = matchesQ.data ?? [];
+  const allMatches = matchesQ.data ?? [];
   const apps = appsQ.data ?? [];
   const sessions = sessionsQ.data ?? [];
+
+  // -------- Location filters --------
+  const [fCity, setFCity] = useState("");
+  const [fState, setFState] = useState("");
+  const [fCountry, setFCountry] = useState("");
+  const [fZip, setFZip] = useState("");
+  const [fRadius, setFRadius] = useState(25);
+  const nearbyFn = useServerFn(nearbyZipCodes);
+  const zipQ = useQuery({
+    queryKey: ["nearby-zips", fZip.trim(), fRadius],
+    queryFn: () => nearbyFn({ data: { zip: fZip.trim(), radius_miles: fRadius } }),
+    enabled: fZip.trim().length >= 3 && fRadius > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+  const nearbySet = useMemo(
+    () => (zipQ.data ? new Set(zipQ.data.zips) : null),
+    [zipQ.data],
+  );
+
+  const matches = useMemo(() => {
+    const c = fCity.trim().toLowerCase();
+    const st = fState.trim().toLowerCase();
+    const co = fCountry.trim().toLowerCase();
+    return allMatches.filter((m) => {
+      if (c && (m.city ?? "").toLowerCase() !== c) return false;
+      if (st && (m.state ?? "").toLowerCase() !== st) return false;
+      if (co && (m.country ?? "").toLowerCase() !== co) return false;
+      if (nearbySet) {
+        const z = (m.zip_code ?? "").trim();
+        if (!z || !nearbySet.has(z)) return false;
+      }
+      return true;
+    });
+  }, [allMatches, fCity, fState, fCountry, nearbySet]);
+  const anyFilter =
+    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim();
 
   return (
     <main
