@@ -128,7 +128,7 @@ export const resendAccessLink = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { data: req, error: reqErr } = await context.supabase
       .from("access_requests")
-      .select("email, status")
+      .select("email, full_name, status")
       .eq("id", data.id)
       .single();
     if (reqErr || !req) throw reqErr ?? new Error("Not found");
@@ -144,12 +144,45 @@ export const resendAccessLink = createServerFn({ method: "POST" })
         options: { redirectTo: `${origin}/auth` },
       });
     if (linkErr) throw linkErr;
+    const magicLink = link.properties?.action_link ?? null;
+
+    let emailSent = false;
+    let emailError: string | null = null;
+    if (magicLink) {
+      try {
+        const { sendTemplateEmail } = await import(
+          "@/lib/email-templates/send-email"
+        );
+        const result = await sendTemplateEmail("access-approved", req.email, {
+          templateData: {
+            magicLink,
+            fullName:
+              (req as { full_name?: string | null }).full_name ?? null,
+          },
+          idempotencyKey: `access-resend-${data.id}-${Date.now()}`,
+        });
+        emailSent = result.sent;
+        if (!result.sent) emailError = result.reason;
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
+        console.error("[admin] access-resend email failed", err);
+      }
+    }
+
     await writeAudit(context.userId, "access_request.link_resent", null, {
       access_request_id: data.id,
       email: req.email,
       prior_status: req.status,
+      email_sent: emailSent,
+      email_error: emailError,
     });
-    return { ok: true, email: req.email, magicLink: link.properties?.action_link ?? null };
+    return {
+      ok: true,
+      email: req.email,
+      magicLink,
+      emailSent,
+      emailError,
+    };
   });
 
 // Admin is provisioned manually in the database — there is no self-serve
