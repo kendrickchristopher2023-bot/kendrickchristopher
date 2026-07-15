@@ -6,6 +6,7 @@
 // should never block the whole refresh, so callers wrap them in try/catch.
 
 import { parseLocation } from "./location-parse";
+import { stripHtmlInline, stripHtmlToText } from "./strip-html";
 
 export type RawJob = {
   source: string;
@@ -23,8 +24,18 @@ export type RawJob = {
 };
 
 function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
-  const p = parseLocation(base.location);
-  return { ...base, city: p.city, region: p.region, country: p.country };
+  // Sanitize every string field that could carry raw HTML or entities from a
+  // third-party feed. Descriptions get the multi-line stripper; short fields
+  // get the inline stripper so a stray tag never lands in the DB.
+  const cleaned: Omit<RawJob, "city" | "region" | "country"> = {
+    ...base,
+    role: stripHtmlInline(base.role) ?? base.role,
+    company: stripHtmlInline(base.company) ?? base.company,
+    location: stripHtmlInline(base.location),
+    description: stripHtmlToText(base.description),
+  };
+  const p = parseLocation(cleaned.location);
+  return { ...cleaned, city: p.city, region: p.region, country: p.country };
 }
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
