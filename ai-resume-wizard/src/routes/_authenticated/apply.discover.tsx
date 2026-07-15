@@ -100,8 +100,9 @@ function DiscoverPage() {
             Live jobs from company career pages.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Pulled directly from public Greenhouse, Lever, Ashby, and Remotive feeds — no
-            scraping, no bots. Save one to <strong>Matches</strong> to start tailoring.
+            Pulled directly from public Greenhouse, Lever, Ashby, Remotive, RemoteOK, Jobicy,
+            Arbeitnow, and The Muse feeds — no scraping, no bots. Save one to{" "}
+            <strong>Matches</strong> to start tailoring.
           </p>
         </header>
 
@@ -109,7 +110,7 @@ function DiscoverPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search role or company…"
+            placeholder="Search role, company, or city (e.g. Charlotte)…"
             className="w-64 rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
           <select
@@ -121,7 +122,11 @@ function DiscoverPage() {
             <option value="greenhouse">Greenhouse</option>
             <option value="lever">Lever</option>
             <option value="ashby">Ashby</option>
-            <option value="remotive">Remotive</option>
+            <option value="remotive">Remotive (remote)</option>
+            <option value="remoteok">RemoteOK (remote)</option>
+            <option value="jobicy">Jobicy (remote, US)</option>
+            <option value="arbeitnow">Arbeitnow</option>
+            <option value="themuse">The Muse (US metros)</option>
           </select>
           <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />

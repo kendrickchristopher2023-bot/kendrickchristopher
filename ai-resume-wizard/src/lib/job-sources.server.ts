@@ -174,6 +174,155 @@ export async function fetchRemotive(): Promise<RawJob[]> {
   }));
 }
 
+// ---------- RemoteOK ----------
+// https://remoteok.com/api  (first item is a legend row; skip it)
+export async function fetchRemoteOK(): Promise<RawJob[]> {
+  const url = `https://remoteok.com/api`;
+  const raw = (await fetchJson(url)) as Array<Record<string, unknown>>;
+  const items = (raw ?? []).filter((r) => r && typeof (r as { id?: unknown }).id !== "undefined");
+  return items.map((j) => {
+    const loc = (j.location as string | undefined) || "Remote";
+    return {
+      source: "remoteok",
+      source_id: String(j.id),
+      company: (j.company as string) ?? "Unknown",
+      role: (j.position as string) ?? (j.title as string) ?? "Role",
+      location: loc,
+      url: (j.url as string) ?? (j.apply_url as string) ?? "",
+      description: stripHtml((j.description as string) ?? null),
+      remote: true,
+      posted_at: (j.date as string) ?? null,
+    };
+  }).filter((j) => j.url);
+}
+
+// ---------- Jobicy ----------
+// https://jobicy.com/api/v2/remote-jobs  (keyless; supports ?geo=usa&count=50)
+export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
+  const url = `https://jobicy.com/api/v2/remote-jobs?count=${count}&geo=${encodeURIComponent(geo)}`;
+  const data = (await fetchJson(url)) as {
+    jobs?: Array<{
+      id: number | string;
+      jobTitle: string;
+      companyName: string;
+      jobGeo?: string;
+      url: string;
+      jobExcerpt?: string;
+      jobDescription?: string;
+      pubDate?: string;
+    }>;
+  };
+  return (data.jobs ?? []).map((j) => ({
+    source: "jobicy",
+    source_id: String(j.id),
+    company: j.companyName,
+    role: j.jobTitle,
+    location: j.jobGeo ?? "Remote",
+    url: j.url,
+    description: stripHtml(j.jobDescription ?? j.jobExcerpt ?? null),
+    remote: true,
+    posted_at: j.pubDate ?? null,
+  }));
+}
+
+// ---------- Arbeitnow ----------
+// https://www.arbeitnow.com/api/job-board-api  (keyless; mixed remote + on-site)
+export async function fetchArbeitnow(): Promise<RawJob[]> {
+  const url = `https://www.arbeitnow.com/api/job-board-api`;
+  const data = (await fetchJson(url)) as {
+    data?: Array<{
+      slug: string;
+      title: string;
+      company_name: string;
+      location?: string;
+      remote?: boolean;
+      url: string;
+      description?: string;
+      created_at?: number;
+      tags?: string[];
+    }>;
+  };
+  return (data.data ?? []).map((j) => {
+    const loc = j.location ?? null;
+    return {
+      source: "arbeitnow",
+      source_id: j.slug,
+      company: j.company_name,
+      role: j.title,
+      location: loc,
+      url: j.url,
+      description: stripHtml(j.description ?? null),
+      remote: !!j.remote || looksRemote(loc, (j.tags ?? []).join(" ")),
+      posted_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : null,
+    };
+  });
+}
+
+// ---------- The Muse ----------
+// https://www.themuse.com/api/public/jobs  (keyless; supports ?location=Charlotte,%20NC&page=0)
+// Called once per metro so US regions (Charlotte, Atlanta, Raleigh, etc.) get real coverage.
+const MUSE_LOCATIONS = [
+  "Flexible / Remote",
+  "Charlotte, NC",
+  "Atlanta, GA",
+  "Raleigh, NC",
+  "Nashville, TN",
+  "Miami, FL",
+  "New York, NY",
+  "Boston, MA",
+  "Washington, DC",
+  "Philadelphia, PA",
+  "Chicago, IL",
+  "Minneapolis, MN",
+  "Austin, TX",
+  "Dallas, TX",
+  "Denver, CO",
+  "San Francisco, CA",
+  "Los Angeles, CA",
+  "Seattle, WA",
+  "Portland, OR",
+];
+export async function fetchTheMuse(): Promise<RawJob[]> {
+  const out: RawJob[] = [];
+  const seen = new Set<string>();
+  for (const loc of MUSE_LOCATIONS) {
+    const url = `https://www.themuse.com/api/public/jobs?location=${encodeURIComponent(loc)}&page=0`;
+    try {
+      const data = (await fetchJson(url)) as {
+        results?: Array<{
+          id: number;
+          name: string;
+          company?: { name?: string };
+          locations?: Array<{ name?: string }>;
+          refs?: { landing_page?: string };
+          contents?: string;
+          publication_date?: string;
+        }>;
+      };
+      for (const j of data.results ?? []) {
+        const key = `muse:${j.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const locName = j.locations?.map((l) => l.name).filter(Boolean).join(", ") || loc;
+        out.push({
+          source: "themuse",
+          source_id: String(j.id),
+          company: j.company?.name ?? "Unknown",
+          role: j.name,
+          location: locName,
+          url: j.refs?.landing_page ?? "",
+          description: stripHtml(j.contents ?? null),
+          remote: looksRemote(locName),
+          posted_at: j.publication_date ?? null,
+        });
+      }
+    } catch {
+      // One metro failing shouldn't kill the batch.
+    }
+  }
+  return out.filter((j) => j.url);
+}
+
 export async function fetchOne(source: string, slug: string, companyName: string): Promise<RawJob[]> {
   switch (source) {
     case "greenhouse":
@@ -184,7 +333,32 @@ export async function fetchOne(source: string, slug: string, companyName: string
       return fetchAshby(slug, companyName);
     case "remotive":
       return fetchRemotive();
+    case "remoteok":
+      return fetchRemoteOK();
+    case "jobicy":
+      return fetchJobicy();
+    case "arbeitnow":
+      return fetchArbeitnow();
+    case "themuse":
+      return fetchTheMuse();
     default:
       throw new Error(`Unknown source: ${source}`);
   }
 }
+
+// Aggregators don't require a watched company row — the refresh loop calls
+// these in addition to iterating watched_companies.
+export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export async function fetchAllAggregators(): Promise<Array<{ source: string; jobs: RawJob[]; error?: string }>> {
+  const results = await Promise.all(
+    AGGREGATOR_SOURCES.map(async (s) => {
+      try {
+        return { source: s, jobs: await fetchOne(s, "", "") };
+      } catch (e) {
+        return { source: s, jobs: [] as RawJob[], error: e instanceof Error ? e.message : String(e) };
+      }
+    }),
+  );
+  return results;
+}
+
