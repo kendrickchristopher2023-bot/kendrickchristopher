@@ -168,11 +168,87 @@ function MatchesPage() {
           </button>
         </div>
 
+        <div className="mt-4 rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Filter by location
+            </p>
+            {anyFilter && (
+              <button
+                onClick={() => {
+                  setFCity("");
+                  setFState("");
+                  setFCountry("");
+                  setFZip("");
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <input
+              value={fCity}
+              onChange={(e) => setFCity(e.target.value)}
+              placeholder="City"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fState}
+              onChange={(e) => setFState(e.target.value)}
+              placeholder="State"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fCountry}
+              onChange={(e) => setFCountry(e.target.value)}
+              placeholder="Country"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fZip}
+              onChange={(e) => setFZip(e.target.value)}
+              placeholder="ZIP (US)"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                max={500}
+                value={fRadius}
+                onChange={(e) => setFRadius(Number(e.target.value) || 0)}
+                className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+              />
+              <span className="text-xs text-muted-foreground">mi</span>
+            </div>
+          </div>
+          {fZip.trim().length >= 3 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {zipQ.isLoading
+                ? "Looking up ZIP radius…"
+                : zipQ.data && zipQ.data.zips.length === 0
+                  ? "No US ZIPs found in radius (dataset is US-only)."
+                  : zipQ.data
+                    ? `${zipQ.data.zips.length} ZIPs within ${fRadius} miles.`
+                    : ""}
+            </p>
+          )}
+          {anyFilter && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Showing {matches.length} of {allMatches.length} matches.
+            </p>
+          )}
+        </div>
+
         {matchesQ.isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
         ) : matches.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            No targets yet. Add one manually or use <strong>AI suggest</strong>.
+            {anyFilter
+              ? "No matches fit these filters. Clear filters or add more targets."
+              : "No targets yet. Add one manually or use AI suggest."}
           </div>
         ) : (
           <div className="mt-8 overflow-x-auto rounded-lg border border-border">
