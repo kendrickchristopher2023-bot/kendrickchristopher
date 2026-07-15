@@ -13,6 +13,18 @@ export type ResumeMeta = {
   updated_at: string;
 };
 
+async function markOnboardedIfNeeded(
+  supabase: import("@supabase/supabase-js").SupabaseClient,
+  userId: string,
+) {
+  // First completion wins — never overwrite an existing timestamp.
+  await supabase
+    .from("profiles")
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq("id", userId)
+    .is("onboarded_at", null);
+}
+
 export const listMyResumes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ResumeMeta[]> => {
@@ -89,6 +101,7 @@ export const saveMyResume = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+    await markOnboardedIfNeeded(context.supabase, context.userId);
     return { ok: true, id: inserted.id };
   });
 
@@ -125,6 +138,7 @@ export const createNamedResume = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+    await markOnboardedIfNeeded(context.supabase, context.userId);
     return { ok: true, id: inserted.id };
   });
 

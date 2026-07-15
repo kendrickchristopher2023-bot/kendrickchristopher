@@ -156,5 +156,11 @@ export const saveRewrittenResume = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+    // First completion wins — only sets onboarded_at when currently null.
+    await context.supabase
+      .from("profiles")
+      .update({ onboarded_at: new Date().toISOString() })
+      .eq("id", context.userId)
+      .is("onboarded_at", null);
     return { ok: true, id: inserted.id };
   });
