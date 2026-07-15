@@ -615,3 +615,58 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+// Format annualized salary in the row's native currency. Because we store
+// annualized numbers, the "/yr" is implied — we still show the original
+// period as a caveat when it wasn't yearly at ingest.
+function formatSalary(j: JobListing): string {
+  if (j.salary_max == null) return "";
+  const cur = j.salary_currency ?? "USD";
+  const sym = cur === "EUR" ? "€" : cur === "GBP" ? "£" : "$";
+  const fmt = (n: number) => (n >= 1000 ? `${sym}${Math.round(n / 1000)}k` : `${sym}${n}`);
+  const range =
+    j.salary_min != null && j.salary_min !== j.salary_max
+      ? `${fmt(j.salary_min)}–${fmt(j.salary_max)}`
+      : fmt(j.salary_max);
+  const suffix = j.salary_period && j.salary_period !== "year" ? ` (${j.salary_period})` : "/yr";
+  return `${range}${suffix}`;
+}
+
+// Honest count of how many rows on this page actually have data for the
+// filters that are active, vs. how many are included-but-unlisted. The
+// numbers are per-page, not global — but they immediately answer "is the
+// filter finding anything or am I mostly looking at unlisted rows?".
+function CoverageNote(props: {
+  rows: JobListing[];
+  salaryFilterActive: boolean;
+  levelFilterActive: boolean;
+  onlyListedSalary: boolean;
+  onlyClassifiedLevel: boolean;
+}) {
+  const total = props.rows.length;
+  if (total === 0) return null;
+  const withSalary = props.rows.filter((r) => r.salary_max != null).length;
+  const withLevel = props.rows.filter((r) => r.experience_level != null).length;
+  const parts: string[] = [];
+  if (props.salaryFilterActive) {
+    parts.push(
+      props.onlyListedSalary
+        ? `${withSalary} with listed salary (unlisted excluded).`
+        : `${withSalary} of ${total} on this page have a listed salary — the other ${total - withSalary} are included because their salary is unknown.`,
+    );
+  }
+  if (props.levelFilterActive) {
+    parts.push(
+      props.onlyClassifiedLevel
+        ? `${withLevel} with a classified experience level (unclassified excluded).`
+        : `${withLevel} of ${total} on this page have a classified experience level — the other ${total - withLevel} are included because their level is unknown.`,
+    );
+  }
+  if (parts.length === 0) return null;
+  return (
+    <div className="mt-8 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+      {parts.join(" ")}
+    </div>
+  );
+}
+
