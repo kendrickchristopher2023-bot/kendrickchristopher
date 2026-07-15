@@ -453,10 +453,20 @@ function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSav
             </span>
           )}
         </div>
-        <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {job.location && <span>{job.location}</span>}
           {posted && <span>{posted}</span>}
           <span className="uppercase tracking-wider">{job.source}</span>
+          {job.experience_level && (
+            <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium capitalize">
+              {job.experience_level}
+            </span>
+          )}
+          {job.salary_max != null && (
+            <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+              {formatSalary(job)}
+            </span>
+          )}
         </div>
         {job.description && (
           <>
