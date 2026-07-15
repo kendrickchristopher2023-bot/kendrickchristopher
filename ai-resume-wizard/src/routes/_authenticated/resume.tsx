@@ -8,9 +8,8 @@ import { AtsLintPanel } from "@/components/AtsLintPanel";
 import { lintResumeForAts } from "@/lib/ats-lint";
 
 export const Route = createFileRoute("/_authenticated/resume")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    id: typeof search.id === "string" ? search.id : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { id?: string } =>
+    typeof search.id === "string" ? { id: search.id } : {},
   head: () => ({
     meta: [
       { title: "My Resume — AI Job Kit" },
