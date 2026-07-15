@@ -185,6 +185,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
     return withParsed({
       source: "lever",
       source_id: `${slug}:${j.id}`,
+      source_slug: slug,
       company: companyName,
       role: j.text,
       location: loc,
@@ -193,6 +194,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
       remote: looksRemote(loc, j.categories?.commitment),
       posted_at: j.createdAt ? new Date(j.createdAt).toISOString() : null,
     });
+
   });
 }
 
