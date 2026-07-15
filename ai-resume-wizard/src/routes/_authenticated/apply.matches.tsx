@@ -6,6 +6,7 @@ import {
   addMatch,
   deleteMatch,
   listMatches,
+  nearbyZipCodes,
   suggestMatches,
   updateMatch,
   type PersonalMatch,
