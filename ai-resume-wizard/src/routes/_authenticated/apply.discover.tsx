@@ -172,10 +172,8 @@ function DiscoverPage() {
     setApplied(EMPTY);
   };
 
-  const clear = () => {
-    setDraft(EMPTY);
-    setApplied(EMPTY);
-  };
+
+
 
   return (
     <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
