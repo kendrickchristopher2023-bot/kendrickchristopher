@@ -552,11 +552,26 @@ function SuggestDialog({ onClose, onAdded }: { onClose: () => void; onAdded: () 
   const suggestFn = useServerFn(suggestMatches);
   const addFn = useServerFn(addMatch);
   const [prompt, setPrompt] = useState("");
+  const [city, setCity] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [country, setCountry] = useState("");
+  const [zip, setZip] = useState("");
+  const [radius, setRadius] = useState(25);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [addedIdx, setAddedIdx] = useState<Set<number>>(new Set());
   const [err, setErr] = useState<string | null>(null);
   const gen = useMutation({
-    mutationFn: () => suggestFn({ data: { prompt } }),
+    mutationFn: () =>
+      suggestFn({
+        data: {
+          prompt,
+          city: city.trim() || undefined,
+          state: stateVal.trim() || undefined,
+          country: country.trim() || undefined,
+          zip_code: zip.trim() || undefined,
+          radius_miles: zip.trim() ? radius : undefined,
+        },
+      }),
     onSuccess: (r) => {
       setSuggestions(r.suggestions);
       setAddedIdx(new Set());
@@ -572,28 +587,51 @@ function SuggestDialog({ onClose, onAdded }: { onClose: () => void; onAdded: () 
         location: s.location || null,
         role_url: s.careers_url || null,
         notes: s.why || null,
+        city: city.trim() || null,
+        state: stateVal.trim() || null,
+        country: country.trim() || null,
+        zip_code: zip.trim() || null,
       } as never,
     });
     setAddedIdx((prev) => new Set(prev).add(idx));
     onAdded();
   };
 
+  const canSubmit =
+    prompt.trim().length >= 3 || !!city.trim() || !!stateVal.trim() || !!country.trim() || !!zip.trim();
+
   return (
     <Modal onClose={onClose} title="AI suggest targets" wide>
       <p className="text-sm text-muted-foreground mb-3">
-        Describe industries, locations, seniority. AI reads your resume and proposes matches.
-        Nothing is added until you click <strong>Add</strong> on each row.
+        Describe industries, seniority, and/or fill any location fields. AI reads your resume and
+        proposes matches. Nothing is added until you click <strong>Add</strong>.
       </p>
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="e.g. Series B–C AI startups, remote or NYC, forward deployed or solutions roles"
+        placeholder="e.g. Series B–C AI startups, forward-deployed or solutions roles"
         rows={3}
         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm mb-3"
       />
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+        <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={stateVal} onChange={(e) => setStateVal(e.target.value)} placeholder="State"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="ZIP (US)"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <div className="flex items-center gap-1">
+          <input type="number" min={0} max={500} value={radius}
+            onChange={(e) => setRadius(Number(e.target.value) || 0)}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+          <span className="text-xs text-muted-foreground">mi</span>
+        </div>
+      </div>
       <button
         onClick={() => gen.mutate()}
-        disabled={gen.isPending || prompt.trim().length < 3}
+        disabled={gen.isPending || !canSubmit}
         className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
       >
         {gen.isPending ? "Thinking…" : "Suggest"}
