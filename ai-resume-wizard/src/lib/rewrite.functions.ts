@@ -160,10 +160,13 @@ export const saveRewrittenResume = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     // First completion wins — only sets onboarded_at when currently null.
-    await context.supabase
+    // Server-side only: `onboarded_at` UPDATE is revoked from the authenticated role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
       .from("profiles")
       .update({ onboarded_at: new Date().toISOString() })
       .eq("id", context.userId)
       .is("onboarded_at", null);
+
     return { ok: true, id: inserted.id };
   });
