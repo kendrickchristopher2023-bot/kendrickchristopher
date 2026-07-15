@@ -390,7 +390,81 @@ export const backfillJobDescriptions = createServerFn({ method: "POST" })
       from += PAGE;
     }
     return { scanned, updated };
+
+// Backfill experience_level and salary_* on existing rows. Idempotent —
+// only rewrites when the derived value would change and only fills nulls
+// for salary (never overwrites structured feed data).
+export const backfillJobClassifiers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: role } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin" as never)
+      .maybeSingle();
+    if (!role) throw new Error("Admins only.");
+
+    const { classifyLevel, parseSalaryText, toAnnual } = await import("./job-classify");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const PAGE = 500;
+    let from = 0;
+    let scanned = 0;
+    let levelSet = 0;
+    let salarySet = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabaseAdmin
+        .from("job_listings")
+        .select("id, role, description, experience_level, salary_max")
+        .order("id", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      scanned += data.length;
+
+      for (const row of data as Array<{
+        id: string;
+        role: string;
+        description: string | null;
+        experience_level: string | null;
+        salary_max: number | null;
+      }>) {
+        const patch: Record<string, unknown> = {};
+        if (!row.experience_level) {
+          const lvl = classifyLevel(row.role);
+          if (lvl) {
+            patch.experience_level = lvl;
+            levelSet += 1;
+          }
+        }
+        if (row.salary_max == null && row.description) {
+          const p = parseSalaryText(row.description);
+          if (p.max != null && p.period) {
+            const a = toAnnual(p.min, p.max, p.period);
+            patch.salary_min = a.min;
+            patch.salary_max = a.max;
+            patch.salary_currency = p.currency ?? "USD";
+            patch.salary_period = a.period;
+            salarySet += 1;
+          }
+        }
+        if (Object.keys(patch).length > 0) {
+          const { error: upErr } = await supabaseAdmin
+            .from("job_listings")
+            .update(patch as never)
+            .eq("id", row.id);
+          if (upErr) throw upErr;
+        }
+      }
+
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+    return { scanned, levelSet, salarySet };
   });
+
 
 export const autoRankForCurrentUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
