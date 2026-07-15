@@ -243,10 +243,12 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
       usageByUser.set(row.user_id, total);
     }
     const bannedByUser = new Map<string, boolean>();
+    const lastSignInByUser = new Map<string, string | null>();
     for (const u of authList.data?.users ?? []) {
       const untilRaw = (u as { banned_until?: string | null }).banned_until;
       const banned = !!untilRaw && new Date(untilRaw).getTime() > Date.now();
       bannedByUser.set(u.id, banned);
+      lastSignInByUser.set(u.id, (u as { last_sign_in_at?: string | null }).last_sign_in_at ?? null);
     }
 
     return {
@@ -257,12 +259,14 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         plan: p.plan,
         created_at: p.created_at,
         onboarded_at: p.onboarded_at,
+        last_sign_in_at: lastSignInByUser.get(p.id) ?? null,
         has_primary_resume: primaryByUser.has(p.id),
         usage_today: usageByUser.get(p.id) ?? 0,
         banned: bannedByUser.get(p.id) ?? false,
       })),
     };
   });
+
 
 export const updateUserPlanAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

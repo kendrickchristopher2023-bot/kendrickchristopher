@@ -60,16 +60,20 @@ const EMPTY: Filters = {
   levelOnlyClassified: false,
 };
 
+// NOTE: The classifier never assigns "mid" — it's the implicit default when no
+// seniority marker is present, so filtering for "mid" would either match nothing
+// (only-classified) or duplicate the include-unknown behavior of every other
+// level. We omit it from the dropdown rather than ship a dead option.
 const LEVEL_OPTIONS = [
   { value: "", label: "Any experience level" },
   { value: "intern", label: "Intern" },
   { value: "entry", label: "Entry / Junior" },
-  { value: "mid", label: "Mid" },
   { value: "senior", label: "Senior" },
   { value: "lead", label: "Lead / Staff / Principal" },
   { value: "manager", label: "Manager" },
   { value: "director+", label: "Director / VP+" },
 ];
+
 
 function DiscoverPage() {
   const qc = useQueryClient();
