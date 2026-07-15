@@ -35,7 +35,7 @@ export type WatchedCompany = {
   last_fetch_count: number | null;
 };
 
-const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "remotive"] as const;
+const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
 
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
