@@ -14,6 +14,7 @@ export type JobListing = {
   id: string;
   source: string;
   source_id: string;
+  source_slug: string | null;
   company: string;
   role: string;
   location: string | null;
@@ -31,6 +32,7 @@ export type JobListing = {
   salary_period: string | null;
   experience_level: string | null;
 };
+
 
 export type WatchedCompany = {
   id: string;
