@@ -61,7 +61,12 @@ function AdminDashboard() {
   });
 
   const [search, setSearch] = useState("");
-  const [magic, setMagic] = useState<{ email: string; link: string } | null>(null);
+  const [magic, setMagic] = useState<{
+    email: string;
+    link: string;
+    emailSent: boolean;
+    emailError: string | null;
+  } | null>(null);
 
   const changePlan = useMutation({
     mutationFn: (v: { userId: string; plan: (typeof PLANS)[number] }) =>
@@ -87,14 +92,26 @@ function AdminDashboard() {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
-      if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
+      if (res.magicLink)
+        setMagic({
+          email: res.email,
+          link: res.magicLink,
+          emailSent: !!res.emailSent,
+          emailError: res.emailError ?? null,
+        });
     },
   });
   const resend = useMutation({
     mutationFn: (v: { id: string }) => resendFn({ data: v }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
-      if (res.magicLink) setMagic({ email: res.email, link: res.magicLink });
+      if (res.magicLink)
+        setMagic({
+          email: res.email,
+          link: res.magicLink,
+          emailSent: !!res.emailSent,
+          emailError: res.emailError ?? null,
+        });
     },
   });
 
