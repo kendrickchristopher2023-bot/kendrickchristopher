@@ -171,7 +171,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       publication_date?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => ({
+  return (data.jobs ?? []).map((j) => withParsed({
     source: "remotive",
     source_id: String(j.id),
     company: j.company_name,
