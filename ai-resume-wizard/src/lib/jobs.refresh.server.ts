@@ -17,16 +17,45 @@ export async function runRefreshJobs(): Promise<Summary> {
 
   const { data: watched, error } = await supabaseAdmin
     .from("watched_companies")
-    .select("id, source, slug, company_name");
+    .select("id, source, slug, company_name")
+    // Aggregators handled below — skip any watched rows for them so we don't
+    // double-fetch or require a bogus slug.
+    .not("source", "in", "(remotive,remoteok,jobicy,arbeitnow,themuse)");
   if (error) throw error;
 
   const summary: Summary = {
-    companiesTried: watched?.length ?? 0,
+    companiesTried: (watched?.length ?? 0),
     companiesOk: 0,
     companiesFailed: 0,
     jobsUpserted: 0,
     errors: [],
   };
+
+  // ---- Aggregators (no per-company slug needed) ----
+  const aggResults = await fetchAllAggregators();
+  for (const r of aggResults) {
+    summary.companiesTried += 1;
+    if (r.error) {
+      summary.companiesFailed += 1;
+      summary.errors.push({ source: r.source, slug: "*", error: r.error });
+      continue;
+    }
+    if (r.jobs.length > 0) {
+      const CHUNK = 200;
+      for (let i = 0; i < r.jobs.length; i += CHUNK) {
+        const chunk = r.jobs.slice(i, i + CHUNK);
+        const { error: upErr } = await supabaseAdmin
+          .from("job_listings")
+          .upsert(chunk as never, { onConflict: "source,source_id" });
+        if (upErr) {
+          summary.errors.push({ source: r.source, slug: "*", error: `upsert: ${upErr.message}` });
+        } else {
+          summary.jobsUpserted += chunk.length;
+        }
+      }
+    }
+    summary.companiesOk += 1;
+  }
 
   for (const w of (watched ?? []) as Array<{
     id: string;
