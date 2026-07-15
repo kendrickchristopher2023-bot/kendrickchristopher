@@ -36,6 +36,12 @@ type Filters = {
   radius: number;
   remoteOnly: boolean;
   source: string;
+  // Salary: annual USD; 0 = no filter. `onlyListed` opts into the narrow view.
+  salaryMin: number;
+  salaryOnlyListed: boolean;
+  // Experience level; "" = no filter. `onlyClassified` requires an exact match.
+  experienceLevel: string;
+  levelOnlyClassified: boolean;
 };
 
 const EMPTY: Filters = {
@@ -48,7 +54,22 @@ const EMPTY: Filters = {
   radius: 25,
   remoteOnly: false,
   source: "",
+  salaryMin: 0,
+  salaryOnlyListed: false,
+  experienceLevel: "",
+  levelOnlyClassified: false,
 };
+
+const LEVEL_OPTIONS = [
+  { value: "", label: "Any experience level" },
+  { value: "intern", label: "Intern" },
+  { value: "entry", label: "Entry / Junior" },
+  { value: "mid", label: "Mid" },
+  { value: "senior", label: "Senior" },
+  { value: "lead", label: "Lead / Staff / Principal" },
+  { value: "manager", label: "Manager" },
+  { value: "director+", label: "Director / VP+" },
+];
 
 function DiscoverPage() {
   const qc = useQueryClient();
