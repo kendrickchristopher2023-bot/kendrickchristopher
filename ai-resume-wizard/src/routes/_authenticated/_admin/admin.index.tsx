@@ -357,17 +357,36 @@ function AdminDashboard() {
         <section>
           <h2 className="text-xl font-semibold">Access requests</h2>
           {magic && (
-            <div className="mt-3 rounded-lg border border-primary/40 bg-primary/5 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Magic link for {magic.email}
+            <div
+              className={
+                "mt-3 rounded-lg border p-3 " +
+                (magic.emailSent
+                  ? "border-emerald-500/40 bg-emerald-500/5"
+                  : "border-amber-500/40 bg-amber-500/5")
+              }
+            >
+              <p
+                className={
+                  "text-xs font-semibold uppercase tracking-wider " +
+                  (magic.emailSent ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300")
+                }
+              >
+                {magic.emailSent
+                  ? `✓ Sign-in email sent to ${magic.email}`
+                  : `Magic link for ${magic.email} — email not sent, copy manually`}
               </p>
+              {!magic.emailSent && magic.emailError && (
+                <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
+                  {magic.emailError}
+                </p>
+              )}
               <p className="mt-2 break-all font-mono text-xs">{magic.link}</p>
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => navigator.clipboard.writeText(magic.link)}
                   className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
                 >
-                  Copy
+                  Copy link
                 </button>
                 <button
                   onClick={() => setMagic(null)}
