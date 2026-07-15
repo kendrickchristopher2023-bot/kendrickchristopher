@@ -105,7 +105,7 @@ function RewritePage() {
             ← Application kit
           </Link>
           <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-            One-time · Pro
+            {ent.data?.reason === "founder_unlimited" ? "Unlimited · Founder" : "One-time · Pro"}
           </span>
         </div>
 
