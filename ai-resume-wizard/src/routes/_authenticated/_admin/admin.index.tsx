@@ -12,6 +12,7 @@ import {
   listAdminAuditLog,
   getAdminAnalytics,
 } from "@/lib/admin.functions";
+import { getAppStatus, setAppStatus } from "@/lib/app-status.functions";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/")({
   head: () => ({
@@ -140,6 +141,10 @@ function AdminDashboard() {
             </p>
           </div>
         </header>
+
+        <SiteStatusPanel />
+
+
 
         {/* Analytics */}
         <section className="grid gap-6 md:grid-cols-3">
@@ -508,3 +513,89 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
     </div>
   );
 }
+
+function SiteStatusPanel() {
+  const qc = useQueryClient();
+  const getFn = useServerFn(getAppStatus);
+  const setFn = useServerFn(setAppStatus);
+  const status = useQuery({
+    queryKey: ["app-status"],
+    queryFn: () => getFn(),
+  });
+  const [message, setMessage] = useState("");
+  const [dirty, setDirty] = useState(false);
+
+  const currentMessage = status.data?.message ?? "";
+  const shownMessage = dirty ? message : currentMessage;
+
+  const save = useMutation({
+    mutationFn: (v: { active: boolean; message: string | null }) =>
+      setFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["app-status"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+      setDirty(false);
+    },
+  });
+
+  const active = !!status.data?.active;
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Site status banner</h2>
+          <p className="text-xs text-muted-foreground">
+            Shows a live notice to every signed-in user. Polls every 30s.
+          </p>
+        </div>
+        <span
+          className={
+            "rounded-full px-2 py-0.5 text-xs font-medium " +
+            (active
+              ? "bg-amber-500/20 text-amber-900 dark:text-amber-100"
+              : "bg-muted text-muted-foreground")
+          }
+        >
+          {active ? "Active" : "Off"}
+        </span>
+      </div>
+      <textarea
+        value={shownMessage}
+        onChange={(e) => {
+          setMessage(e.target.value);
+          setDirty(true);
+        }}
+        placeholder="e.g. Deploying changes — brief interruptions possible."
+        rows={2}
+        className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      />
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={() =>
+            save.mutate({ active: true, message: shownMessage.trim() || null })
+          }
+          disabled={save.isPending}
+          className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {active ? "Update banner" : "Turn on"}
+        </button>
+        <button
+          onClick={() =>
+            save.mutate({ active: false, message: shownMessage.trim() || null })
+          }
+          disabled={save.isPending || !active}
+          className="rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+        >
+          Turn off
+        </button>
+        {status.data?.updated_at && (
+          <span className="ml-auto self-center text-xs text-muted-foreground">
+            Last updated {new Date(status.data.updated_at).toLocaleString()}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+

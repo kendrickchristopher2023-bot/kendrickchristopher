@@ -101,6 +101,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_status: {
+        Row: {
+          active: boolean
+          id: boolean
+          message: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          id?: boolean
+          message?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          id?: boolean
+          message?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           applied_at: string
