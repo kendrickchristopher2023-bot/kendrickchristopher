@@ -82,7 +82,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location?.name ?? null;
-    return {
+    return withParsed({
       source: "greenhouse",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -92,7 +92,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
       description: stripHtml(j.content ?? null),
       remote: looksRemote(loc),
       posted_at: j.updated_at ?? null,
-    };
+    });
   });
 }
 
