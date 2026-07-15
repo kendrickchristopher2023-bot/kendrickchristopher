@@ -563,12 +563,24 @@ function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSav
   );
 }
 
+const FEED_LABELS: Record<AggregateFeed, string> = {
+  remotive: "Remotive (remote)",
+  remoteok: "RemoteOK (remote)",
+  jobicy: "Jobicy (remote, US)",
+  arbeitnow: "Arbeitnow",
+  themuse: "The Muse (US metros)",
+};
+
 function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const listFn = useServerFn(listWatchedCompanies);
   const addFn = useServerFn(addWatchedCompany);
   const removeFn = useServerFn(removeWatchedCompany);
+  const getPrefsFn = useServerFn(getMyFeedPrefs);
+  const setPrefsFn = useServerFn(setMyFeedPrefs);
+
   const q = useQuery({ queryKey: ["watched-companies"], queryFn: () => listFn() });
+  const prefsQ = useQuery({ queryKey: ["feed-prefs"], queryFn: () => getPrefsFn() });
 
   const [source, setSource] = useState<"greenhouse" | "lever" | "ashby">("greenhouse");
   const [slug, setSlug] = useState("");
@@ -582,15 +594,33 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
       setName("");
       setErr(null);
       qc.invalidateQueries({ queryKey: ["watched-companies"] });
+      qc.invalidateQueries({ queryKey: ["job-listings"] });
     },
     onError: (e) => setErr(e instanceof Error ? e.message : "Failed"),
   });
   const remove = useMutation({
     mutationFn: (id: string) => removeFn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["watched-companies"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["watched-companies"] });
+      qc.invalidateQueries({ queryKey: ["job-listings"] });
+    },
+  });
+  const setPrefs = useMutation({
+    mutationFn: (enabledFeeds: AggregateFeed[]) => setPrefsFn({ data: { enabledFeeds } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["feed-prefs"] });
+      qc.invalidateQueries({ queryKey: ["job-listings"] });
+    },
   });
 
   const rows = q.data ?? [];
+  const enabledFeeds = new Set<AggregateFeed>(prefsQ.data?.enabledFeeds ?? []);
+  const toggleFeed = (f: AggregateFeed) => {
+    const next = new Set(enabledFeeds);
+    if (next.has(f)) next.delete(f);
+    else next.add(f);
+    setPrefs.mutate(Array.from(next));
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -599,79 +629,110 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Watched companies</h2>
+          <h2 className="text-lg font-semibold">Your Discover pool</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
         </div>
 
-        <p className="mb-4 text-sm text-muted-foreground">
-          Add a company by its ATS slug — the identifier in its careers URL. Examples:{" "}
-          <code>boards.greenhouse.io/<strong>stripe</strong></code>,{" "}
-          <code>jobs.lever.co/<strong>netflix</strong></code>,{" "}
-          <code>jobs.ashbyhq.com/<strong>openai</strong></code>. The daily refresh picks them up automatically.
-        </p>
+        <section className="mb-6">
+          <h3 className="text-sm font-semibold">Aggregate feeds</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            General-board remote/US-metro sources. Enabled by default so you always have some
+            postings even before you add companies.
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {AGGREGATE_FEEDS.map((f) => (
+              <label
+                key={f}
+                className="inline-flex items-center gap-2 text-sm text-foreground"
+              >
+                <input
+                  type="checkbox"
+                  checked={enabledFeeds.has(f)}
+                  disabled={prefsQ.isLoading || setPrefs.isPending}
+                  onChange={() => toggleFeed(f)}
+                />
+                {FEED_LABELS[f]}
+              </label>
+            ))}
+          </div>
+        </section>
 
-        <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-4">
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value as never)}
-            className="rounded-md border border-input bg-background px-2 py-2 text-sm"
-          >
-            <option value="greenhouse">Greenhouse</option>
-            <option value="lever">Lever</option>
-            <option value="ashby">Ashby</option>
-          </select>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="slug (e.g. stripe)"
-            className="rounded-md border border-input bg-background px-2 py-2 text-sm"
-          />
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Display name"
-            className="rounded-md border border-input bg-background px-2 py-2 text-sm"
-          />
-          <button
-            onClick={() => add.mutate()}
-            disabled={add.isPending || !slug || !name}
-            className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
-          >
-            {add.isPending ? "Adding…" : "Add"}
-          </button>
-        </div>
-        {err && <p className="mb-2 text-sm text-destructive">{err}</p>}
+        <section>
+          <h3 className="text-sm font-semibold">Watched companies</h3>
+          <p className="mt-1 mb-3 text-xs text-muted-foreground">
+            Add a company by its ATS slug — the identifier in its careers URL. Examples:{" "}
+            <code>boards.greenhouse.io/<strong>stripe</strong></code>,{" "}
+            <code>jobs.lever.co/<strong>netflix</strong></code>,{" "}
+            <code>jobs.ashbyhq.com/<strong>openai</strong></code>. The daily refresh picks them up automatically.
+          </p>
 
-        <ul className="divide-y divide-border rounded-md border border-border">
-          {rows.map((w) => (
-            <li key={w.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-              <div className="min-w-0">
-                <p className="truncate font-medium">{w.company_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {w.source} · {w.slug}
-                  {w.last_fetch_count !== null && ` · ${w.last_fetch_count} jobs`}
-                  {w.last_fetch_status && w.last_fetch_status !== "ok" && (
-                    <span className="text-destructive"> · {w.last_fetch_status.slice(0, 60)}</span>
-                  )}
-                </p>
-              </div>
-              {w.added_by ? (
-                <button
-                  onClick={() => remove.mutate(w.id)}
-                  className="text-xs text-destructive hover:underline"
-                >
-                  Remove
-                </button>
-              ) : (
-                <span className="text-xs text-muted-foreground">seeded</span>
-              )}
-            </li>
-          ))}
-        </ul>
+          <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-4">
+            <select
+              value={source}
+              onChange={(e) => setSource(e.target.value as never)}
+              className="rounded-md border border-input bg-background px-2 py-2 text-sm"
+            >
+              <option value="greenhouse">Greenhouse</option>
+              <option value="lever">Lever</option>
+              <option value="ashby">Ashby</option>
+            </select>
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              placeholder="slug (e.g. stripe)"
+              className="rounded-md border border-input bg-background px-2 py-2 text-sm"
+            />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Display name"
+              className="rounded-md border border-input bg-background px-2 py-2 text-sm"
+            />
+            <button
+              onClick={() => add.mutate()}
+              disabled={add.isPending || !slug || !name}
+              className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+            >
+              {add.isPending ? "Adding…" : "Add"}
+            </button>
+          </div>
+          {err && <p className="mb-2 text-sm text-destructive">{err}</p>}
+
+          {rows.length === 0 ? (
+            <p className="rounded-md border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              You haven't added any companies yet. Add a few above — the daily refresh will
+              pull their open roles into your Discover pool.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border rounded-md border border-border">
+              {rows.map((w) => (
+                <li key={w.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{w.company_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {w.source} · {w.slug}
+                      {w.last_fetch_count !== null && ` · ${w.last_fetch_count} jobs`}
+                      {w.last_fetch_status && w.last_fetch_status !== "ok" && (
+                        <span className="text-destructive"> · {w.last_fetch_status.slice(0, 60)}</span>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => remove.mutate(w.id)}
+                    className="text-xs text-destructive hover:underline"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );
 }
+
 
 // Format annualized salary in the row's native currency. Because we store
 // annualized numbers, the "/yr" is implied — we still show the original
