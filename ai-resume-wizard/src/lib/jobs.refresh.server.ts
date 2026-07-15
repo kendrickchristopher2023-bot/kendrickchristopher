@@ -132,7 +132,7 @@ export async function runRefreshJobs(): Promise<Summary> {
   summary.companiesTried += watched.length;
 
 
-  await runWithConcurrency(rows, CONCURRENCY, async (w) => {
+  await runWithConcurrency(watched, CONCURRENCY, async (w) => {
     let jobs: RawJob[] = [];
     try {
       jobs = await fetchOne(w.source, w.slug, w.company_name);
@@ -141,6 +141,7 @@ export async function runRefreshJobs(): Promise<Summary> {
       summary.companiesFailed += 1;
       bump(w.source, { failed: 1 });
       summary.errors.push({ source: w.source, slug: w.slug, error: msg });
+      // Mirror the error status onto every user's row for this (source, slug).
       await supabaseAdmin
         .from("watched_companies")
         .update({
@@ -148,7 +149,7 @@ export async function runRefreshJobs(): Promise<Summary> {
           last_fetch_status: `error: ${msg.slice(0, 200)}`,
           last_fetch_count: 0,
         } as never)
-        .eq("id", w.id);
+        .in("id", w.ids);
       return;
     }
 
@@ -162,6 +163,7 @@ export async function runRefreshJobs(): Promise<Summary> {
     summary.companiesOk += 1;
     bump(w.source, { ok: 1, jobs: inserted });
 
+    // Mirror the successful status onto every user's row for this (source, slug).
     await supabaseAdmin
       .from("watched_companies")
       .update({
@@ -169,8 +171,9 @@ export async function runRefreshJobs(): Promise<Summary> {
         last_fetch_status: "ok",
         last_fetch_count: jobs.length,
       } as never)
-      .eq("id", w.id);
+      .in("id", w.ids);
   });
+
 
   return summary;
 }
