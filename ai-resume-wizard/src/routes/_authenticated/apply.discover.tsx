@@ -5,14 +5,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   addWatchedCompany,
   autoRankForCurrentUser,
+  getMyFeedPrefs,
+  setMyFeedPrefs,
   listJobListings,
   listWatchedCompanies,
   refreshWatchedNow,
   removeWatchedCompany,
   saveJobToMatches,
+  AGGREGATE_FEEDS,
+  type AggregateFeed,
   type JobListing,
 } from "@/lib/jobs.functions";
 import { currentUserIsAdmin } from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/_authenticated/apply/discover")({
   head: () => ({
