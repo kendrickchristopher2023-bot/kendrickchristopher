@@ -38,7 +38,15 @@ function InterviewPrepPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listInterviewSessions);
   const genFn = useServerFn(generateInterviewPrep);
+  const prefillFn = useServerFn(getMatchPrefill);
+  const { matchId } = Route.useSearch();
   const sessionsQ = useQuery({ queryKey: ["interview-sessions"], queryFn: () => listFn() });
+  const prefillQ = useQuery({
+    queryKey: ["match-prefill", matchId],
+    queryFn: () => prefillFn({ data: { matchId: matchId! } }),
+    enabled: !!matchId,
+    staleTime: 60_000,
+  });
 
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -46,6 +54,17 @@ function InterviewPrepPage() {
   const [questions, setQuestions] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || !prefillQ.data) return;
+    const p = prefillQ.data;
+    setCompany((c) => c || p.company || "");
+    setRole((r) => r || p.role || "");
+    if (p.jobDescription) setJd((j) => j || p.jobDescription || "");
+    setPrefilled(true);
+  }, [prefillQ.data, prefilled]);
+
 
   const gen = useMutation({
     mutationFn: () =>
