@@ -6,6 +6,7 @@
 // should never block the whole refresh, so callers wrap them in try/catch.
 
 import { parseLocation } from "./location-parse";
+import { stripHtmlInline, stripHtmlToText } from "./strip-html";
 
 export type RawJob = {
   source: string;
@@ -23,8 +24,18 @@ export type RawJob = {
 };
 
 function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
-  const p = parseLocation(base.location);
-  return { ...base, city: p.city, region: p.region, country: p.country };
+  // Sanitize every string field that could carry raw HTML or entities from a
+  // third-party feed. Descriptions get the multi-line stripper; short fields
+  // get the inline stripper so a stray tag never lands in the DB.
+  const cleaned: Omit<RawJob, "city" | "region" | "country"> = {
+    ...base,
+    role: stripHtmlInline(base.role) ?? base.role,
+    company: stripHtmlInline(base.company) ?? base.company,
+    location: stripHtmlInline(base.location),
+    description: stripHtmlToText(base.description),
+  };
+  const p = parseLocation(cleaned.location);
+  return { ...cleaned, city: p.city, region: p.region, country: p.country };
 }
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
@@ -45,20 +56,10 @@ async function fetchJson(url: string): Promise<unknown> {
   }
 }
 
-function stripHtml(s: string | null | undefined, max = 2000): string | null {
-  if (!s) return null;
-  const text = s
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
-  return text.length > max ? text.slice(0, max) + "…" : text;
+function stripHtml(s: string | null | undefined, max = 4000): string | null {
+  // Delegate to the shared sanitizer. Kept as a thin alias so adapters below
+  // read the same. `withParsed()` re-sanitizes at the end as a safety net.
+  return stripHtmlToText(s, max);
 }
 
 function looksRemote(location: string | null, extra?: string | null): boolean {
