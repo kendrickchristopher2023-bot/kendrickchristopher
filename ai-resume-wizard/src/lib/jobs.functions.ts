@@ -288,8 +288,13 @@ export const listJobListings = createServerFn({ method: "GET" })
 
     const { data: rows, error, count } = await q;
     if (error) throw error;
-    return { rows: (rows ?? []) as JobListing[], total: count ?? (rows?.length ?? 0) };
+    return {
+      rows: (rows ?? []) as JobListing[],
+      total: count ?? (rows?.length ?? 0),
+      poolScope: scopeMeta,
+    };
   });
+
 
 export const listWatchedCompanies = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
