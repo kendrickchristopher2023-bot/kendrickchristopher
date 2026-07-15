@@ -183,43 +183,55 @@ export type Database = {
       }
       job_listings: {
         Row: {
+          city: string | null
           company: string
+          country: string | null
           created_at: string
           description: string | null
           fetched_at: string
           id: string
           location: string | null
           posted_at: string | null
+          region: string | null
           remote: boolean | null
           role: string
+          search_vector: unknown
           source: string
           source_id: string
           url: string
         }
         Insert: {
+          city?: string | null
           company: string
+          country?: string | null
           created_at?: string
           description?: string | null
           fetched_at?: string
           id?: string
           location?: string | null
           posted_at?: string | null
+          region?: string | null
           remote?: boolean | null
           role: string
+          search_vector?: unknown
           source: string
           source_id: string
           url: string
         }
         Update: {
+          city?: string | null
           company?: string
+          country?: string | null
           created_at?: string
           description?: string | null
           fetched_at?: string
           id?: string
           location?: string | null
           posted_at?: string | null
+          region?: string | null
           remote?: boolean | null
           role?: string
+          search_vector?: unknown
           source?: string
           source_id?: string
           url?: string

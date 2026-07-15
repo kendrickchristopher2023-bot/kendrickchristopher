@@ -5,17 +5,27 @@
 // public.job_listings. Adapters must be resilient — one company's failure
 // should never block the whole refresh, so callers wrap them in try/catch.
 
+import { parseLocation } from "./location-parse";
+
 export type RawJob = {
   source: string;
   source_id: string;
   company: string;
   role: string;
   location: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
   url: string;
   description: string | null;
   remote: boolean;
   posted_at: string | null; // ISO
 };
+
+function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
+  const p = parseLocation(base.location);
+  return { ...base, city: p.city, region: p.region, country: p.country };
+}
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
 const FETCH_TIMEOUT_MS = 15_000;
@@ -72,7 +82,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location?.name ?? null;
-    return {
+    return withParsed({
       source: "greenhouse",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -82,7 +92,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
       description: stripHtml(j.content ?? null),
       remote: looksRemote(loc),
       posted_at: j.updated_at ?? null,
-    };
+    });
   });
 }
 
@@ -100,7 +110,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
   }>;
   return (data ?? []).map((j) => {
     const loc = j.categories?.location ?? null;
-    return {
+    return withParsed({
       source: "lever",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -110,7 +120,7 @@ export async function fetchLever(slug: string, companyName: string): Promise<Raw
       description: stripHtml(j.descriptionPlain ?? null),
       remote: looksRemote(loc, j.categories?.commitment),
       posted_at: j.createdAt ? new Date(j.createdAt).toISOString() : null,
-    };
+    });
   });
 }
 
@@ -132,7 +142,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
   };
   return (data.jobs ?? []).map((j) => {
     const loc = j.location ?? null;
-    return {
+    return withParsed({
       source: "ashby",
       source_id: `${slug}:${j.id}`,
       company: companyName,
@@ -142,7 +152,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       description: stripHtml(j.descriptionPlain ?? null),
       remote: !!j.isRemote || looksRemote(loc),
       posted_at: j.publishedDate ?? null,
-    };
+    });
   });
 }
 
@@ -161,7 +171,7 @@ export async function fetchRemotive(): Promise<RawJob[]> {
       publication_date?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => ({
+  return (data.jobs ?? []).map((j) => withParsed({
     source: "remotive",
     source_id: String(j.id),
     company: j.company_name,
@@ -182,7 +192,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
   const items = (raw ?? []).filter((r) => r && typeof (r as { id?: unknown }).id !== "undefined");
   return items.map((j) => {
     const loc = (j.location as string | undefined) || "Remote";
-    return {
+    return withParsed({
       source: "remoteok",
       source_id: String(j.id),
       company: (j.company as string) ?? "Unknown",
@@ -192,7 +202,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
       description: stripHtml((j.description as string) ?? null),
       remote: true,
       posted_at: (j.date as string) ?? null,
-    };
+    });
   }).filter((j) => j.url);
 }
 
@@ -212,7 +222,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       pubDate?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => ({
+  return (data.jobs ?? []).map((j) => withParsed({
     source: "jobicy",
     source_id: String(j.id),
     company: j.companyName,
@@ -244,7 +254,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
   };
   return (data.data ?? []).map((j) => {
     const loc = j.location ?? null;
-    return {
+    return withParsed({
       source: "arbeitnow",
       source_id: j.slug,
       company: j.company_name,
@@ -254,7 +264,7 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
       description: stripHtml(j.description ?? null),
       remote: !!j.remote || looksRemote(loc, (j.tags ?? []).join(" ")),
       posted_at: j.created_at ? new Date(j.created_at * 1000).toISOString() : null,
-    };
+    });
   });
 }
 
@@ -304,7 +314,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
         if (seen.has(key)) continue;
         seen.add(key);
         const locName = j.locations?.map((l) => l.name).filter(Boolean).join(", ") || loc;
-        out.push({
+        out.push(withParsed({
           source: "themuse",
           source_id: String(j.id),
           company: j.company?.name ?? "Unknown",
@@ -314,7 +324,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
           description: stripHtml(j.contents ?? null),
           remote: looksRemote(locName),
           posted_at: j.publication_date ?? null,
-        });
+        }));
       }
     } catch {
       // One metro failing shouldn't kill the batch.

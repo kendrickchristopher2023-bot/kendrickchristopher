@@ -17,6 +17,9 @@ export type JobListing = {
   company: string;
   role: string;
   location: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
   url: string;
   description: string | null;
   remote: boolean;
@@ -37,33 +40,104 @@ export type WatchedCompany = {
 
 const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
 
+// Escape a user string for safe inclusion in a PostgREST `.or()` filter value.
+// PostgREST parses `,` and `)` inside `.or(...)`, so anything user-supplied must
+// have them stripped/escaped. We only allow ilike wildcards.
+function escapeForOr(v: string): string {
+  return v.replace(/[,()*]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Turn a free-text search into a websearch tsquery — safe for FTS.
+function toWebsearch(q: string): string {
+  return q.replace(/[\\'"]/g, " ").trim();
+}
+
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
+        // Legacy combined search (role OR company OR city) — still used by callers
+        // that pass a single box; new UI uses the split fields below.
         q: z.string().max(200).optional(),
+        role: z.string().max(200).optional(),
+        company: z.string().max(200).optional(),
+        city: z.string().max(120).optional(),
+        region: z.string().max(60).optional(),
+        country: z.string().max(60).optional(),
+        zip: z.string().max(10).optional(),
+        radius_miles: z.number().int().min(0).max(500).optional(),
         remoteOnly: z.boolean().optional(),
         source: z.enum(KNOWN_SOURCES).optional(),
         limit: z.number().int().min(1).max(200).optional(),
+        offset: z.number().int().min(0).max(50_000).optional(),
       })
       .parse(input ?? {}),
   )
-  .handler(async ({ data, context }): Promise<JobListing[]> => {
+  .handler(async ({ data, context }): Promise<{ rows: JobListing[]; total: number }> => {
     let q = context.supabase
       .from("job_listings")
-      .select("*")
+      .select("*", { count: "exact" })
       .order("posted_at", { ascending: false, nullsFirst: false })
-      .limit(data.limit ?? 100);
+      .range(data.offset ?? 0, (data.offset ?? 0) + (data.limit ?? 50) - 1);
+
     if (data.remoteOnly) q = q.eq("remote", true);
     if (data.source) q = q.eq("source", data.source);
-    if (data.q && data.q.trim()) {
-      const like = `%${data.q.trim()}%`;
-      q = q.or(`role.ilike.${like},company.ilike.${like}`);
+
+    // Full-text search on role+company. Prefer the split role/company fields;
+    // fall back to the legacy combined `q`.
+    if (data.role && data.role.trim()) {
+      q = q.textSearch("search_vector", toWebsearch(data.role), { type: "websearch", config: "english" });
     }
-    const { data: rows, error } = await q;
+    if (data.company && data.company.trim()) {
+      const like = `%${escapeForOr(data.company)}%`;
+      q = q.ilike("company", like);
+    }
+    if (!data.role && !data.company && data.q && data.q.trim()) {
+      q = q.textSearch("search_vector", toWebsearch(data.q), { type: "websearch", config: "english" });
+    }
+
+    // Structured location. Zip radius resolves offline to a set of (city, region)
+    // pairs; when present it overrides city/region so results stay coherent.
+    if (data.zip && (data.radius_miles ?? 0) > 0) {
+      const { nearbyZips, lookupZip } = await import("./zipcodes.server");
+      const zips = nearbyZips(data.zip, data.radius_miles!).slice(0, 500);
+      const cities = new Set<string>();
+      let inferredRegion: string | null = null;
+      for (const z of zips) {
+        const info = lookupZip(z);
+        if (info?.city) cities.add(info.city.toLowerCase());
+        if (!inferredRegion && info?.state) inferredRegion = info.state;
+      }
+      if (cities.size > 0) {
+        // ilike-based OR against the free-text location field too, since older
+        // rows haven't been re-ingested yet and may not have city populated.
+        const cityList = Array.from(cities).slice(0, 200);
+        const orParts = cityList.flatMap((c) => [
+          `city.ilike.${c}`,
+          `location.ilike.%${escapeForOr(c)}%`,
+        ]);
+        q = q.or(orParts.join(","));
+      }
+      if (inferredRegion) q = q.or(`region.ilike.${inferredRegion},location.ilike.%, ${inferredRegion}%`);
+    } else {
+      if (data.city && data.city.trim()) {
+        const c = escapeForOr(data.city);
+        q = q.or(`city.ilike.${c},location.ilike.%${c}%`);
+      }
+      if (data.region && data.region.trim()) {
+        const r = escapeForOr(data.region);
+        q = q.or(`region.ilike.${r},location.ilike.%, ${r}%`);
+      }
+      if (data.country && data.country.trim()) {
+        const c = escapeForOr(data.country);
+        q = q.or(`country.ilike.${c},location.ilike.%${c}%`);
+      }
+    }
+
+    const { data: rows, error, count } = await q;
     if (error) throw error;
-    return (rows ?? []) as JobListing[];
+    return { rows: (rows ?? []) as JobListing[], total: count ?? (rows?.length ?? 0) };
   });
 
 export const listWatchedCompanies = createServerFn({ method: "GET" })

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addWatchedCompany,
   autoRankForCurrentUser,
@@ -24,6 +24,32 @@ export const Route = createFileRoute("/_authenticated/apply/discover")({
   component: DiscoverPage,
 });
 
+const PAGE_SIZE = 50;
+
+type Filters = {
+  role: string;
+  company: string;
+  city: string;
+  region: string;
+  country: string;
+  zip: string;
+  radius: number;
+  remoteOnly: boolean;
+  source: string;
+};
+
+const EMPTY: Filters = {
+  role: "",
+  company: "",
+  city: "",
+  region: "",
+  country: "",
+  zip: "",
+  radius: 25,
+  remoteOnly: false,
+  source: "",
+};
+
 function DiscoverPage() {
   const qc = useQueryClient();
   const listJobsFn = useServerFn(listJobListings);
@@ -33,22 +59,39 @@ function DiscoverPage() {
   const refreshFn = useServerFn(refreshWatchedNow);
   const saveFn = useServerFn(saveJobToMatches);
 
-  const [q, setQ] = useState("");
-  const [remoteOnly, setRemoteOnly] = useState(false);
-  const [source, setSource] = useState<string>("");
+  // Draft (typed) vs applied (used in the query). Search only runs on submit
+  // so a partial typed string doesn't produce a page of garbage matches.
+  const [draft, setDraft] = useState<Filters>(EMPTY);
+  const [applied, setApplied] = useState<Filters>(EMPTY);
+  const [page, setPage] = useState(0);
+
   const [showManage, setShowManage] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [msg, setMsg] = useState<string | null>(null);
 
+  // Reset the stale confirmation banner whenever the applied filters change
+  // so a "Refreshed X jobs" message doesn't hang around next to new results.
+  useEffect(() => {
+    setMsg(null);
+    setPage(0);
+  }, [applied]);
+
   const jobsQ = useQuery({
-    queryKey: ["job-listings", q, remoteOnly, source],
+    queryKey: ["job-listings", applied, page],
     queryFn: () =>
       listJobsFn({
         data: {
-          q: q || undefined,
-          remoteOnly: remoteOnly || undefined,
-          source: (source || undefined) as never,
-          limit: 100,
+          role: applied.role || undefined,
+          company: applied.company || undefined,
+          city: applied.city || undefined,
+          region: applied.region || undefined,
+          country: applied.country || undefined,
+          zip: applied.zip || undefined,
+          radius_miles: applied.zip ? applied.radius : undefined,
+          remoteOnly: applied.remoteOnly || undefined,
+          source: (applied.source || undefined) as never,
+          limit: PAGE_SIZE,
+          offset: page * PAGE_SIZE,
         },
       }),
   });
@@ -65,7 +108,13 @@ function DiscoverPage() {
   const refresh = useMutation({
     mutationFn: () => refreshFn(),
     onSuccess: (r) => {
-      setMsg(`Refreshed: ${r.jobsUpserted} jobs across ${r.companiesOk}/${r.companiesTried} companies.`);
+      const per = Object.entries(r.perSource ?? {})
+        .map(([src, s]) => `${src}: ${s.jobs} (${s.ok} ok, ${s.failed} failed)`)
+        .join(" · ");
+      setMsg(
+        `Refreshed: ${r.jobsUpserted} jobs across ${r.companiesOk}/${r.companiesTried} sources.` +
+          (per ? ` — ${per}` : ""),
+      );
       qc.invalidateQueries({ queryKey: ["job-listings"] });
       qc.invalidateQueries({ queryKey: ["watched-companies"] });
     },
@@ -77,7 +126,18 @@ function DiscoverPage() {
     onSuccess: (_r, id) => setSavedIds((s) => new Set(s).add(id)),
   });
 
-  const jobs = jobsQ.data ?? [];
+  const rows = jobsQ.data?.rows ?? [];
+  const total = jobsQ.data?.total ?? 0;
+  const hasMore = (page + 1) * PAGE_SIZE < total;
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setApplied({ ...draft });
+  };
+  const clear = () => {
+    setDraft(EMPTY);
+    setApplied(EMPTY);
+  };
 
   return (
     <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -87,7 +147,7 @@ function DiscoverPage() {
             ← Application kit
           </Link>
           <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-            {jobs.length} shown
+            {rows.length} of {total.toLocaleString()} shown
           </span>
         </div>
 
@@ -106,59 +166,131 @@ function DiscoverPage() {
           </p>
         </header>
 
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search role, company, or city (e.g. Charlotte)…"
-            className="w-64 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">All sources</option>
-            <option value="greenhouse">Greenhouse</option>
-            <option value="lever">Lever</option>
-            <option value="ashby">Ashby</option>
-            <option value="remotive">Remotive (remote)</option>
-            <option value="remoteok">RemoteOK (remote)</option>
-            <option value="jobicy">Jobicy (remote, US)</option>
-            <option value="arbeitnow">Arbeitnow</option>
-            <option value="themuse">The Muse (US metros)</option>
-          </select>
-          <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />
-            Remote only
-          </label>
-          <div className="ml-auto flex flex-wrap gap-2">
+        <form onSubmit={submit} className="mt-6 space-y-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              value={draft.role}
+              onChange={(e) => setDraft({ ...draft, role: e.target.value })}
+              placeholder="Role (e.g. Product Manager)"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.company}
+              onChange={(e) => setDraft({ ...draft, company: e.target.value })}
+              placeholder="Company"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.city}
+              onChange={(e) => setDraft({ ...draft, city: e.target.value })}
+              placeholder="City (e.g. Charlotte)"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.region}
+              onChange={(e) => setDraft({ ...draft, region: e.target.value })}
+              placeholder="State (e.g. NC)"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              value={draft.country}
+              onChange={(e) => setDraft({ ...draft, country: e.target.value })}
+              placeholder="Country (e.g. US, UK)"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={draft.zip}
+              onChange={(e) => setDraft({ ...draft, zip: e.target.value })}
+              placeholder="ZIP (US only)"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+              inputMode="numeric"
+            />
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground">Radius</label>
+              <input
+                type="number"
+                min={0}
+                max={500}
+                value={draft.radius}
+                onChange={(e) => setDraft({ ...draft, radius: Number(e.target.value) || 0 })}
+                className="w-20 rounded-md border border-input bg-background px-2 py-2 text-sm"
+                disabled={!draft.zip}
+              />
+              <span className="text-xs text-muted-foreground">mi</span>
+            </div>
+            <select
+              value={draft.source}
+              onChange={(e) => setDraft({ ...draft, source: e.target.value })}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">All sources</option>
+              <option value="greenhouse">Greenhouse</option>
+              <option value="lever">Lever</option>
+              <option value="ashby">Ashby</option>
+              <option value="remotive">Remotive (remote)</option>
+              <option value="remoteok">RemoteOK (remote)</option>
+              <option value="jobicy">Jobicy (remote, US)</option>
+              <option value="arbeitnow">Arbeitnow</option>
+              <option value="themuse">The Muse (US metros)</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={draft.remoteOnly}
+                onChange={(e) => setDraft({ ...draft, remoteOnly: e.target.checked })}
+              />
+              Remote only
+            </label>
             <button
-              onClick={() => setShowManage(true)}
+              type="submit"
+              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={clear}
               className="rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
             >
-              Manage companies ({watchedQ.data?.length ?? "…"})
+              Clear
             </button>
-            <button
-              onClick={() => rank.mutate()}
-              disabled={rank.isPending}
-              className="rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
-              title="AI-rank the current pool against your resume; adds top 10 to Matches."
-            >
-              {rank.isPending ? "Ranking…" : "✨ Rank for me now"}
-            </button>
-            {adminQ.data?.isAdmin && (
+            <div className="ml-auto flex flex-wrap gap-2">
               <button
-                onClick={() => refresh.mutate()}
-                disabled={refresh.isPending}
-                className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
-                title="Admin: re-fetch every watched company right now."
+                type="button"
+                onClick={() => setShowManage(true)}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent"
               >
-                {refresh.isPending ? "Refreshing…" : "Refresh pool"}
+                Manage companies ({watchedQ.data?.length ?? "…"})
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => rank.mutate()}
+                disabled={rank.isPending}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                title="AI-rank the current pool against your resume; adds top 10 to Matches."
+              >
+                {rank.isPending ? "Ranking…" : "✨ Rank for me now"}
+              </button>
+              {adminQ.data?.isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => refresh.mutate()}
+                  disabled={refresh.isPending}
+                  className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                  title="Admin: re-fetch every watched company right now (parallelized)."
+                >
+                  {refresh.isPending ? "Refreshing…" : "Refresh pool"}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </form>
 
         {msg && (
           <div className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
@@ -168,23 +300,46 @@ function DiscoverPage() {
 
         {jobsQ.isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
-        ) : jobs.length === 0 ? (
+        ) : rows.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            Pool is empty or nothing matches your filters. Admins can hit <strong>Refresh pool</strong>;
-            the daily cron fills it automatically.
+            Nothing matches. Try broadening filters or ask an admin to hit <strong>Refresh pool</strong>.
           </div>
         ) : (
-          <ul className="mt-8 divide-y divide-border rounded-lg border border-border">
-            {jobs.map((j) => (
-              <JobRow key={j.id} job={j} saved={savedIds.has(j.id)} onSave={() => save.mutate(j.id)} />
-            ))}
-          </ul>
+          <>
+            <ul className="mt-8 divide-y divide-border rounded-lg border border-border">
+              {rows.map((j) => (
+                <JobRow key={j.id} job={j} saved={savedIds.has(j.id)} onSave={() => save.mutate(j.id)} />
+              ))}
+            </ul>
+            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                Page {page + 1} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40"
+                >
+                  ← Previous
+                </button>
+                <button
+                  disabled={!hasMore}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         <p className="mt-6 text-xs text-muted-foreground">
-          The daily refresh runs automatically. The weekly ranker adds your top 10 matches to{" "}
-          <Link to="/apply/matches" className="underline">Matches</Link> every Monday. Nothing here
-          submits an application — every link opens the real posting for you to review.
+          Location filters use structured city/state/country parsed from each feed; older rows fall
+          back to free-text matching until the next refresh. ZIP-radius search is US-only and works
+          offline. The daily refresh runs automatically. The weekly ranker adds your top 10 matches
+          to <Link to="/apply/matches" className="underline">Matches</Link> every Monday.
         </p>
       </div>
 
