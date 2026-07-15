@@ -57,11 +57,11 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw error;
 
-    // If approved, mint a magic link the admin can send.
+    // If approved, mint a magic link and email it to the requester.
     if (data.approve) {
       const { data: req } = await context.supabase
         .from("access_requests")
-        .select("email")
+        .select("email, full_name")
         .eq("id", data.id)
         .single();
       if (req) {
@@ -76,17 +76,47 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
             options: { redirectTo: `${origin}/auth` },
           });
         if (linkErr) throw linkErr;
+        const magicLink = link.properties?.action_link ?? null;
+
+        let emailSent = false;
+        let emailError: string | null = null;
+        if (magicLink) {
+          try {
+            const { sendTemplateEmail } = await import(
+              "@/lib/email-templates/send-email"
+            );
+            const result = await sendTemplateEmail(
+              "access-approved",
+              req.email,
+              {
+                templateData: {
+                  magicLink,
+                  fullName: (req as { full_name?: string | null }).full_name ?? null,
+                },
+                idempotencyKey: `access-approved-${data.id}`,
+              },
+            );
+            emailSent = result.sent;
+            if (!result.sent) emailError = result.reason;
+          } catch (err) {
+            emailError = err instanceof Error ? err.message : String(err);
+            console.error("[admin] access-approved email failed", err);
+          }
+        }
+
         await writeAudit(context.userId, "access_request.approved", null, {
           access_request_id: data.id,
           email: req.email,
+          email_sent: emailSent,
+          email_error: emailError,
         });
-        return { ok: true, magicLink: link.properties?.action_link ?? null };
+        return { ok: true, magicLink, emailSent, emailError };
       }
     }
     await writeAudit(context.userId, `access_request.${status}`, null, {
       access_request_id: data.id,
     });
-    return { ok: true, magicLink: null };
+    return { ok: true, magicLink: null, emailSent: false, emailError: null };
   });
 
 export const resendAccessLink = createServerFn({ method: "POST" })
