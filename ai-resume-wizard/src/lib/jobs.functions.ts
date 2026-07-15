@@ -155,15 +155,44 @@ export const listJobListings = createServerFn({ method: "GET" })
       })
       .parse(input ?? {}),
   )
-  .handler(async ({ data, context }): Promise<{ rows: JobListing[]; total: number }> => {
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      rows: JobListing[];
+      total: number;
+      poolScope: {
+        watchedCount: number;
+        enabledFeeds: AggregateFeed[];
+        emptyPool: boolean;
+      };
+    }> => {
+    // Personal pool: only jobs from THIS user's watched companies + their
+    // enabled aggregate feeds. Empty scope → skip the query and return
+    // a zero-result payload with `emptyPool: true` so the UI can prompt
+    // the user to add companies instead of showing a stale "nothing matches".
+    const scope = await loadUserPoolScope(context.supabase, context.userId);
+    const poolOr = buildUserPoolOrClause(scope);
+    const scopeMeta = {
+      watchedCount: scope.watched.length,
+      enabledFeeds: scope.enabledFeeds,
+      emptyPool: poolOr === null,
+    };
+    if (poolOr === null) {
+      return { rows: [], total: 0, poolScope: scopeMeta };
+    }
+
     let q = context.supabase
       .from("job_listings")
       .select("*", { count: "exact" })
+      .or(poolOr)
       .order("posted_at", { ascending: false, nullsFirst: false })
       .range(data.offset ?? 0, (data.offset ?? 0) + (data.limit ?? 50) - 1);
 
     if (data.remoteOnly) q = q.eq("remote", true);
     if (data.source) q = q.eq("source", data.source);
+
 
     // Full-text search on role+company. Prefer the split role/company fields;
     // fall back to the legacy combined `q`.
