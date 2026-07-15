@@ -349,6 +349,7 @@ function DiscoverPage() {
 }
 
 function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSave: () => void }) {
+  const [expanded, setExpanded] = useState(false);
   const posted = useMemo(() => {
     if (!job.posted_at) return null;
     const d = new Date(job.posted_at);
@@ -358,6 +359,9 @@ function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSav
     if (days < 30) return `${days} days ago`;
     return d.toLocaleDateString();
   }, [job.posted_at]);
+  // Only offer "Show more" when the text is actually long enough to be
+  // clamped — otherwise the toggle is noise.
+  const canExpand = !!job.description && job.description.length > 180;
   return (
     <li className="flex items-start justify-between gap-4 p-4 hover:bg-muted/30">
       <div className="min-w-0 flex-1">
@@ -378,7 +382,25 @@ function JobRow({ job, saved, onSave }: { job: JobListing; saved: boolean; onSav
           <span className="uppercase tracking-wider">{job.source}</span>
         </div>
         {job.description && (
-          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
+          <>
+            <p
+              className={
+                "mt-2 whitespace-pre-line text-sm text-muted-foreground " +
+                (expanded ? "" : "line-clamp-2")
+              }
+            >
+              {job.description}
+            </p>
+            {canExpand && (
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-1 text-xs font-medium text-primary hover:underline"
+              >
+                {expanded ? "Show less" : "Show more"}
+              </button>
+            )}
+          </>
         )}
       </div>
       <button
