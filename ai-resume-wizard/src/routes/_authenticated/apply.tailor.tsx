@@ -2,10 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { getMyResume } from "@/lib/resume.functions";
+import { getMatchPrefill } from "@/lib/matches.functions";
+
+const tailorSearchSchema = z.object({
+  matchId: fallback(z.string().uuid().optional(), undefined),
+});
 
 export const Route = createFileRoute("/_authenticated/apply/tailor")({
+  validateSearch: zodValidator(tailorSearchSchema),
   head: () => ({
     meta: [
       { title: "AI Resume Tailor — Christopher Kendrick" },
