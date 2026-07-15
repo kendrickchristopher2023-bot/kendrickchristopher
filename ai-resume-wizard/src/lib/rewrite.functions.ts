@@ -106,12 +106,13 @@ Rules recap:
       parsed = JSON.parse(m[0]);
     }
 
-    // Result produced successfully — mark the one-time entitlement as used now.
-    // (Saving is a separate step; the AI credit is what we're gating.)
-    await context.supabase
-      .from("profiles")
-      .update({ free_resume_rewrite_used: true })
-      .eq("id", context.userId);
+    // Founders get unlimited rewrites — don't consume the one-time flag.
+    if (ent.plan !== "founder") {
+      await context.supabase
+        .from("profiles")
+        .update({ free_resume_rewrite_used: true })
+        .eq("id", context.userId);
+    }
 
     return { resume: parsed, sourceId: row.id };
   });
