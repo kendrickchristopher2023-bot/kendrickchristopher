@@ -192,7 +192,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
   const items = (raw ?? []).filter((r) => r && typeof (r as { id?: unknown }).id !== "undefined");
   return items.map((j) => {
     const loc = (j.location as string | undefined) || "Remote";
-    return {
+    return withParsed({
       source: "remoteok",
       source_id: String(j.id),
       company: (j.company as string) ?? "Unknown",
@@ -202,7 +202,7 @@ export async function fetchRemoteOK(): Promise<RawJob[]> {
       description: stripHtml((j.description as string) ?? null),
       remote: true,
       posted_at: (j.date as string) ?? null,
-    };
+    });
   }).filter((j) => j.url);
 }
 
