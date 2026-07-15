@@ -6,6 +6,7 @@ import {
   createNamedResume,
   deleteResume,
   listMyResumes,
+  renameResume,
   setPrimaryResume,
 } from "@/lib/resume.functions";
 
@@ -25,11 +26,14 @@ function ResumesPage() {
   const createFn = useServerFn(createNamedResume);
   const setPrimFn = useServerFn(setPrimaryResume);
   const delFn = useServerFn(deleteResume);
+  const renameFn = useServerFn(renameResume);
   const q = useQuery({ queryKey: ["my-resumes"], queryFn: () => listFn() });
 
   const [name, setName] = useState("");
   const [clone, setClone] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
   const invalidate = () => qc.invalidateQueries({ queryKey: ["my-resumes"] });
 
   const create = useMutation({
@@ -44,6 +48,10 @@ function ResumesPage() {
   const del = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: invalidate,
+  });
+  const rename = useMutation({
+    mutationFn: (v: { id: string; name: string }) => renameFn({ data: v }),
+    onSuccess: () => { setEditingId(null); setEditName(""); invalidate(); },
   });
 
   return (
@@ -90,18 +98,49 @@ function ResumesPage() {
               {(q.data ?? []).map((r) => (
                 <li key={r.id} className="flex flex-wrap items-center gap-3 p-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">
-                      {r.name || <span className="text-muted-foreground italic">Unnamed</span>}
-                      {r.is_primary && (
-                        <span className="ml-2 rounded bg-primary/10 text-primary border border-primary/40 px-1.5 py-0.5 text-[10px] font-semibold">
-                          PRIMARY
-                        </span>
-                      )}
-                    </p>
+                    {editingId === r.id ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (editName.trim()) rename.mutate({ id: r.id, name: editName.trim() });
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          autoFocus
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1 min-w-0 rounded border border-input bg-background px-2 py-1 text-sm"
+                        />
+                        <button type="submit" disabled={rename.isPending} className="text-xs text-primary hover:underline">
+                          Save
+                        </button>
+                        <button type="button" onClick={() => setEditingId(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="font-medium">
+                        {r.name || <span className="text-muted-foreground italic">Unnamed</span>}
+                        {r.is_primary && (
+                          <span className="ml-2 rounded bg-primary/10 text-primary border border-primary/40 px-1.5 py-0.5 text-[10px] font-semibold">
+                            PRIMARY
+                          </span>
+                        )}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       Updated {new Date(r.updated_at).toLocaleString()}
                     </p>
                   </div>
+                  {editingId !== r.id && (
+                    <button
+                      onClick={() => { setEditingId(r.id); setEditName(r.name ?? ""); }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Rename
+                    </button>
+                  )}
                   {!r.is_primary && (
                     <button
                       onClick={() => setPrim.mutate(r.id)}
