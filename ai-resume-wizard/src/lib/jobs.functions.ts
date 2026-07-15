@@ -142,7 +142,7 @@ export const listJobListings = createServerFn({ method: "GET" })
         ]);
         q = q.or(orParts.join(","));
       }
-      if (inferredRegion) q = q.or(`region.ilike.${inferredRegion},location.ilike.%, ${inferredRegion}%`);
+      if (inferredRegion) q = q.or(`region.ilike.${inferredRegion},location.ilike."%, ${inferredRegion}%"`);
     } else {
       if (data.city && data.city.trim()) {
         const c = escapeForOr(data.city);
@@ -150,7 +150,7 @@ export const listJobListings = createServerFn({ method: "GET" })
       }
       if (data.region && data.region.trim()) {
         const r = escapeForOr(data.region);
-        q = q.or(`region.ilike.${r},location.ilike.%, ${r}%`);
+        q = q.or(`region.ilike.${r},location.ilike."%, ${r}%"`);
       }
       if (data.country && data.country.trim()) {
         const c = escapeForOr(data.country);
