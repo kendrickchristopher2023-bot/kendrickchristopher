@@ -245,6 +245,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
       {
         source: "ashby",
         source_id: `${slug}:${j.id}`,
+        source_slug: slug,
         company: companyName,
         role: j.title,
         location: loc,
@@ -253,6 +254,7 @@ export async function fetchAshby(slug: string, companyName: string): Promise<Raw
         remote: !!j.isRemote || looksRemote(loc),
         posted_at: j.publishedDate ?? null,
       },
+
       {
         levelHint: j.employmentType ?? null,
         salary: salaryComp
