@@ -6,6 +6,7 @@ import {
   createNamedResume,
   deleteResume,
   listMyResumes,
+  renameResume,
   setPrimaryResume,
 } from "@/lib/resume.functions";
 
