@@ -42,6 +42,8 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_authenticated/_admin/admin.index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksRefreshJobsRouteImport } from './routes/api/public/hooks/refresh-jobs'
 import { Route as ApiPublicHooksRankJobsRouteImport } from './routes/api/public/hooks/rank-jobs'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
@@ -222,6 +224,16 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRefreshJobsRoute =
   ApiPublicHooksRefreshJobsRouteImport.update({
     id: '/api/public/hooks/refresh-jobs',
@@ -273,6 +285,8 @@ export interface FileRoutesByFullPath {
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -308,6 +322,8 @@ export interface FileRoutesByTo {
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -347,6 +363,8 @@ export interface FileRoutesById {
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/_admin/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
@@ -385,6 +403,8 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -420,6 +440,8 @@ export interface FileRouteTypes {
     | '/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/admin'
   id:
@@ -458,6 +480,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin/admin/invites'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/_admin/admin/'
   fileRoutesById: FileRoutesById
@@ -482,6 +506,8 @@ export interface RootRouteChildren {
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -718,6 +744,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-jobs': {
       id: '/api/public/hooks/refresh-jobs'
       path: '/api/public/hooks/refresh-jobs'
@@ -825,6 +865,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
