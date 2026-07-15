@@ -23,7 +23,18 @@ export const Route = createFileRoute("/_authenticated")({
       <AppStatusBanner />
       <AppNav />
       <Outlet />
+      <AuthedFooter />
       <ChatAssistant />
     </>
   ),
 });
+
+function AuthedFooter() {
+  return (
+    <footer className="mx-auto mt-12 max-w-6xl px-4 pb-8 text-center text-xs text-muted-foreground">
+      <a href="/legal" className="hover:text-foreground hover:underline">
+        Terms &amp; Privacy
+      </a>
+    </footer>
+  );
+}
