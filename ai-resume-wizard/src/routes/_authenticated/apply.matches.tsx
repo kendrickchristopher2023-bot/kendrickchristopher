@@ -84,6 +84,7 @@ function MatchesPage() {
   const [fCountry, setFCountry] = useState("");
   const [fZip, setFZip] = useState("");
   const [fRadius, setFRadius] = useState(25);
+  const [fRemoteOnly, setFRemoteOnly] = useState(false);
   const nearbyFn = useServerFn(nearbyZipCodes);
   const zipQ = useQuery({
     queryKey: ["nearby-zips", fZip.trim(), fRadius],
