@@ -25,6 +25,11 @@ export type JobListing = {
   remote: boolean;
   posted_at: string | null;
   fetched_at: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  experience_level: string | null;
 };
 
 export type WatchedCompany = {
