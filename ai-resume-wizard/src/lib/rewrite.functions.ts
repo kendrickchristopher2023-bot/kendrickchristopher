@@ -108,11 +108,14 @@ Rules recap:
 
     // Founders get unlimited rewrites — don't consume the one-time flag.
     if (ent.plan !== "founder") {
-      await context.supabase
+      // Server-side only: `free_resume_rewrite_used` UPDATE is revoked from the authenticated role.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
         .from("profiles")
         .update({ free_resume_rewrite_used: true })
         .eq("id", context.userId);
     }
+
 
     return { resume: parsed, sourceId: row.id };
   });
