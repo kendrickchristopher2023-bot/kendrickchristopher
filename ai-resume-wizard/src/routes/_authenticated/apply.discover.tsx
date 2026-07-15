@@ -399,10 +399,37 @@ function DiscoverPage() {
         {jobsQ.isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
         ) : rows.length === 0 ? (
-          <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            Nothing matches. Try broadening filters or ask an admin to hit <strong>Refresh pool</strong>.
-          </div>
+          poolScope?.emptyPool ? (
+            <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              <p className="text-base font-medium text-foreground">Your Discover pool is empty.</p>
+              <p className="mt-2">
+                Add a few companies you want to watch, or enable at least one aggregate feed
+                (Remotive, RemoteOK, Jobicy, Arbeitnow, The Muse). Both live behind{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowManage(true)}
+                  className="font-medium text-primary hover:underline"
+                >
+                  Manage companies
+                </button>
+                .
+              </p>
+            </div>
+          ) : (
+            <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              Nothing in your pool matches. Try broadening filters, or add more companies via{" "}
+              <button
+                type="button"
+                onClick={() => setShowManage(true)}
+                className="font-medium text-primary hover:underline"
+              >
+                Manage companies
+              </button>
+              .
+            </div>
+          )
         ) : (
+
           <>
             {(applied.salaryMin > 0 || applied.experienceLevel) && (
               <CoverageNote
