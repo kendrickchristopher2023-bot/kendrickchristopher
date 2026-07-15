@@ -56,20 +56,10 @@ async function fetchJson(url: string): Promise<unknown> {
   }
 }
 
-function stripHtml(s: string | null | undefined, max = 2000): string | null {
-  if (!s) return null;
-  const text = s
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
-  return text.length > max ? text.slice(0, max) + "…" : text;
+function stripHtml(s: string | null | undefined, max = 4000): string | null {
+  // Delegate to the shared sanitizer. Kept as a thin alias so adapters below
+  // read the same. `withParsed()` re-sanitizes at the end as a safety net.
+  return stripHtmlToText(s, max);
 }
 
 function looksRemote(location: string | null, extra?: string | null): boolean {
