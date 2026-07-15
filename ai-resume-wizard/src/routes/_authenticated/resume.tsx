@@ -8,9 +8,8 @@ import { AtsLintPanel } from "@/components/AtsLintPanel";
 import { lintResumeForAts } from "@/lib/ats-lint";
 
 export const Route = createFileRoute("/_authenticated/resume")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    id: typeof search.id === "string" ? search.id : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { id?: string } =>
+    typeof search.id === "string" ? { id: search.id } : {},
   head: () => ({
     meta: [
       { title: "My Resume — AI Job Kit" },
@@ -255,7 +254,7 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
 
         <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           {R.lastUpdated && <span>Last updated {R.lastUpdated}</span>}
-          <Link to="/resume" search={{}} className="text-primary hover:underline">
+          <Link to="/resume" className="text-primary hover:underline">
             Manage
           </Link>
         </footer>

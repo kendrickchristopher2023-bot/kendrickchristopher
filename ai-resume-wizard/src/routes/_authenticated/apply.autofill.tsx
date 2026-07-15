@@ -128,7 +128,7 @@ function AutofillPage() {
         {answers.length === 0 && !gen.isPending && (
           <p className="mt-8 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground text-center">
             Click <strong>Generate my answers</strong> — the AI reads your resume from{" "}
-            <Link to="/resume" search={{}} className="text-primary hover:underline">/resume</Link> and drafts personalized answers.
+            <Link to="/resume" className="text-primary hover:underline">/resume</Link> and drafts personalized answers.
           </p>
         )}
 
