@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getMyUsage } from "@/lib/resume.functions";
 import { getRewriteEntitlement } from "@/lib/rewrite.functions";
+import { getMyNotificationPrefs, setMyNotificationPrefs } from "@/lib/notifications.functions";
 import { PLAN_CAPS, ACTION_LABEL, type UsageAction } from "@/lib/usage";
 import {
   listMyApiTokens,
