@@ -18,8 +18,10 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 import { template as accessApprovedTemplate } from './access-approved'
+import { template as weeklyDigestTemplate } from './weekly-digest'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'access-approved': accessApprovedTemplate,
+  'weekly-digest': weeklyDigestTemplate,
 }
 
