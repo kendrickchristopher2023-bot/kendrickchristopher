@@ -390,6 +390,9 @@ export const backfillJobDescriptions = createServerFn({ method: "POST" })
       from += PAGE;
     }
     return { scanned, updated };
+  });
+
+
 
 // Backfill experience_level and salary_* on existing rows. Idempotent —
 // only rewrites when the derived value would change and only fills nulls
