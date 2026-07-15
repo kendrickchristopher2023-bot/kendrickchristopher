@@ -5,17 +5,27 @@
 // public.job_listings. Adapters must be resilient — one company's failure
 // should never block the whole refresh, so callers wrap them in try/catch.
 
+import { parseLocation } from "./location-parse";
+
 export type RawJob = {
   source: string;
   source_id: string;
   company: string;
   role: string;
   location: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
   url: string;
   description: string | null;
   remote: boolean;
   posted_at: string | null; // ISO
 };
+
+function withParsed(base: Omit<RawJob, "city" | "region" | "country">): RawJob {
+  const p = parseLocation(base.location);
+  return { ...base, city: p.city, region: p.region, country: p.country };
+}
 
 const UA = "AIJobKit/1.0 (+https://excel-ai-resume.lovable.app)";
 const FETCH_TIMEOUT_MS = 15_000;
