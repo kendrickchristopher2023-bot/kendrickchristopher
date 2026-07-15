@@ -138,6 +138,7 @@ export const createNamedResume = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+    await markOnboardedIfNeeded(context.supabase, context.userId);
     return { ok: true, id: inserted.id };
   });
 
