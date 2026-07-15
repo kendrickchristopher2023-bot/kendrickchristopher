@@ -222,7 +222,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       pubDate?: string;
     }>;
   };
-  return (data.jobs ?? []).map((j) => ({
+  return (data.jobs ?? []).map((j) => withParsed({
     source: "jobicy",
     source_id: String(j.id),
     company: j.companyName,
