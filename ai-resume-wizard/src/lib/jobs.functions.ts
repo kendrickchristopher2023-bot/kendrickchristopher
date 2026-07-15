@@ -343,6 +343,42 @@ export const removeWatchedCompany = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Personal Discover feed preferences. Aggregate feeds default to ALL ON —
+// so a brand-new user with no watched companies still sees the general-board
+// pool instead of a blank page.
+export const getMyFeedPrefs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ enabledFeeds: AggregateFeed[] }> => {
+    const { data } = await context.supabase
+      .from("profiles")
+      .select("enabled_feeds")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const raw = (data?.enabled_feeds as string[] | null) ?? null;
+    const enabledFeeds: AggregateFeed[] = raw
+      ? (raw.filter((s) => (AGGREGATE_FEEDS as readonly string[]).includes(s)) as AggregateFeed[])
+      : [...AGGREGATE_FEEDS];
+    return { enabledFeeds };
+  });
+
+export const setMyFeedPrefs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ enabledFeeds: z.array(z.enum(AGGREGATE_FEEDS)) }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ enabledFeeds: AggregateFeed[] }> => {
+    // Store deduped to keep the row tidy.
+    const uniq = Array.from(new Set(data.enabledFeeds)) as AggregateFeed[];
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ enabled_feeds: uniq } as never)
+      .eq("id", context.userId);
+    if (error) throw error;
+    return { enabledFeeds: uniq };
+  });
+
+
+
 export const saveJobToMatches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ job_listing_id: z.string().uuid() }).parse(input))
