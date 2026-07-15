@@ -44,8 +44,11 @@ import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_auth
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
+import { Route as ApiPublicHooksUnsubscribeRouteImport } from './routes/api/public/hooks/unsubscribe'
 import { Route as ApiPublicHooksRefreshJobsRouteImport } from './routes/api/public/hooks/refresh-jobs'
 import { Route as ApiPublicHooksRankJobsRouteImport } from './routes/api/public/hooks/rank-jobs'
+import { Route as ApiPublicHooksCleanupRouteImport } from './routes/api/public/hooks/cleanup'
 import { Route as AuthenticatedAdminAdminInvitesRouteImport } from './routes/_authenticated/_admin/admin.invites'
 
 const RequestAccessRoute = RequestAccessRouteImport.update({
@@ -234,6 +237,18 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWeeklyDigestRoute =
+  ApiPublicHooksWeeklyDigestRouteImport.update({
+    id: '/api/public/hooks/weekly-digest',
+    path: '/api/public/hooks/weekly-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksUnsubscribeRoute =
+  ApiPublicHooksUnsubscribeRouteImport.update({
+    id: '/api/public/hooks/unsubscribe',
+    path: '/api/public/hooks/unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRefreshJobsRoute =
   ApiPublicHooksRefreshJobsRouteImport.update({
     id: '/api/public/hooks/refresh-jobs',
@@ -243,6 +258,11 @@ const ApiPublicHooksRefreshJobsRoute =
 const ApiPublicHooksRankJobsRoute = ApiPublicHooksRankJobsRouteImport.update({
   id: '/api/public/hooks/rank-jobs',
   path: '/api/public/hooks/rank-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksCleanupRoute = ApiPublicHooksCleanupRouteImport.update({
+  id: '/api/public/hooks/cleanup',
+  path: '/api/public/hooks/cleanup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminAdminInvitesRoute =
@@ -283,8 +303,11 @@ export interface FileRoutesByFullPath {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -320,8 +343,11 @@ export interface FileRoutesByTo {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -361,8 +387,11 @@ export interface FileRoutesById {
   '/api/extension/profile': typeof ApiExtensionProfileRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
+  '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
+  '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -401,8 +430,11 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/apply/'
     | '/admin/invites'
+    | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/unsubscribe'
+    | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -438,8 +470,11 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/apply'
     | '/admin/invites'
+    | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/unsubscribe'
+    | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -478,8 +513,11 @@ export interface FileRouteTypes {
     | '/api/extension/profile'
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/invites'
+    | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/unsubscribe'
+    | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -504,8 +542,11 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
+  ApiPublicHooksCleanupRoute: typeof ApiPublicHooksCleanupRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
+  ApiPublicHooksUnsubscribeRoute: typeof ApiPublicHooksUnsubscribeRoute
+  ApiPublicHooksWeeklyDigestRoute: typeof ApiPublicHooksWeeklyDigestRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -758,6 +799,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/weekly-digest': {
+      id: '/api/public/hooks/weekly-digest'
+      path: '/api/public/hooks/weekly-digest'
+      fullPath: '/api/public/hooks/weekly-digest'
+      preLoaderRoute: typeof ApiPublicHooksWeeklyDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/unsubscribe': {
+      id: '/api/public/hooks/unsubscribe'
+      path: '/api/public/hooks/unsubscribe'
+      fullPath: '/api/public/hooks/unsubscribe'
+      preLoaderRoute: typeof ApiPublicHooksUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-jobs': {
       id: '/api/public/hooks/refresh-jobs'
       path: '/api/public/hooks/refresh-jobs'
@@ -770,6 +825,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/rank-jobs'
       fullPath: '/api/public/hooks/rank-jobs'
       preLoaderRoute: typeof ApiPublicHooksRankJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/cleanup': {
+      id: '/api/public/hooks/cleanup'
+      path: '/api/public/hooks/cleanup'
+      fullPath: '/api/public/hooks/cleanup'
+      preLoaderRoute: typeof ApiPublicHooksCleanupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_admin/admin/invites': {
@@ -863,8 +925,11 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
+  ApiPublicHooksCleanupRoute: ApiPublicHooksCleanupRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
+  ApiPublicHooksUnsubscribeRoute: ApiPublicHooksUnsubscribeRoute,
+  ApiPublicHooksWeeklyDigestRoute: ApiPublicHooksWeeklyDigestRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
