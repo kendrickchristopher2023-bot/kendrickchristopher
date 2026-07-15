@@ -6,6 +6,7 @@ import {
   addMatch,
   deleteMatch,
   listMatches,
+  nearbyZipCodes,
   suggestMatches,
   updateMatch,
   type PersonalMatch,
@@ -73,9 +74,45 @@ function MatchesPage() {
     });
   };
 
-  const matches = matchesQ.data ?? [];
+  const allMatches = matchesQ.data ?? [];
   const apps = appsQ.data ?? [];
   const sessions = sessionsQ.data ?? [];
+
+  // -------- Location filters --------
+  const [fCity, setFCity] = useState("");
+  const [fState, setFState] = useState("");
+  const [fCountry, setFCountry] = useState("");
+  const [fZip, setFZip] = useState("");
+  const [fRadius, setFRadius] = useState(25);
+  const nearbyFn = useServerFn(nearbyZipCodes);
+  const zipQ = useQuery({
+    queryKey: ["nearby-zips", fZip.trim(), fRadius],
+    queryFn: () => nearbyFn({ data: { zip: fZip.trim(), radius_miles: fRadius } }),
+    enabled: fZip.trim().length >= 3 && fRadius > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+  const nearbySet = useMemo(
+    () => (zipQ.data ? new Set(zipQ.data.zips) : null),
+    [zipQ.data],
+  );
+
+  const matches = useMemo(() => {
+    const c = fCity.trim().toLowerCase();
+    const st = fState.trim().toLowerCase();
+    const co = fCountry.trim().toLowerCase();
+    return allMatches.filter((m) => {
+      if (c && (m.city ?? "").toLowerCase() !== c) return false;
+      if (st && (m.state ?? "").toLowerCase() !== st) return false;
+      if (co && (m.country ?? "").toLowerCase() !== co) return false;
+      if (nearbySet) {
+        const z = (m.zip_code ?? "").trim();
+        if (!z || !nearbySet.has(z)) return false;
+      }
+      return true;
+    });
+  }, [allMatches, fCity, fState, fCountry, nearbySet]);
+  const anyFilter =
+    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim();
 
   return (
     <main
@@ -131,11 +168,87 @@ function MatchesPage() {
           </button>
         </div>
 
+        <div className="mt-4 rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Filter by location
+            </p>
+            {anyFilter && (
+              <button
+                onClick={() => {
+                  setFCity("");
+                  setFState("");
+                  setFCountry("");
+                  setFZip("");
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <input
+              value={fCity}
+              onChange={(e) => setFCity(e.target.value)}
+              placeholder="City"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fState}
+              onChange={(e) => setFState(e.target.value)}
+              placeholder="State"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fCountry}
+              onChange={(e) => setFCountry(e.target.value)}
+              placeholder="Country"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <input
+              value={fZip}
+              onChange={(e) => setFZip(e.target.value)}
+              placeholder="ZIP (US)"
+              className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+            />
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                max={500}
+                value={fRadius}
+                onChange={(e) => setFRadius(Number(e.target.value) || 0)}
+                className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+              />
+              <span className="text-xs text-muted-foreground">mi</span>
+            </div>
+          </div>
+          {fZip.trim().length >= 3 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {zipQ.isLoading
+                ? "Looking up ZIP radius…"
+                : zipQ.data && zipQ.data.zips.length === 0
+                  ? "No US ZIPs found in radius (dataset is US-only)."
+                  : zipQ.data
+                    ? `${zipQ.data.zips.length} ZIPs within ${fRadius} miles.`
+                    : ""}
+            </p>
+          )}
+          {anyFilter && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Showing {matches.length} of {allMatches.length} matches.
+            </p>
+          )}
+        </div>
+
         {matchesQ.isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
         ) : matches.length === 0 ? (
           <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            No targets yet. Add one manually or use <strong>AI suggest</strong>.
+            {anyFilter
+              ? "No matches fit these filters. Clear filters or add more targets."
+              : "No targets yet. Add one manually or use AI suggest."}
           </div>
         ) : (
           <div className="mt-8 overflow-x-auto rounded-lg border border-border">
@@ -331,7 +444,18 @@ function Chip({ on, label }: { on: boolean; label: string }) {
 
 function AddMatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const addFn = useServerFn(addMatch);
-  const [form, setForm] = useState({ company: "", role: "", location: "", tier: "", role_url: "", notes: "" });
+  const [form, setForm] = useState({
+    company: "",
+    role: "",
+    location: "",
+    tier: "",
+    role_url: "",
+    notes: "",
+    zip_code: "",
+    city: "",
+    state: "",
+    country: "",
+  });
   const [err, setErr] = useState<string | null>(null);
   const m = useMutation({
     mutationFn: () => addFn({ data: form as never }),
@@ -346,7 +470,13 @@ function AddMatchDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
       <div className="space-y-3">
         <Field label="Company" value={form.company} onChange={(v) => setForm({ ...form, company: v })} />
         <Field label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} />
-        <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+        <Field label="Location (free-text, for display)" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+          <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+          <Field label="ZIP" value={form.zip_code} onChange={(v) => setForm({ ...form, zip_code: v })} />
+          <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
+        </div>
         <Field label="Tier (A/B/C)" value={form.tier} onChange={(v) => setForm({ ...form, tier: v })} />
         <Field label="Role URL" value={form.role_url} onChange={(v) => setForm({ ...form, role_url: v })} />
         <Field label="Notes" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} textarea />
@@ -383,6 +513,10 @@ function EditMatchInline({
     tier: match.tier ?? "",
     role_url: match.role_url ?? "",
     notes: match.notes ?? "",
+    zip_code: match.zip_code ?? "",
+    city: match.city ?? "",
+    state: match.state ?? "",
+    country: match.country ?? "",
   });
   const m = useMutation({
     mutationFn: () => updateFn({ data: { id: match.id, ...form } as never }),
@@ -392,8 +526,12 @@ function EditMatchInline({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <Field label="Company" value={form.company} onChange={(v) => setForm({ ...form, company: v })} />
       <Field label="Role" value={form.role} onChange={(v) => setForm({ ...form, role: v })} />
-      <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+      <Field label="Location (display)" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
       <Field label="Tier" value={form.tier} onChange={(v) => setForm({ ...form, tier: v })} />
+      <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+      <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+      <Field label="ZIP" value={form.zip_code} onChange={(v) => setForm({ ...form, zip_code: v })} />
+      <Field label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
       <Field label="Role URL" value={form.role_url} onChange={(v) => setForm({ ...form, role_url: v })} />
       <Field label="Notes" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} />
       <div className="sm:col-span-2 flex justify-end gap-2">
@@ -414,11 +552,26 @@ function SuggestDialog({ onClose, onAdded }: { onClose: () => void; onAdded: () 
   const suggestFn = useServerFn(suggestMatches);
   const addFn = useServerFn(addMatch);
   const [prompt, setPrompt] = useState("");
+  const [city, setCity] = useState("");
+  const [stateVal, setStateVal] = useState("");
+  const [country, setCountry] = useState("");
+  const [zip, setZip] = useState("");
+  const [radius, setRadius] = useState(25);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [addedIdx, setAddedIdx] = useState<Set<number>>(new Set());
   const [err, setErr] = useState<string | null>(null);
   const gen = useMutation({
-    mutationFn: () => suggestFn({ data: { prompt } }),
+    mutationFn: () =>
+      suggestFn({
+        data: {
+          prompt,
+          city: city.trim() || undefined,
+          state: stateVal.trim() || undefined,
+          country: country.trim() || undefined,
+          zip_code: zip.trim() || undefined,
+          radius_miles: zip.trim() ? radius : undefined,
+        },
+      }),
     onSuccess: (r) => {
       setSuggestions(r.suggestions);
       setAddedIdx(new Set());
@@ -434,28 +587,51 @@ function SuggestDialog({ onClose, onAdded }: { onClose: () => void; onAdded: () 
         location: s.location || null,
         role_url: s.careers_url || null,
         notes: s.why || null,
+        city: city.trim() || null,
+        state: stateVal.trim() || null,
+        country: country.trim() || null,
+        zip_code: zip.trim() || null,
       } as never,
     });
     setAddedIdx((prev) => new Set(prev).add(idx));
     onAdded();
   };
 
+  const canSubmit =
+    prompt.trim().length >= 3 || !!city.trim() || !!stateVal.trim() || !!country.trim() || !!zip.trim();
+
   return (
     <Modal onClose={onClose} title="AI suggest targets" wide>
       <p className="text-sm text-muted-foreground mb-3">
-        Describe industries, locations, seniority. AI reads your resume and proposes matches.
-        Nothing is added until you click <strong>Add</strong> on each row.
+        Describe industries, seniority, and/or fill any location fields. AI reads your resume and
+        proposes matches. Nothing is added until you click <strong>Add</strong>.
       </p>
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="e.g. Series B–C AI startups, remote or NYC, forward deployed or solutions roles"
+        placeholder="e.g. Series B–C AI startups, forward-deployed or solutions roles"
         rows={3}
         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm mb-3"
       />
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+        <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={stateVal} onChange={(e) => setStateVal(e.target.value)} placeholder="State"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="ZIP (US)"
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+        <div className="flex items-center gap-1">
+          <input type="number" min={0} max={500} value={radius}
+            onChange={(e) => setRadius(Number(e.target.value) || 0)}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm" />
+          <span className="text-xs text-muted-foreground">mi</span>
+        </div>
+      </div>
       <button
         onClick={() => gen.mutate()}
-        disabled={gen.isPending || prompt.trim().length < 3}
+        disabled={gen.isPending || !canSubmit}
         className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
       >
         {gen.isPending ? "Thinking…" : "Suggest"}
