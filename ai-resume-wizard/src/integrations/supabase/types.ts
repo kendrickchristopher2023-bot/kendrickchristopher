@@ -204,7 +204,9 @@ export type Database = {
       }
       personal_matches: {
         Row: {
+          city: string | null
           company: string
+          country: string | null
           created_at: string
           id: string
           job_listing_id: string | null
@@ -213,12 +215,16 @@ export type Database = {
           role: string
           role_url: string | null
           source: string
+          state: string | null
           status: string
           tier: string | null
           user_id: string
+          zip_code: string | null
         }
         Insert: {
+          city?: string | null
           company: string
+          country?: string | null
           created_at?: string
           id?: string
           job_listing_id?: string | null
@@ -227,12 +233,16 @@ export type Database = {
           role: string
           role_url?: string | null
           source?: string
+          state?: string | null
           status?: string
           tier?: string | null
           user_id: string
+          zip_code?: string | null
         }
         Update: {
+          city?: string | null
           company?: string
+          country?: string | null
           created_at?: string
           id?: string
           job_listing_id?: string | null
@@ -241,9 +251,11 @@ export type Database = {
           role?: string
           role_url?: string | null
           source?: string
+          state?: string | null
           status?: string
           tier?: string | null
           user_id?: string
+          zip_code?: string | null
         }
         Relationships: [
           {
