@@ -331,9 +331,11 @@ function AdminDashboard() {
               >
                 <option value="joined_desc">Sort: Newest joined</option>
                 <option value="joined_asc">Sort: Oldest joined</option>
-                <option value="login_desc">Sort: Most-recently active</option>
-                <option value="login_asc">Sort: Least-recently active (never last)</option>
+                <option value="login_desc">Sort: Most-recently signed in</option>
+                <option value="login_asc">Sort: Least-recently signed in (never last)</option>
                 <option value="login_never_first">Sort: Never signed in first</option>
+                <option value="active_desc">Sort: Most-recently active</option>
+                <option value="active_asc">Sort: Least-recently active (never last)</option>
               </select>
               <input
                 value={search}
