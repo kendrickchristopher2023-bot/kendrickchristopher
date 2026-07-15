@@ -242,9 +242,14 @@ function DiscoverPage() {
                 value={draft.radius}
                 onChange={(e) => setDraft({ ...draft, radius: Number(e.target.value) || 0 })}
                 className="w-20 rounded-md border border-input bg-background px-2 py-2 text-sm"
-                disabled={!draft.zip}
+                title="Radius only applies once a US ZIP is entered above."
               />
-              <span className="text-xs text-muted-foreground">mi</span>
+              <span
+                className="text-xs text-muted-foreground"
+                title="Radius only applies once a US ZIP is entered above."
+              >
+                mi{!draft.zip ? " (enter ZIP to use)" : ""}
+              </span>
             </div>
             <select
               value={draft.source}
