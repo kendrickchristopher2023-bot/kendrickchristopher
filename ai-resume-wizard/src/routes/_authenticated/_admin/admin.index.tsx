@@ -444,6 +444,15 @@ function AdminDashboard() {
                     <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
                       {formatEasternDateTime(u.last_sign_in_at)}
                     </td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
+                      <div>{formatEasternDateTime(u.last_active_at)}</div>
+                      {u.last_active_at && (
+                        <div className="text-[10px] text-muted-foreground/70">
+                          {formatRelative(u.last_active_at)}
+                        </div>
+                      )}
+                    </td>
+
 
                     <td className="px-3 py-2 text-xs">
                       {u.has_primary_resume ? "✓" : "—"}
