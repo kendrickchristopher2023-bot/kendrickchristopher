@@ -186,6 +186,7 @@ function MatchesPage() {
                   setFState("");
                   setFCountry("");
                   setFZip("");
+                  setFRemoteOnly(false);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground underline"
               >
@@ -193,6 +194,15 @@ function MatchesPage() {
               </button>
             )}
           </div>
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={fRemoteOnly}
+              onChange={(e) => setFRemoteOnly(e.target.checked)}
+            />
+            <span>Remote only</span>
+            <span className="text-xs text-muted-foreground">(matches with "remote" in location/notes)</span>
+          </label>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
             <input
               value={fCity}
