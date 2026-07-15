@@ -84,6 +84,7 @@ function MatchesPage() {
   const [fCountry, setFCountry] = useState("");
   const [fZip, setFZip] = useState("");
   const [fRadius, setFRadius] = useState(25);
+  const [fRemoteOnly, setFRemoteOnly] = useState(false);
   const nearbyFn = useServerFn(nearbyZipCodes);
   const zipQ = useQuery({
     queryKey: ["nearby-zips", fZip.trim(), fRadius],
@@ -101,6 +102,11 @@ function MatchesPage() {
     const st = fState.trim().toLowerCase();
     const co = fCountry.trim().toLowerCase();
     return allMatches.filter((m) => {
+      if (fRemoteOnly) {
+        const loc = (m.location ?? "").toLowerCase();
+        const notes = (m.notes ?? "").toLowerCase();
+        if (!/\bremote\b/.test(loc) && !/\bremote\b/.test(notes)) return false;
+      }
       if (c && (m.city ?? "").toLowerCase() !== c) return false;
       if (st && (m.state ?? "").toLowerCase() !== st) return false;
       if (co && (m.country ?? "").toLowerCase() !== co) return false;
@@ -110,9 +116,9 @@ function MatchesPage() {
       }
       return true;
     });
-  }, [allMatches, fCity, fState, fCountry, nearbySet]);
+  }, [allMatches, fCity, fState, fCountry, nearbySet, fRemoteOnly]);
   const anyFilter =
-    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim();
+    !!fCity.trim() || !!fState.trim() || !!fCountry.trim() || !!fZip.trim() || fRemoteOnly;
 
   return (
     <main
@@ -180,6 +186,7 @@ function MatchesPage() {
                   setFState("");
                   setFCountry("");
                   setFZip("");
+                  setFRemoteOnly(false);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground underline"
               >
@@ -187,6 +194,15 @@ function MatchesPage() {
               </button>
             )}
           </div>
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={fRemoteOnly}
+              onChange={(e) => setFRemoteOnly(e.target.checked)}
+            />
+            <span>Remote only</span>
+            <span className="text-xs text-muted-foreground">(matches with "remote" in location/notes)</span>
+          </label>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
             <input
               value={fCity}
