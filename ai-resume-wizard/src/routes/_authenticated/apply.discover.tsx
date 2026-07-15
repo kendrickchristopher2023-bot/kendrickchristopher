@@ -331,6 +331,13 @@ function DiscoverPage() {
               />
               Remote only
             </label>
+            {draft.remoteOnly &&
+              (draft.city || draft.region || draft.country || draft.zip) && (
+                <span className="text-xs text-muted-foreground italic">
+                  Location filters ignored — remote jobs match any location.
+                </span>
+              )}
+
             <button
               type="submit"
               className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90"
