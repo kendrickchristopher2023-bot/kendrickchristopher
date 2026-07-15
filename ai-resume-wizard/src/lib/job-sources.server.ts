@@ -155,6 +155,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
     return withParsed({
       source: "greenhouse",
       source_id: `${slug}:${j.id}`,
+      source_slug: slug,
       company: companyName,
       role: j.title,
       location: loc,
@@ -163,6 +164,7 @@ export async function fetchGreenhouse(slug: string, companyName: string): Promis
       remote: looksRemote(loc),
       posted_at: j.updated_at ?? null,
     });
+
   });
 }
 
