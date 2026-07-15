@@ -389,6 +389,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
       {
         source: "jobicy",
         source_id: String(j.id),
+        source_slug: null,
         company: j.companyName,
         role: j.jobTitle,
         location: j.jobGeo ?? "Remote",
@@ -397,6 +398,7 @@ export async function fetchJobicy(geo = "usa", count = 100): Promise<RawJob[]> {
         remote: true,
         posted_at: j.pubDate ?? null,
       },
+
       {
         levelHint: j.jobLevel ?? null,
         salary:
