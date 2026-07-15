@@ -57,6 +57,16 @@ function toWebsearch(q: string): string {
   return q.replace(/[\\'"]/g, " ").trim();
 }
 
+const EXPERIENCE_LEVELS = [
+  "intern",
+  "entry",
+  "mid",
+  "senior",
+  "lead",
+  "manager",
+  "director+",
+] as const;
+
 export const listJobListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -74,6 +84,14 @@ export const listJobListings = createServerFn({ method: "GET" })
         radius_miles: z.number().int().min(0).max(500).optional(),
         remoteOnly: z.boolean().optional(),
         source: z.enum(KNOWN_SOURCES).optional(),
+        // Salary filter: annualized USD. Rows with unknown salary are INCLUDED
+        // by default; set salary_only_listed=true to opt in to the narrow view.
+        salary_min: z.number().int().min(0).max(10_000_000).optional(),
+        salary_only_listed: z.boolean().optional(),
+        // Experience filter: rows without a classified level are INCLUDED by
+        // default. Set level_only_classified=true to require a match.
+        experience_level: z.enum(EXPERIENCE_LEVELS).optional(),
+        level_only_classified: z.boolean().optional(),
         limit: z.number().int().min(1).max(200).optional(),
         offset: z.number().int().min(0).max(50_000).optional(),
       })
@@ -137,6 +155,38 @@ export const listJobListings = createServerFn({ method: "GET" })
       if (data.country && data.country.trim()) {
         const c = escapeForOr(data.country);
         q = q.or(`country.ilike.${c},location.ilike.%${c}%`);
+      }
+    }
+
+    // Salary: hide unknowns only when the user explicitly opts in. Salary is
+    // stored annualized in native currency, so we compare against USD/null-
+    // currency rows to avoid mixing scales (a €150k row won't be matched by
+    // a $150k threshold — that's fine, we treat it as "unknown for filter").
+    if (data.salary_only_listed) {
+      q = q.not("salary_max", "is", null);
+    }
+    if (data.salary_min && data.salary_min > 0) {
+      const min = data.salary_min;
+      if (data.salary_only_listed) {
+        q = q.gte("salary_max", min);
+        q = q.or(`salary_currency.eq.USD,salary_currency.is.null`);
+      } else {
+        // Include rows with unknown salary OR (known salary that meets threshold
+        // AND currency compatible with USD comparison).
+        q = q.or(
+          `salary_max.is.null,and(salary_max.gte.${min},or(salary_currency.eq.USD,salary_currency.is.null))`,
+        );
+      }
+    }
+
+    // Experience: same include-unknown-by-default behavior.
+    if (data.experience_level) {
+      if (data.level_only_classified) {
+        q = q.eq("experience_level", data.experience_level);
+      } else {
+        q = q.or(
+          `experience_level.eq.${data.experience_level},experience_level.is.null`,
+        );
       }
     }
 
