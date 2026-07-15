@@ -314,7 +314,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
         if (seen.has(key)) continue;
         seen.add(key);
         const locName = j.locations?.map((l) => l.name).filter(Boolean).join(", ") || loc;
-        out.push({
+        out.push(withParsed({
           source: "themuse",
           source_id: String(j.id),
           company: j.company?.name ?? "Unknown",
@@ -324,7 +324,7 @@ export async function fetchTheMuse(): Promise<RawJob[]> {
           description: stripHtml(j.contents ?? null),
           remote: looksRemote(locName),
           posted_at: j.publication_date ?? null,
-        });
+        }));
       }
     } catch {
       // One metro failing shouldn't kill the batch.
