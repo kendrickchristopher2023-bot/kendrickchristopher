@@ -130,6 +130,8 @@ function ApplyPage() {
 
         {!isLoading && data?.resume && (
           <>
+            <NextApplyCard />
+
             <Section title="Tools">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {TOOLS.map((t) => (
