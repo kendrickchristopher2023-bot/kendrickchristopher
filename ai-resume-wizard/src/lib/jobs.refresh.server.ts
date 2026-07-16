@@ -199,7 +199,11 @@ export async function runRefreshJobs(): Promise<{ slices: SliceSummary[]; jobsUp
 // Worker, so a slow source cannot 502 the others.
 export async function dispatchAllRefreshSlices(): Promise<{ dispatched: string[] }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await supabaseAdmin.rpc("dispatch_refresh_slices");
+  // Cast: dispatch_refresh_slices is a new SQL function whose signature isn't
+  // yet reflected in the auto-generated types.ts. Regenerated on next sync.
+  const { error } = await (supabaseAdmin.rpc as (fn: string) => Promise<{ error: { message: string } | null }>)(
+    "dispatch_refresh_slices",
+  );
   if (error) throw new Error(`dispatch_refresh_slices failed: ${error.message}`);
   return { dispatched: [...REFRESH_SLICES] };
 }
