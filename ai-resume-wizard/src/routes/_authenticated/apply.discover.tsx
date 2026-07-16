@@ -572,6 +572,7 @@ const FEED_LABELS: Record<AggregateFeed, string> = {
   jobicy: "Jobicy (remote, US)",
   arbeitnow: "Arbeitnow",
   themuse: "The Muse (US metros)",
+  usajobs: "USAJOBS (federal, US metros)",
 };
 
 function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
