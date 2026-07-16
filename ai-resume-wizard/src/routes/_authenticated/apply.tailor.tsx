@@ -299,7 +299,7 @@ function TailorPage() {
                   disabled={pdfLoading || docxLoading}
                   className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
-                  {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
+                  {pdfLoading ? "Building PDF…" : "Resume PDF"}
                 </button>
                 <button
                   type="button"
@@ -307,7 +307,34 @@ function TailorPage() {
                   disabled={pdfLoading || docxLoading}
                   className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
-                  {docxLoading ? "Building DOCX…" : "Download tailored DOCX"}
+                  {docxLoading ? "Building DOCX…" : "Resume DOCX"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCoverLetter("pdf")}
+                  disabled={clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {clPdfLoading ? "Building PDF…" : "Cover letter PDF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCoverLetter("docx")}
+                  disabled={clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {clDocxLoading ? "Building DOCX…" : "Cover letter DOCX"}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await download("pdf");
+                    await downloadCoverLetter("pdf");
+                  }}
+                  disabled={pdfLoading || docxLoading || clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md bg-primary/10 border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary disabled:opacity-50 hover:bg-primary/20"
+                >
+                  Download both (PDF)
                 </button>
               </>
             )}
