@@ -84,6 +84,155 @@ export const getMatchPrefill = createServerFn({ method: "GET" })
     };
   });
 
+export type ApplyContext = {
+  match: PersonalMatch;
+  jobDescription: string | null;
+  jdSource: "job_listing" | "tailor_session" | null;
+  salary: {
+    min: number | null;
+    max: number | null;
+    currency: string | null;
+    period: string | null;
+  } | null;
+  experienceLevel: string | null;
+  remote: boolean | null;
+  postingUrl: string | null;
+  applied: boolean;
+  stack: { ids: string[]; index: number; prevId: string | null; nextId: string | null };
+};
+
+function normLower(s: string | null | undefined) {
+  return (s ?? "").trim().toLowerCase();
+}
+
+export const getApplyContext = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ matchId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<ApplyContext | null> => {
+    const { data: match, error } = await context.supabase
+      .from("personal_matches")
+      .select("*")
+      .eq("id", data.matchId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!match) return null;
+    const m = match as PersonalMatch;
+
+    let jd: string | null = null;
+    let jdSource: "job_listing" | "tailor_session" | null = null;
+    let salary: ApplyContext["salary"] = null;
+    let experienceLevel: string | null = null;
+    let remote: boolean | null = null;
+    let postingUrl: string | null = m.role_url ?? null;
+
+    if (m.job_listing_id) {
+      const { data: jl } = await context.supabase
+        .from("job_listings")
+        .select("description, salary_min, salary_max, salary_currency, salary_period, experience_level, remote, url")
+        .eq("id", m.job_listing_id)
+        .maybeSingle();
+      if (jl) {
+        if (jl.description && jl.description.trim().length >= 30) {
+          jd = jl.description;
+          jdSource = "job_listing";
+        }
+        if (jl.salary_min || jl.salary_max) {
+          salary = {
+            min: jl.salary_min,
+            max: jl.salary_max,
+            currency: jl.salary_currency,
+            period: jl.salary_period,
+          };
+        }
+        experienceLevel = jl.experience_level;
+        remote = jl.remote;
+        if (!postingUrl) postingUrl = jl.url;
+      }
+    }
+
+    if (!jd) {
+      const { data: sess } = await context.supabase
+        .from("tailor_sessions")
+        .select("jd_text")
+        .eq("user_id", context.userId)
+        .ilike("company", m.company)
+        .ilike("role", m.role)
+        .not("jd_text", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (sess?.jd_text && sess.jd_text.trim().length >= 30) {
+        jd = sess.jd_text;
+        jdSource = "tailor_session";
+      }
+    }
+
+    // Build stack of un-applied matches (excluding current only if applied).
+    const [{ data: allMatches }, { data: allApps }] = await Promise.all([
+      context.supabase
+        .from("personal_matches")
+        .select("id, company, role, created_at")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: false }),
+      context.supabase
+        .from("applications")
+        .select("company, role")
+        .eq("user_id", context.userId),
+    ]);
+    const appliedKeys = new Set(
+      (allApps ?? []).map((a) => `${normLower(a.company)}::${normLower(a.role)}`),
+    );
+    const currentApplied = appliedKeys.has(`${normLower(m.company)}::${normLower(m.role)}`);
+    const stackIds = (allMatches ?? [])
+      .filter((r) => {
+        const key = `${normLower(r.company)}::${normLower(r.role)}`;
+        if (r.id === m.id) return true; // keep current in stack for context
+        return !appliedKeys.has(key);
+      })
+      .map((r) => r.id);
+    const idx = stackIds.indexOf(m.id);
+    const prevId = idx > 0 ? stackIds[idx - 1] : null;
+    const nextId = idx >= 0 && idx < stackIds.length - 1 ? stackIds[idx + 1] : null;
+
+    return {
+      match: m,
+      jobDescription: jd,
+      jdSource,
+      salary,
+      experienceLevel,
+      remote,
+      postingUrl,
+      applied: currentApplied,
+      stack: { ids: stackIds, index: idx, prevId, nextId },
+    };
+  });
+
+export const getNextUnappliedMatch = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ matchId: string | null; total: number }> => {
+    const [{ data: allMatches }, { data: allApps }] = await Promise.all([
+      context.supabase
+        .from("personal_matches")
+        .select("id, company, role")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: false }),
+      context.supabase
+        .from("applications")
+        .select("company, role")
+        .eq("user_id", context.userId),
+    ]);
+    const appliedKeys = new Set(
+      (allApps ?? []).map((a) => `${normLower(a.company)}::${normLower(a.role)}`),
+    );
+    const unapplied = (allMatches ?? []).filter(
+      (r) => !appliedKeys.has(`${normLower(r.company)}::${normLower(r.role)}`),
+    );
+    return { matchId: unapplied[0]?.id ?? null, total: unapplied.length };
+  });
+
 export const listMatches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<PersonalMatch[]> => {
