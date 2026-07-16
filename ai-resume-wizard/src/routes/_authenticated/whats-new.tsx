@@ -116,9 +116,8 @@ function WhatsNewPage() {
                 </div>
               </li>
             ))}
-          </ol>
-        </div>
-      </main>
-    </>
+        </ol>
+      </div>
+    </main>
   );
 }
