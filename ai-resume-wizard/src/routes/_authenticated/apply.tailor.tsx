@@ -167,6 +167,51 @@ function TailorPage() {
     }
   };
 
+  const downloadCoverLetter = async (kind: "pdf" | "docx") => {
+    if (!result) return;
+    if (!resumeData?.resume) {
+      setErr("No resume found. Visit /resume to set one up first.");
+      return;
+    }
+    kind === "pdf" ? setClPdfLoading(true) : setClDocxLoading(true);
+    try {
+      const url = kind === "pdf" ? "/api/cover-letter-pdf" : "/api/cover-letter-docx";
+      const R = resumeData.resume;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: {
+            name: R.name || "",
+            email: R.email || "",
+            phone: R.phone || "",
+            location: R.location || "",
+          },
+          company,
+          role,
+          coverLetter: result.coverLetter,
+        }),
+      });
+      if (!res.ok) throw new Error(`Cover letter ${kind.toUpperCase()} failed (${res.status})`);
+      const blob = await res.blob();
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const slug = (R.name || "Cover_Letter").replace(/[^a-z0-9]/gi, "_");
+      a.href = href;
+      a.download = company
+        ? `${slug}_Cover_Letter_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
+        : `${slug}_Cover_Letter.${kind}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : `Cover letter ${kind.toUpperCase()} export failed.`);
+    } finally {
+      kind === "pdf" ? setClPdfLoading(false) : setClDocxLoading(false);
+    }
+  };
+
   const copy = async (label: string, text: string) => {
     await navigator.clipboard.writeText(text);
     setCopied(label);
