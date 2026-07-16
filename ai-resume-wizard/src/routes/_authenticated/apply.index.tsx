@@ -272,6 +272,45 @@ ${R.email ? `Say hi: ${R.email}` : ""}`.trim();
   );
 }
 
+function NextApplyCard() {
+  const fn = useServerFn(getNextUnappliedMatch);
+  const { data } = useQuery({
+    queryKey: ["next-unapplied-match"],
+    queryFn: () => fn(),
+  });
+  if (!data || !data.matchId) return null;
+  return (
+    <section className="mt-10">
+      <Link
+        to="/apply/go"
+        search={{ matchId: data.matchId }}
+        className="block rounded-lg border-2 border-primary/40 bg-primary/5 p-6 hover:border-primary/70 transition-colors"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Start here
+            </p>
+            <h3
+              className="mt-2 text-2xl font-bold tracking-tight text-foreground"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Work your next application on one screen
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tailored resume, cover letter, referral DM, downloads, and log-as-applied —
+              all in one flow. {data.total} match{data.total === 1 ? "" : "es"} left to work.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+            Open →
+          </span>
+        </div>
+      </Link>
+    </section>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-14">
