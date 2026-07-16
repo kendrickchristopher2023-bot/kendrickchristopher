@@ -278,12 +278,14 @@ function DiscoverPage() {
               <option value="greenhouse">Greenhouse</option>
               <option value="lever">Lever</option>
               <option value="ashby">Ashby</option>
+              <option value="smartrecruiters">SmartRecruiters</option>
               <option value="remotive">Remotive (remote)</option>
               <option value="remoteok">RemoteOK (remote)</option>
               <option value="jobicy">Jobicy (remote, US)</option>
               <option value="arbeitnow">Arbeitnow</option>
               <option value="themuse">The Muse (US metros)</option>
             </select>
+
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
