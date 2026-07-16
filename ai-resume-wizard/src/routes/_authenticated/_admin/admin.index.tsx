@@ -13,6 +13,13 @@ import {
   getAdminAnalytics,
 } from "@/lib/admin.functions";
 import { getAppStatus, setAppStatus } from "@/lib/app-status.functions";
+import {
+  listChangelog,
+  createChangelogEntry,
+  updateChangelogEntry,
+  deleteChangelogEntry,
+  type ChangelogEntry,
+} from "@/lib/changelog.functions";
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/")({
   head: () => ({
