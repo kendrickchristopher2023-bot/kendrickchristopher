@@ -42,20 +42,23 @@ export const touchLastActive = createMiddleware({ type: "function" }).server(
       const prev = lastWriteAt.get(sub) ?? 0;
       if (now - prev < THROTTLE_MS) return result;
       lastWriteAt.set(sub, now);
-      void (async () => {
-        try {
-          const { supabaseAdmin } = await import(
-            "@/integrations/supabase/client.server"
-          );
-          await supabaseAdmin
-            .from("profiles")
-            .update({ last_active_at: new Date(now).toISOString() })
-            .eq("id", sub);
-        } catch (err) {
-          // Analytics nicety — never surface.
-          console.warn("[touchLastActive] update failed", err);
-        }
-      })();
+      // Await the write. Same isolate-teardown race as the extension endpoint:
+      // an unawaited promise after the middleware returns can be dropped on
+      // Workers. Cost is bounded by the 5-min throttle — at most one indexed
+      // UPDATE per user per 5 minutes pays a few ms; every other call is a
+      // no-op map lookup. Errors are swallowed so tracking never breaks a
+      // request.
+      try {
+        const { supabaseAdmin } = await import(
+          "@/integrations/supabase/client.server"
+        );
+        await supabaseAdmin
+          .from("profiles")
+          .update({ last_active_at: new Date(now).toISOString() })
+          .eq("id", sub);
+      } catch (err) {
+        console.warn("[touchLastActive] update failed", err);
+      }
     } catch {
       // never break the request
     }
