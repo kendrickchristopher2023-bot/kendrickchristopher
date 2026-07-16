@@ -744,15 +744,26 @@ async function fetchUsaJobsMetro(loc: string, apiKey: string): Promise<UsaJobsIt
   return items;
 }
 
-export async function fetchUsaJobs(): Promise<RawJob[]> {
+// Fetch USAJOBS. If `metros` is provided, only those LocationNames are queried;
+// otherwise every metro is queried in parallel. Sub-slicing per metro is how
+// the dispatch keeps each request inside the Worker's time budget.
+export async function fetchUsaJobs(metros?: string[]): Promise<RawJob[]> {
   const apiKey = process.env.USAJOBS_API_KEY;
   if (!apiKey) {
     console.warn("[usajobs] USAJOBS_API_KEY is not set — skipping (adapter returns []). Add it in Project Settings → Secrets to enable.");
     return [];
   }
+  const locations = metros && metros.length > 0 ? metros : USAJOBS_LOCATIONS;
   // Fetch metros in parallel; one failing metro can't block the batch.
   const perMetro = await Promise.all(
-    USAJOBS_LOCATIONS.map(async (loc) => ({ loc, items: await fetchUsaJobsMetro(loc, apiKey) })),
+    locations.map(async (loc) => {
+      try {
+        return { loc, items: await fetchUsaJobsMetro(loc, apiKey) };
+      } catch (e) {
+        console.warn(`[usajobs] metro ${loc} failed:`, e instanceof Error ? e.message : e);
+        return { loc, items: [] as UsaJobsItem[] };
+      }
+    }),
   );
   const out: RawJob[] = [];
   const seen = new Set<string>();
