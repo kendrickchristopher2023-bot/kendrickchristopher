@@ -56,7 +56,7 @@ export async function runRefreshJobs(): Promise<Summary> {
     .select("id, source, slug, company_name")
     // Aggregators handled below — skip any watched rows for them so we don't
     // double-fetch or require a bogus slug.
-    .not("source", "in", "(remotive,remoteok,jobicy,arbeitnow,themuse)");
+    .not("source", "in", "(remotive,remoteok,jobicy,arbeitnow,themuse,usajobs)");
   if (error) throw error;
 
   // Deduplicate (source, slug) across users: if two users both watch Stripe,

@@ -632,6 +632,178 @@ export async function fetchSmartRecruiters(slug: string, companyName: string): P
   return out;
 }
 
+// ---------- USAJOBS ----------
+// https://developer.usajobs.gov/api-reference/get-api-search
+// Requires an Authorization-Key (per-account) and a User-Agent set to the
+// registered email. Queried once per Southeastern metro to fill the huge
+// coverage gap for NC/SC/GA/TN/VA/FL. Structured salary lives in
+// PositionRemuneration[] with RateIntervalCode ("Per Year", "Per Hour", ...).
+const USAJOBS_UA = "kendrickchristopher@hotmail.com"; // registered USAJOBS account email — required header, not a secret
+const USAJOBS_LOCATIONS = [
+  // USAJOBS wants FULL state names in LocationName ("Charlotte, North Carolina").
+  "Charlotte, North Carolina",
+  "Raleigh, North Carolina",
+  "Durham, North Carolina",
+  "Greensboro, North Carolina",
+  "Winston-Salem, North Carolina",
+  "Atlanta, Georgia",
+  "Savannah, Georgia",
+  "Charleston, South Carolina",
+  "Columbia, South Carolina",
+  "Greenville, South Carolina",
+  "Jacksonville, Florida",
+  "Orlando, Florida",
+  "Tampa, Florida",
+  "Miami, Florida",
+  "Richmond, Virginia",
+  "Virginia Beach, Virginia",
+  "Knoxville, Tennessee",
+  "Nashville, Tennessee",
+  "Memphis, Tennessee",
+  "Birmingham, Alabama",
+  "Huntsville, Alabama",
+  "Louisville, Kentucky",
+];
+const USAJOBS_MAX_PAGES = 5; // hard cap per metro (ResultsPerPage=500 → up to 2500 per metro)
+
+type UsaJobsItem = {
+  MatchedObjectId?: string;
+  MatchedObjectDescriptor?: {
+    PositionID?: string;
+    PositionTitle?: string;
+    PositionURI?: string;
+    PositionLocation?: Array<{ LocationName?: string; CityName?: string; CountrySubDivisionCode?: string; CountryCode?: string }>;
+    OrganizationName?: string;
+    DepartmentName?: string;
+    PublicationStartDate?: string;
+    PositionRemuneration?: Array<{
+      MinimumRange?: string | number;
+      MaximumRange?: string | number;
+      RateIntervalCode?: string;
+      Description?: string;
+    }>;
+    UserArea?: { Details?: { JobSummary?: string } };
+    QualificationSummary?: string;
+    JobGrade?: Array<{ Code?: string }>;
+  };
+};
+type UsaJobsResp = {
+  SearchResult?: {
+    SearchResultCount?: number;
+    SearchResultCountAll?: number;
+    SearchResultItems?: UsaJobsItem[];
+  };
+};
+
+function usaJobsInterval(code: string | undefined): string | null {
+  if (!code) return null;
+  const c = code.trim().toLowerCase();
+  if (c.includes("year") || c === "pa") return "year";
+  if (c.includes("hour") || c === "ph") return "hour";
+  if (c.includes("month") || c === "pm") return "month";
+  if (c.includes("week") || c === "pw" || c === "bw") return "week";
+  if (c.includes("day") || c === "pd") return "day";
+  return null;
+}
+
+async function fetchUsaJobsMetro(loc: string, apiKey: string): Promise<UsaJobsItem[]> {
+  const items: UsaJobsItem[] = [];
+  for (let page = 1; page <= USAJOBS_MAX_PAGES; page++) {
+    const url = `https://data.usajobs.gov/api/search?LocationName=${encodeURIComponent(loc)}&ResultsPerPage=500&Page=${page}`;
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    let data: UsaJobsResp;
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Host: "data.usajobs.gov",
+          "User-Agent": USAJOBS_UA,
+          "Authorization-Key": apiKey,
+          Accept: "application/json",
+        },
+        signal: ctrl.signal,
+      });
+      if (!res.ok) {
+        // 401 → bad/expired key; log so it's obvious it's the key not the code.
+        console.warn(`[usajobs] ${res.status} ${res.statusText} for ${loc} page ${page}`);
+        break;
+      }
+      data = (await res.json()) as UsaJobsResp;
+    } catch (e) {
+      console.warn(`[usajobs] fetch failed for ${loc} page ${page}:`, e instanceof Error ? e.message : e);
+      break;
+    } finally {
+      clearTimeout(t);
+    }
+    const batch = data.SearchResult?.SearchResultItems ?? [];
+    items.push(...batch);
+    if (batch.length < 500) break;
+  }
+  return items;
+}
+
+export async function fetchUsaJobs(): Promise<RawJob[]> {
+  const apiKey = process.env.USAJOBS_API_KEY;
+  if (!apiKey) {
+    console.warn("[usajobs] USAJOBS_API_KEY is not set — skipping (adapter returns []). Add it in Project Settings → Secrets to enable.");
+    return [];
+  }
+  // Fetch metros in parallel; one failing metro can't block the batch.
+  const perMetro = await Promise.all(
+    USAJOBS_LOCATIONS.map(async (loc) => ({ loc, items: await fetchUsaJobsMetro(loc, apiKey) })),
+  );
+  const out: RawJob[] = [];
+  const seen = new Set<string>();
+  for (const { loc, items } of perMetro) {
+    for (const it of items) {
+      const d = it.MatchedObjectDescriptor;
+      if (!d) continue;
+      const id = it.MatchedObjectId ?? d.PositionID;
+      if (!id) continue;
+      const key = `usajobs:${id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const locName =
+        (d.PositionLocation ?? []).map((l) => l.LocationName).filter(Boolean).join("; ") || loc;
+
+      const rem = d.PositionRemuneration?.[0];
+      const toNum = (v: unknown): number | null => {
+        const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
+      const sMin = toNum(rem?.MinimumRange);
+      const sMax = toNum(rem?.MaximumRange);
+      const period = usaJobsInterval(rem?.RateIntervalCode);
+
+      out.push(
+        withParsed(
+          {
+            source: "usajobs",
+            source_id: String(id),
+            source_slug: null,
+            company: d.OrganizationName ?? d.DepartmentName ?? "U.S. Federal Government",
+            role: d.PositionTitle ?? "Role",
+            location: locName,
+            url: d.PositionURI ?? "",
+            description: stripHtml(d.UserArea?.Details?.JobSummary ?? d.QualificationSummary ?? null),
+            remote: looksRemote(locName),
+            posted_at: d.PublicationStartDate ?? null,
+          },
+          {
+            levelHint: d.JobGrade?.[0]?.Code ?? null,
+            salary:
+              (sMin != null || sMax != null) && period
+                ? { min: sMin, max: sMax, currency: "USD", period }
+                : null,
+          },
+        ),
+      );
+    }
+  }
+  return out.filter((j) => j.url);
+}
+
 export async function fetchOne(source: string, slug: string, companyName: string): Promise<RawJob[]> {
   switch (source) {
     case "greenhouse":
@@ -652,6 +824,8 @@ export async function fetchOne(source: string, slug: string, companyName: string
       return fetchArbeitnow();
     case "themuse":
       return fetchTheMuse();
+    case "usajobs":
+      return fetchUsaJobs();
     default:
       throw new Error(`Unknown source: ${source}`);
   }
@@ -660,7 +834,7 @@ export async function fetchOne(source: string, slug: string, companyName: string
 // Aggregators don't require a watched company row — the refresh loop calls
 // these in addition to iterating watched_companies. SmartRecruiters is per
 // company (verified: no keyless cross-company endpoint), so it's NOT here.
-export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse", "usajobs"] as const;
 export async function fetchAllAggregators(): Promise<Array<{ source: string; jobs: RawJob[]; error?: string }>> {
   const results = await Promise.all(
     AGGREGATOR_SOURCES.map(async (s) => {
