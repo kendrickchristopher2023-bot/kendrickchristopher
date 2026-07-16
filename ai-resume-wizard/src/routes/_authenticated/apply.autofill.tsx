@@ -132,23 +132,45 @@ function AutofillPage() {
           </p>
         )}
 
+
+        {answers.some((a) => /\{\{[^}]*\}\}/.test(a.a)) && (
+          <div className="mt-8 rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-foreground">
+            <p className="font-semibold">Some answers need your attention.</p>
+            <p className="mt-1 text-muted-foreground">
+              Answers marked <strong>Needs customizing</strong> contain <code>{"{{...}}"}</code> placeholders and will be
+              skipped by the browser extension. Edit them by hand per application, or regenerate to get fresh drafts
+              (older answers may have unnecessary placeholders — regenerating fixes that).
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 space-y-4">
-          {answers.map((item, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card">
-              <div className="flex items-center justify-between border-b border-border px-4 py-2">
-                <p className="text-sm font-semibold text-foreground">{fill(item.q)}</p>
-                <button
-                  onClick={() => copy(i, item.a)}
-                  className="text-xs font-medium text-primary hover:underline shrink-0 ml-3"
-                >
-                  {copiedIdx === i ? "Copied ✓" : "Copy"}
-                </button>
+          {answers.map((item, i) => {
+            const needsCustomizing = /\{\{[^}]*\}\}/.test(item.a);
+            return (
+              <div key={i} className="rounded-lg border border-border bg-card">
+                <div className="flex items-center justify-between border-b border-border px-4 py-2 gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{fill(item.q)}</p>
+                    {needsCustomizing && (
+                      <span className="shrink-0 rounded-full border border-amber-500/50 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                        Needs customizing — won't autofill
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => copy(i, item.a)}
+                    className="text-xs font-medium text-primary hover:underline shrink-0"
+                  >
+                    {copiedIdx === i ? "Copied ✓" : "Copy"}
+                  </button>
+                </div>
+                <p className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground">
+                  {fill(item.a)}
+                </p>
               </div>
-              <p className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground">
-                {fill(item.a)}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </main>

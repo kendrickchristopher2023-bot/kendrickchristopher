@@ -23,7 +23,9 @@ const STANDARD_QUESTIONS = [
 const SYSTEM = `You draft honest, first-person answers to standard job-application screener questions. Rules:
 - Ground every answer in the candidate's actual resume — do not fabricate employers, metrics, or experiences.
 - Keep answers 3–6 sentences. Concrete, professional, human.
-- Preserve the literal token {{Company}} wherever the question mentions a company; the UI substitutes it later.
+- Answers MUST be self-contained and submittable as-is with NO placeholders. Write around the employer's name using natural phrasing like "your team", "this role", "the company", or "your organization".
+- The ONLY exception: a question that is fundamentally meaningless without naming the employer (e.g. "Why do you want to work at this company?"). For those — and ONLY those — put the literal token {{Company}} in the answer as a deliberate stop sign the candidate must customize per-application. Never use {{Company}} as filler in answers about salary, notice period, relocation, leaving reasons, strengths, or behavioral stories — those work fine without naming anyone.
+- In the returned "q" field, preserve the literal token {{Company}} exactly as it appears in the input question.
 - Return ONLY valid JSON: { "answers": [ { "q": "...", "a": "..." } ] } in the same order as the questions given.`;
 
 export const generateScreenerAnswers = createServerFn({ method: "POST" })
