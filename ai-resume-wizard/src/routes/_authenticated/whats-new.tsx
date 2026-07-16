@@ -64,10 +64,8 @@ function WhatsNewPage() {
   const entries = (q.data?.entries ?? []).filter((e) => e.published);
 
   return (
-    <>
-      <AppNav />
-      <main className="min-h-screen bg-background px-6 py-10">
-        <div className="mx-auto max-w-3xl">
+    <main className="min-h-screen bg-background px-6 py-10">
+      <div className="mx-auto max-w-3xl">
           <header className="mb-8">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Product updates
