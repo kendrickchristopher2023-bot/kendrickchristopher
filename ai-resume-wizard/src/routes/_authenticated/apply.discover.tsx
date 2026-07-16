@@ -278,12 +278,14 @@ function DiscoverPage() {
               <option value="greenhouse">Greenhouse</option>
               <option value="lever">Lever</option>
               <option value="ashby">Ashby</option>
+              <option value="smartrecruiters">SmartRecruiters</option>
               <option value="remotive">Remotive (remote)</option>
               <option value="remoteok">RemoteOK (remote)</option>
               <option value="jobicy">Jobicy (remote, US)</option>
               <option value="arbeitnow">Arbeitnow</option>
               <option value="themuse">The Muse (US metros)</option>
             </select>
+
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -582,7 +584,7 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
   const q = useQuery({ queryKey: ["watched-companies"], queryFn: () => listFn() });
   const prefsQ = useQuery({ queryKey: ["feed-prefs"], queryFn: () => getPrefsFn() });
 
-  const [source, setSource] = useState<"greenhouse" | "lever" | "ashby">("greenhouse");
+  const [source, setSource] = useState<"greenhouse" | "lever" | "ashby" | "smartrecruiters">("greenhouse");
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -675,7 +677,9 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
               <option value="greenhouse">Greenhouse</option>
               <option value="lever">Lever</option>
               <option value="ashby">Ashby</option>
+              <option value="smartrecruiters">SmartRecruiters</option>
             </select>
+
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}

@@ -453,8 +453,10 @@ export async function fetchArbeitnow(): Promise<RawJob[]> {
 // ---------- The Muse ----------
 // https://www.themuse.com/api/public/jobs  (keyless; supports ?location=Charlotte,%20NC&page=0)
 // Called once per metro so US regions (Charlotte, Atlanta, Raleigh, etc.) get real coverage.
+// Each response includes `page_count`; we paginate up to MUSE_MAX_PAGES per metro.
 const MUSE_LOCATIONS = [
   "Flexible / Remote",
+  // Original set
   "Charlotte, NC",
   "Atlanta, GA",
   "Raleigh, NC",
@@ -473,48 +475,161 @@ const MUSE_LOCATIONS = [
   "Los Angeles, CA",
   "Seattle, WA",
   "Portland, OR",
+  // Southeast expansion — Greensboro/Winston-Salem were returning zero
+  // simply because they were never queried.
+  "Greensboro, NC",
+  "Winston-Salem, NC",
+  "Durham, NC",
+  "Charleston, SC",
+  "Columbia, SC",
+  "Greenville, SC",
+  "Savannah, GA",
+  "Jacksonville, FL",
+  "Orlando, FL",
+  "Tampa, FL",
+  "Richmond, VA",
+  "Virginia Beach, VA",
+  "Knoxville, TN",
+  "Memphis, TN",
+  "Birmingham, AL",
+  "Louisville, KY",
+  "Huntsville, AL",
 ];
+
+const MUSE_MAX_PAGES = 10; // hard cap per metro
+type MuseJob = {
+  id: number;
+  name: string;
+  company?: { name?: string };
+  locations?: Array<{ name?: string }>;
+  refs?: { landing_page?: string };
+  contents?: string;
+  publication_date?: string;
+};
+type MuseResp = { results?: MuseJob[]; page?: number; page_count?: number };
+
+async function fetchMuseMetro(loc: string): Promise<MuseJob[]> {
+  const base = `https://www.themuse.com/api/public/jobs?location=${encodeURIComponent(loc)}`;
+  let first: MuseResp;
+  try {
+    first = (await fetchJson(`${base}&page=0`)) as MuseResp;
+  } catch {
+    return [];
+  }
+  const results: MuseJob[] = [...(first.results ?? [])];
+  const total = Math.min(first.page_count ?? 1, MUSE_MAX_PAGES);
+  if (total <= 1) return results;
+
+  // Fetch remaining pages for this metro in parallel. One bad page shouldn't
+  // sink the metro — Promise.allSettled + swallow rejections.
+  const rest = await Promise.allSettled(
+    Array.from({ length: total - 1 }, (_, i) =>
+      fetchJson(`${base}&page=${i + 1}`) as Promise<MuseResp>,
+    ),
+  );
+  for (const r of rest) {
+    if (r.status === "fulfilled") results.push(...(r.value.results ?? []));
+  }
+  return results;
+}
+
 export async function fetchTheMuse(): Promise<RawJob[]> {
+  // Fetch all metros in parallel — one failing metro can't block the batch.
+  const perMetro = await Promise.all(
+    MUSE_LOCATIONS.map(async (loc) => ({ loc, jobs: await fetchMuseMetro(loc) })),
+  );
   const out: RawJob[] = [];
   const seen = new Set<string>();
-  for (const loc of MUSE_LOCATIONS) {
-    const url = `https://www.themuse.com/api/public/jobs?location=${encodeURIComponent(loc)}&page=0`;
-    try {
-      const data = (await fetchJson(url)) as {
-        results?: Array<{
-          id: number;
-          name: string;
-          company?: { name?: string };
-          locations?: Array<{ name?: string }>;
-          refs?: { landing_page?: string };
-          contents?: string;
-          publication_date?: string;
-        }>;
-      };
-      for (const j of data.results ?? []) {
-        const key = `muse:${j.id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        const locName = j.locations?.map((l) => l.name).filter(Boolean).join(", ") || loc;
-        out.push(withParsed({
-          source: "themuse",
-          source_id: String(j.id),
-          source_slug: null,
-          company: j.company?.name ?? "Unknown",
-          role: j.name,
-          location: locName,
-          url: j.refs?.landing_page ?? "",
-          description: stripHtml(j.contents ?? null),
-          remote: looksRemote(locName),
-          posted_at: j.publication_date ?? null,
-        }));
-
-      }
-    } catch {
-      // One metro failing shouldn't kill the batch.
+  for (const { loc, jobs } of perMetro) {
+    for (const j of jobs) {
+      const key = `muse:${j.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const locName = j.locations?.map((l) => l.name).filter(Boolean).join(", ") || loc;
+      out.push(withParsed({
+        source: "themuse",
+        source_id: String(j.id),
+        source_slug: null,
+        company: j.company?.name ?? "Unknown",
+        role: j.name,
+        location: locName,
+        url: j.refs?.landing_page ?? "",
+        description: stripHtml(j.contents ?? null),
+        remote: looksRemote(locName),
+        posted_at: j.publication_date ?? null,
+      }));
     }
   }
   return out.filter((j) => j.url);
+}
+
+// ---------- SmartRecruiters ----------
+// https://api.smartrecruiters.com/v1/companies/{company}/postings
+// Verified: no keyless cross-company/location search endpoint exists — the
+// /v1/postings root returns 404 without a company identifier. So this is a
+// PER-COMPANY source (alongside greenhouse/lever/ashby), not an aggregator.
+// The list response omits URL + description; we build a deterministic public
+// posting URL (jobs.smartrecruiters.com/{company}/{id}) which redirects to
+// the canonical slugged URL. Skipping per-posting detail fetches keeps the
+// N+1 cost off the refresh path — description stays null, same as some
+// aggregator rows already do.
+export async function fetchSmartRecruiters(slug: string, companyName: string): Promise<RawJob[]> {
+  const out: RawJob[] = [];
+  const PAGE_LIMIT = 100;
+  const MAX_PAGES = 10; // hard cap → max 1000 postings per company
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const url = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(slug)}/postings?limit=${PAGE_LIMIT}&offset=${page * PAGE_LIMIT}`;
+    const data = (await fetchJson(url)) as {
+      totalFound?: number;
+      content?: Array<{
+        id: string;
+        name: string;
+        releasedDate?: string;
+        location?: {
+          city?: string;
+          region?: string;
+          country?: string;
+          remote?: boolean;
+          fullLocation?: string;
+        };
+        experienceLevel?: { label?: string };
+        typeOfEmployment?: { label?: string };
+      }>;
+    };
+    const items = data.content ?? [];
+    for (const j of items) {
+      const composed =
+        j.location?.fullLocation ??
+        [j.location?.city, j.location?.region, j.location?.country?.toUpperCase()]
+          .filter(Boolean)
+          .join(", ");
+      const loc = composed && composed.length > 0 ? composed : null;
+
+      out.push(
+        withParsed(
+          {
+            source: "smartrecruiters",
+            source_id: `${slug}:${j.id}`,
+            source_slug: slug,
+            company: companyName,
+            role: j.name,
+            location: loc,
+            // Deterministic public URL — SmartRecruiters redirects the un-slugged
+            // form to the canonical posting page.
+            url: `https://jobs.smartrecruiters.com/${encodeURIComponent(slug)}/${encodeURIComponent(j.id)}`,
+            description: null,
+            remote: !!j.location?.remote || looksRemote(loc),
+            posted_at: j.releasedDate ?? null,
+          },
+          {
+            levelHint: j.experienceLevel?.label ?? j.typeOfEmployment?.label ?? null,
+          },
+        ),
+      );
+    }
+    if (items.length < PAGE_LIMIT) break;
+  }
+  return out;
 }
 
 export async function fetchOne(source: string, slug: string, companyName: string): Promise<RawJob[]> {
@@ -525,6 +640,8 @@ export async function fetchOne(source: string, slug: string, companyName: string
       return fetchLever(slug, companyName);
     case "ashby":
       return fetchAshby(slug, companyName);
+    case "smartrecruiters":
+      return fetchSmartRecruiters(slug, companyName);
     case "remotive":
       return fetchRemotive();
     case "remoteok":
@@ -541,7 +658,8 @@ export async function fetchOne(source: string, slug: string, companyName: string
 }
 
 // Aggregators don't require a watched company row — the refresh loop calls
-// these in addition to iterating watched_companies.
+// these in addition to iterating watched_companies. SmartRecruiters is per
+// company (verified: no keyless cross-company endpoint), so it's NOT here.
 export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
 export async function fetchAllAggregators(): Promise<Array<{ source: string; jobs: RawJob[]; error?: string }>> {
   const results = await Promise.all(
@@ -555,4 +673,5 @@ export async function fetchAllAggregators(): Promise<Array<{ source: string; job
   );
   return results;
 }
+
 
