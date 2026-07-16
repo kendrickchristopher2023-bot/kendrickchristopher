@@ -660,7 +660,7 @@ export async function fetchOne(source: string, slug: string, companyName: string
 // Aggregators don't require a watched company row — the refresh loop calls
 // these in addition to iterating watched_companies. SmartRecruiters is per
 // company (verified: no keyless cross-company endpoint), so it's NOT here.
-export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export const AGGREGATOR_SOURCES = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse", "usajobs"] as const;
 export async function fetchAllAggregators(): Promise<Array<{ source: string; jobs: RawJob[]; error?: string }>> {
   const results = await Promise.all(
     AGGREGATOR_SOURCES.map(async (s) => {
