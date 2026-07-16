@@ -181,6 +181,42 @@ export type Database = {
           },
         ]
       }
+      changelog: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       job_listings: {
         Row: {
           city: string | null
@@ -323,6 +359,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          changelog_seen_at: string | null
           created_at: string
           email: string
           email_notifications: boolean
@@ -338,6 +375,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          changelog_seen_at?: string | null
           created_at?: string
           email: string
           email_notifications?: boolean
@@ -353,6 +391,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          changelog_seen_at?: string | null
           created_at?: string
           email?: string
           email_notifications?: boolean
