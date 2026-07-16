@@ -80,11 +80,19 @@ export const Route = createFileRoute("/api/extension/profile")({
           screener_answers: (profile?.screener_answers as Array<{ q: string; a: string }> | null) ?? [],
         };
 
-        // Fire-and-forget last_used_at update; do not block the response.
-        void supabaseAdmin
-          .from("api_tokens")
-          .update({ last_used_at: new Date().toISOString() })
-          .eq("id", tokRow.id);
+        // Await the tracking write: on Workers, unawaited promises after the
+        // Response is returned are frequently dropped when the isolate is torn
+        // down. A single indexed UPDATE is cheap; correctness > shaving ms.
+        // Wrapped in try/catch so a tracking failure never breaks the payload.
+        try {
+          const { error: updErr } = await supabaseAdmin
+            .from("api_tokens")
+            .update({ last_used_at: new Date().toISOString() })
+            .eq("id", tokRow.id);
+          if (updErr) console.warn("[extension.profile] last_used_at update failed", updErr);
+        } catch (err) {
+          console.warn("[extension.profile] last_used_at update threw", err);
+        }
 
         return jsonResponse(payload);
       },
