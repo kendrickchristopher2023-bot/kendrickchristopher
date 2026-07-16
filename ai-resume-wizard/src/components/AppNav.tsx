@@ -1,14 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Menu, X, Shield } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Menu, X, Shield, Sparkles } from "lucide-react";
 import { currentUserIsAdmin } from "@/lib/admin.functions";
+import { getChangelogUnreadCount } from "@/lib/changelog.functions";
 
 type NavItem = {
   to: string;
   label: string;
   adminOnly?: boolean;
   icon?: typeof Shield;
+  badgeKey?: "changelog";
 };
 
 const ITEMS: NavItem[] = [
@@ -19,19 +22,15 @@ const ITEMS: NavItem[] = [
   { to: "/resume", label: "Resume" },
   { to: "/resumes", label: "Resume Tracks" },
   { to: "/settings", label: "Settings" },
+  { to: "/whats-new", label: "What's new", icon: Sparkles, badgeKey: "changelog" },
   { to: "/help/getting-started", label: "Getting Started" },
   { to: "/help/faq", label: "FAQ" },
   { to: "/admin", label: "Admin", adminOnly: true, icon: Shield },
 ];
 
-/**
- * Persistent top nav for every /_authenticated/* page.
- * Admin link only renders when the signed-in user actually has the admin
- * role — server-checked via currentUserIsAdmin, same as the (removed)
- * floating AdminButton.
- */
 export function AppNav() {
   const check = useServerFn(currentUserIsAdmin);
+  const unreadFn = useServerFn(getChangelogUnreadCount);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -46,14 +45,35 @@ export function AppNav() {
     };
   }, [check]);
 
-  // Close the mobile sheet when the route changes.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
+  const unreadQ = useQuery({
+    queryKey: ["changelog-unread"],
+    queryFn: () => unreadFn(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const unreadCount = unreadQ.data?.unreadCount ?? 0;
+
   const visible = ITEMS.filter((i) => !i.adminOnly || isAdmin);
   const isActive = (to: string) =>
     to === "/apply" ? pathname === "/apply" : pathname.startsWith(to);
+
+  const renderBadge = (item: NavItem) => {
+    if (item.badgeKey === "changelog" && unreadCount > 0) {
+      return (
+        <span
+          aria-label={`${unreadCount} new`}
+          className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground"
+        >
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <>
@@ -83,6 +103,7 @@ export function AppNav() {
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
                   {item.label}
+                  {renderBadge(item)}
                 </Link>
               );
             })}
@@ -117,6 +138,7 @@ export function AppNav() {
                   >
                     {Icon && <Icon className="h-4 w-4" />}
                     {item.label}
+                    {renderBadge(item)}
                   </Link>
                 );
               })}
