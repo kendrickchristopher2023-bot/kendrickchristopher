@@ -581,6 +581,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      dispatch_refresh_slices: { Args: never; Returns: Json }
       increment_usage: {
         Args: { _action: string }
         Returns: {
