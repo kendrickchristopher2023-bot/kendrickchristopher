@@ -382,12 +382,14 @@ function TailorPage() {
               </div>
             </div>
 
-            <Block
-              label="Tailored summary"
-              text={result.summary}
-              copied={copied === "summary"}
-              onCopy={() => copy("summary", result.summary)}
-            />
+            <div id="tailored-summary">
+              <Block
+                label="Tailored summary"
+                text={result.summary}
+                copied={copied === "summary"}
+                onCopy={() => copy("summary", result.summary)}
+              />
+            </div>
 
             {result.bullets.map((b) => (
               <Block
