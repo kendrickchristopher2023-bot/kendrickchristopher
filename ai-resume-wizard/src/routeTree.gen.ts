@@ -20,6 +20,7 @@ import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
 import { Route as ApiExtractRouteImport } from './routes/api.extract'
+import { Route as ApiCoverLetterPdfRouteImport } from './routes/api.cover-letter-pdf'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
@@ -103,6 +104,11 @@ const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
 const ApiExtractRoute = ApiExtractRouteImport.update({
   id: '/api/extract',
   path: '/api/extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCoverLetterPdfRoute = ApiCoverLetterPdfRouteImport.update({
+  id: '/api/cover-letter-pdf',
+  path: '/api/cover-letter-pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/resumes'
     | '/settings'
     | '/api/chat'
+    | '/api/cover-letter-pdf'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/resumes'
     | '/settings'
     | '/api/chat'
+    | '/api/cover-letter-pdf'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resumes'
     | '/_authenticated/settings'
     | '/api/chat'
+    | '/api/cover-letter-pdf'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -534,6 +546,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiCoverLetterPdfRoute: typeof ApiCoverLetterPdfRoute
   ApiExtractRoute: typeof ApiExtractRoute
   ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
@@ -629,6 +642,13 @@ declare module '@tanstack/react-router' {
       path: '/api/extract'
       fullPath: '/api/extract'
       preLoaderRoute: typeof ApiExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cover-letter-pdf': {
+      id: '/api/cover-letter-pdf'
+      path: '/api/cover-letter-pdf'
+      fullPath: '/api/cover-letter-pdf'
+      preLoaderRoute: typeof ApiCoverLetterPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -917,6 +937,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiCoverLetterPdfRoute: ApiCoverLetterPdfRoute,
   ApiExtractRoute: ApiExtractRoute,
   ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
