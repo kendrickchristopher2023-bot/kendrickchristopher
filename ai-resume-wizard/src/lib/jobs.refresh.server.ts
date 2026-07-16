@@ -8,7 +8,7 @@
 // via the same dispatch_refresh_slices() SQL function. Partial success is
 // far better than a 502 that saves nothing.
 
-import { AGGREGATOR_SOURCES, fetchOne, type RawJob } from "./job-sources.server";
+import { AGGREGATOR_SOURCES, USAJOBS_METROS, fetchOne, fetchUsaJobs, type RawJob } from "./job-sources.server";
 
 type SliceSummary = {
   slice: string;
@@ -22,12 +22,24 @@ type SliceSummary = {
 
 const CONCURRENCY = 8;
 
-// Slice names: every aggregator source name, plus "watched" for per-company.
-export const REFRESH_SLICES = [...AGGREGATOR_SOURCES, "watched"] as const;
-export type RefreshSlice = (typeof REFRESH_SLICES)[number];
+// Slice names: every aggregator source name (with usajobs sub-sliced per
+// metro so no single request has to cover the whole USAJOBS footprint),
+// plus "watched" for per-company sources.
+const NON_USAJOBS_AGGREGATORS = AGGREGATOR_SOURCES.filter((s) => s !== "usajobs");
+const USAJOBS_SLICES = Object.keys(USAJOBS_METROS).map((k) => `usajobs:${k}`);
+export const REFRESH_SLICES = [
+  ...NON_USAJOBS_AGGREGATORS,
+  ...USAJOBS_SLICES,
+  "watched",
+] as const;
+export type RefreshSlice = string;
 
-export function isRefreshSlice(x: string): x is RefreshSlice {
-  return (REFRESH_SLICES as readonly string[]).includes(x);
+export function isRefreshSlice(x: string): boolean {
+  if (x === "watched") return true;
+  if (x.startsWith("usajobs:")) {
+    return Object.prototype.hasOwnProperty.call(USAJOBS_METROS, x.slice("usajobs:".length));
+  }
+  return (AGGREGATOR_SOURCES as readonly string[]).includes(x);
 }
 
 async function runWithConcurrency<T, R>(
@@ -67,7 +79,14 @@ async function runAggregatorSlice(source: string, summary: SliceSummary): Promis
   summary.companiesTried += 1;
   let jobs: RawJob[] = [];
   try {
-    jobs = await fetchOne(source, "", "");
+    if (source.startsWith("usajobs:")) {
+      const metroKey = source.slice("usajobs:".length);
+      const loc = USAJOBS_METROS[metroKey];
+      if (!loc) throw new Error(`unknown usajobs metro key: ${metroKey}`);
+      jobs = await fetchUsaJobs([loc]);
+    } else {
+      jobs = await fetchOne(source, "", "");
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     summary.companiesFailed += 1;
@@ -200,11 +219,13 @@ export async function runRefreshJobs(): Promise<{ slices: SliceSummary[]; jobsUp
 export async function dispatchAllRefreshSlices(): Promise<{ dispatched: string[] }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // dispatch_refresh_slices is a new SQL function; the auto-generated
-  // types.ts hasn't picked it up yet, so we cast rpc to a loose signature.
-  const rpc = supabaseAdmin.rpc as unknown as (
-    fn: string,
-  ) => Promise<{ error: { message: string } | null }>;
-  const { error } = await rpc("dispatch_refresh_slices");
+  // types.ts hasn't picked it up yet, so we cast the call to a loose signature.
+  // NOTE: must call as a method (supabaseAdmin.rpc(...)), not a detached
+  // reference — detaching drops the `this` binding and PostgrestClient
+  // fails with "Cannot read properties of undefined (reading 'rest')".
+  const { error } = await (
+    supabaseAdmin.rpc as unknown as (fn: string) => Promise<{ error: { message: string } | null }>
+  ).call(supabaseAdmin, "dispatch_refresh_slices");
   if (error) throw new Error(`dispatch_refresh_slices failed: ${error.message}`);
   return { dispatched: [...REFRESH_SLICES] };
 }

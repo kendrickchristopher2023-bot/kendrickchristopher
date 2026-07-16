@@ -639,31 +639,33 @@ export async function fetchSmartRecruiters(slug: string, companyName: string): P
 // coverage gap for NC/SC/GA/TN/VA/FL. Structured salary lives in
 // PositionRemuneration[] with RateIntervalCode ("Per Year", "Per Hour", ...).
 const USAJOBS_UA = "kendrickchristopher@hotmail.com"; // registered USAJOBS account email — required header, not a secret
-const USAJOBS_LOCATIONS = [
-  // USAJOBS wants FULL state names in LocationName ("Charlotte, North Carolina").
-  "Charlotte, North Carolina",
-  "Raleigh, North Carolina",
-  "Durham, North Carolina",
-  "Greensboro, North Carolina",
-  "Winston-Salem, North Carolina",
-  "Atlanta, Georgia",
-  "Savannah, Georgia",
-  "Charleston, South Carolina",
-  "Columbia, South Carolina",
-  "Greenville, South Carolina",
-  "Jacksonville, Florida",
-  "Orlando, Florida",
-  "Tampa, Florida",
-  "Miami, Florida",
-  "Richmond, Virginia",
-  "Virginia Beach, Virginia",
-  "Knoxville, Tennessee",
-  "Nashville, Tennessee",
-  "Memphis, Tennessee",
-  "Birmingham, Alabama",
-  "Huntsville, Alabama",
-  "Louisville, Kentucky",
-];
+// Metro key (URL-safe, used in ?slice=usajobs:<key>) → USAJOBS LocationName.
+// USAJOBS wants FULL state names in LocationName ("Charlotte, North Carolina").
+export const USAJOBS_METROS: Record<string, string> = {
+  charlotte: "Charlotte, North Carolina",
+  raleigh: "Raleigh, North Carolina",
+  durham: "Durham, North Carolina",
+  greensboro: "Greensboro, North Carolina",
+  "winston-salem": "Winston-Salem, North Carolina",
+  atlanta: "Atlanta, Georgia",
+  savannah: "Savannah, Georgia",
+  "charleston-sc": "Charleston, South Carolina",
+  "columbia-sc": "Columbia, South Carolina",
+  "greenville-sc": "Greenville, South Carolina",
+  jacksonville: "Jacksonville, Florida",
+  orlando: "Orlando, Florida",
+  tampa: "Tampa, Florida",
+  miami: "Miami, Florida",
+  richmond: "Richmond, Virginia",
+  "virginia-beach": "Virginia Beach, Virginia",
+  knoxville: "Knoxville, Tennessee",
+  nashville: "Nashville, Tennessee",
+  memphis: "Memphis, Tennessee",
+  birmingham: "Birmingham, Alabama",
+  huntsville: "Huntsville, Alabama",
+  louisville: "Louisville, Kentucky",
+};
+const USAJOBS_LOCATIONS = Object.values(USAJOBS_METROS);
 const USAJOBS_MAX_PAGES = 5; // hard cap per metro (ResultsPerPage=500 → up to 2500 per metro)
 
 type UsaJobsItem = {
@@ -742,15 +744,26 @@ async function fetchUsaJobsMetro(loc: string, apiKey: string): Promise<UsaJobsIt
   return items;
 }
 
-export async function fetchUsaJobs(): Promise<RawJob[]> {
+// Fetch USAJOBS. If `metros` is provided, only those LocationNames are queried;
+// otherwise every metro is queried in parallel. Sub-slicing per metro is how
+// the dispatch keeps each request inside the Worker's time budget.
+export async function fetchUsaJobs(metros?: string[]): Promise<RawJob[]> {
   const apiKey = process.env.USAJOBS_API_KEY;
   if (!apiKey) {
     console.warn("[usajobs] USAJOBS_API_KEY is not set — skipping (adapter returns []). Add it in Project Settings → Secrets to enable.");
     return [];
   }
+  const locations = metros && metros.length > 0 ? metros : USAJOBS_LOCATIONS;
   // Fetch metros in parallel; one failing metro can't block the batch.
   const perMetro = await Promise.all(
-    USAJOBS_LOCATIONS.map(async (loc) => ({ loc, items: await fetchUsaJobsMetro(loc, apiKey) })),
+    locations.map(async (loc) => {
+      try {
+        return { loc, items: await fetchUsaJobsMetro(loc, apiKey) };
+      } catch (e) {
+        console.warn(`[usajobs] metro ${loc} failed:`, e instanceof Error ? e.message : e);
+        return { loc, items: [] as UsaJobsItem[] };
+      }
+    }),
   );
   const out: RawJob[] = [];
   const seen = new Set<string>();
