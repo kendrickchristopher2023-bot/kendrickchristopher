@@ -81,6 +81,9 @@ export const Route = createFileRoute("/api/cover-letter-docx")({
           .split(/\n\s*\n+/)
           .map((p) => p.replace(/\s+\n/g, " ").replace(/\n/g, " ").trim())
           .filter(Boolean);
+        if (paragraphs.length && /^dear\b[^.\n]{0,60}[,:]/i.test(paragraphs[0])) {
+          paragraphs.shift();
+        }
         const last = paragraphs[paragraphs.length - 1] ?? "";
         if (/^(sincerely|regards|best|thank you)[\s,]/i.test(last) && last.length < 160) {
           paragraphs.pop();
