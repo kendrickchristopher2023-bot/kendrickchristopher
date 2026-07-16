@@ -677,7 +677,9 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
               <option value="greenhouse">Greenhouse</option>
               <option value="lever">Lever</option>
               <option value="ashby">Ashby</option>
+              <option value="smartrecruiters">SmartRecruiters</option>
             </select>
+
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
