@@ -7,46 +7,56 @@ import { z } from "zod";
 // not a rasterized image) with the standard section headings screeners parse.
 
 const ResumeInput = z.object({
-  name: z.string().default(""),
-  title: z.string().default(""),
-  email: z.string().default(""),
-  phone: z.string().default(""),
-  location: z.string().default(""),
-  github: z.string().default(""),
-  linkedin: z.string().default(""),
-  summary: z.string().default(""),
-  competencies: z.array(z.string()).default([]),
+  name: z.string().max(200).default(""),
+  title: z.string().max(200).default(""),
+  email: z.string().max(320).default(""),
+  phone: z.string().max(80).default(""),
+  location: z.string().max(200).default(""),
+  github: z.string().max(500).default(""),
+  linkedin: z.string().max(500).default(""),
+  summary: z.string().max(4000).default(""),
+  competencies: z.array(z.string().max(200)).max(60).default([]),
   experience: z
     .array(
       z.object({
-        title: z.string(),
-        company: z.string(),
-        location: z.string().default(""),
-        dates: z.string().default(""),
-        bullets: z.array(z.string()).default([]),
+        title: z.string().max(300),
+        company: z.string().max(300),
+        location: z.string().max(200).default(""),
+        dates: z.string().max(120).default(""),
+        bullets: z.array(z.string().max(1000)).max(30).default([]),
       }),
     )
+    .max(30)
     .default([]),
-  additionalExperience: z.array(z.string()).default([]),
-  proficiencies: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
-  education: z.object({ degree: z.string().default(""), school: z.string().default("") }).default({
-    degree: "",
-    school: "",
-  }),
-  certifications: z.array(z.string()).default([]),
+  additionalExperience: z.array(z.string().max(1000)).max(30).default([]),
+  proficiencies: z
+    .array(z.object({ label: z.string().max(200), value: z.string().max(500) }))
+    .max(40)
+    .default([]),
+  education: z
+    .object({ degree: z.string().max(300).default(""), school: z.string().max(300).default("") })
+    .default({ degree: "", school: "" }),
+  certifications: z.array(z.string().max(300)).max(30).default([]),
 });
 
 const PdfInput = z.object({
   resume: ResumeInput,
-  // Optional tailor override
-  summary: z.string().optional(),
+  summary: z.string().max(4000).optional(),
   bullets: z
-    .array(z.object({ company: z.string(), bullets: z.array(z.string()) }))
+    .array(
+      z.object({
+        company: z.string().max(300),
+        bullets: z.array(z.string().max(1000)).max(30),
+      }),
+    )
+    .max(30)
     .optional()
     .default([]),
-  company: z.string().optional().default(""),
-  role: z.string().optional().default(""),
+  company: z.string().max(300).optional().default(""),
+  role: z.string().max(300).optional().default(""),
 });
+
+const MAX_BODY_BYTES = 256 * 1024;
 
 export const Route = createFileRoute("/api/tailored-resume")({
   server: {
