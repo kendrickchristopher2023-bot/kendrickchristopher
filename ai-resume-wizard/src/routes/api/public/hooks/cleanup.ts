@@ -88,14 +88,10 @@ export const Route = createFileRoute("/api/public/hooks/cleanup")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const anon = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const apikey = request.headers.get("apikey") ?? "";
-        if (!anon || apikey !== anon) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest, unauthorizedCronResponse } = await import(
+          "@/lib/cron-auth.server"
+        );
+        if (!(await verifyCronRequest(request))) return unauthorizedCronResponse();
         try {
           const summary = await runCleanup();
           return Response.json(summary);

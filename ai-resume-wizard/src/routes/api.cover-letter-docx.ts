@@ -5,27 +5,33 @@ import { z } from "zod";
 // resume DOCX so edits here cannot regress `/api/resume-docx`.
 
 const SenderInput = z.object({
-  name: z.string().default(""),
-  email: z.string().default(""),
-  phone: z.string().default(""),
-  location: z.string().default(""),
+  name: z.string().max(200).default(""),
+  email: z.string().max(320).default(""),
+  phone: z.string().max(80).default(""),
+  location: z.string().max(200).default(""),
 });
 
 const Input = z.object({
   sender: SenderInput,
-  company: z.string().optional().default(""),
-  role: z.string().optional().default(""),
-  recipient: z.string().optional().default(""),
-  coverLetter: z.string().min(1),
+  company: z.string().max(300).optional().default(""),
+  role: z.string().max(300).optional().default(""),
+  recipient: z.string().max(200).optional().default(""),
+  coverLetter: z.string().min(1).max(20000),
 });
+
+const MAX_BODY_BYTES = 64 * 1024;
 
 export const Route = createFileRoute("/api/cover-letter-docx")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const bodyText = await request.text();
+        if (bodyText.length > MAX_BODY_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
         let raw: unknown;
         try {
-          raw = await request.json();
+          raw = JSON.parse(bodyText);
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }

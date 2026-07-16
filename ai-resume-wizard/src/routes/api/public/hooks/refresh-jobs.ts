@@ -14,14 +14,10 @@ export const Route = createFileRoute("/api/public/hooks/refresh-jobs")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const anon = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const apikey = request.headers.get("apikey") ?? "";
-        if (!anon || apikey !== anon) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest, unauthorizedCronResponse } = await import(
+          "@/lib/cron-auth.server"
+        );
+        if (!(await verifyCronRequest(request))) return unauthorizedCronResponse();
 
         const url = new URL(request.url);
         const slice = url.searchParams.get("slice");
