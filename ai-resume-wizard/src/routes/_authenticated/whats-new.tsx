@@ -3,7 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { listChangelog, markChangelogSeen } from "@/lib/changelog.functions";
-import { AppNav } from "@/components/AppNav";
 
 export const Route = createFileRoute("/_authenticated/whats-new")({
   head: () => ({
