@@ -79,7 +79,14 @@ async function runAggregatorSlice(source: string, summary: SliceSummary): Promis
   summary.companiesTried += 1;
   let jobs: RawJob[] = [];
   try {
-    jobs = await fetchOne(source, "", "");
+    if (source.startsWith("usajobs:")) {
+      const metroKey = source.slice("usajobs:".length);
+      const loc = USAJOBS_METROS[metroKey];
+      if (!loc) throw new Error(`unknown usajobs metro key: ${metroKey}`);
+      jobs = await fetchUsaJobs([loc]);
+    } else {
+      jobs = await fetchOne(source, "", "");
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     summary.companiesFailed += 1;
