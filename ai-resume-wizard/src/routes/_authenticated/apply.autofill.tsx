@@ -132,12 +132,6 @@ function AutofillPage() {
           </p>
         )}
 
-        {answers.length === 0 && !gen.isPending && (
-          <p className="mt-8 rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground text-center">
-            Click <strong>Generate my answers</strong> — the AI reads your resume from{" "}
-            <Link to="/resume" className="text-primary hover:underline">/resume</Link> and drafts personalized answers.
-          </p>
-        )}
 
         {answers.some((a) => /\{\{[^}]*\}\}/.test(a.a)) && (
           <div className="mt-8 rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-foreground">
