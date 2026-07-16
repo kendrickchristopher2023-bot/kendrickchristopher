@@ -455,8 +455,12 @@ export const refreshWatchedNow = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!role) throw new Error("Only admins can trigger a global refresh.");
 
-    const { runRefreshJobs } = await import("./jobs.refresh.server");
-    return runRefreshJobs();
+    // Dispatch mode: fan out one HTTP request per slice via pg_net so each
+    // slice gets its own request-timeout budget. Returns immediately — the
+    // slices run in the background on their own Worker isolates. Poll
+    // watched_companies.last_fetched_at or job_listings counts for progress.
+    const { dispatchAllRefreshSlices } = await import("./jobs.refresh.server");
+    return dispatchAllRefreshSlices();
   });
 
 // One-off backfill: strip HTML tags and decode entities on every existing
