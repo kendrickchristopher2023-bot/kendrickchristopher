@@ -694,6 +694,8 @@ function AdminDashboard() {
             </table>
           </div>
         </section>
+
+        <ChangelogAdminPanel />
       </div>
     </main>
   );
