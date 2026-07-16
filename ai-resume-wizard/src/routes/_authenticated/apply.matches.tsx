@@ -405,9 +405,16 @@ function MatchRow({
         </td>
         <td className="px-3 py-3 text-right whitespace-nowrap">
           <Link
+            to="/apply/go"
+            search={{ matchId: match.id }}
+            className="text-xs font-semibold text-primary hover:underline"
+          >
+            Apply
+          </Link>
+          <Link
             to="/apply/tailor"
             search={{ matchId: match.id }}
-            className="text-xs font-medium text-primary hover:underline"
+            className="ml-3 text-xs font-medium text-primary hover:underline"
           >
             Tailor
           </Link>
