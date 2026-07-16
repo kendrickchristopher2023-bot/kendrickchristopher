@@ -401,12 +401,14 @@ function TailorPage() {
               />
             ))}
 
-            <Block
-              label="Cover letter"
-              text={result.coverLetter}
-              copied={copied === "cover"}
-              onCopy={() => copy("cover", result.coverLetter)}
-            />
+            <div id="cover-letter">
+              <Block
+                label="Cover letter"
+                text={result.coverLetter}
+                copied={copied === "cover"}
+                onCopy={() => copy("cover", result.coverLetter)}
+              />
+            </div>
 
             <Block
               label="Full tailored resume text (copy-paste into any form)"
