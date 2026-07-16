@@ -584,7 +584,7 @@ function ManageCompaniesDialog({ onClose }: { onClose: () => void }) {
   const q = useQuery({ queryKey: ["watched-companies"], queryFn: () => listFn() });
   const prefsQ = useQuery({ queryKey: ["feed-prefs"], queryFn: () => getPrefsFn() });
 
-  const [source, setSource] = useState<"greenhouse" | "lever" | "ashby">("greenhouse");
+  const [source, setSource] = useState<"greenhouse" | "lever" | "ashby" | "smartrecruiters">("greenhouse");
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
   const [err, setErr] = useState<string | null>(null);
