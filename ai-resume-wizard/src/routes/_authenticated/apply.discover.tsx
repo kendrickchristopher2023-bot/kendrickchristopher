@@ -144,12 +144,9 @@ function DiscoverPage() {
   const refresh = useMutation({
     mutationFn: () => refreshFn(),
     onSuccess: (r) => {
-      const per = Object.entries(r.perSource ?? {})
-        .map(([src, s]) => `${src}: ${s.jobs} (${s.ok} ok, ${s.failed} failed)`)
-        .join(" · ");
       setMsg(
-        `Refreshed: ${r.jobsUpserted} jobs across ${r.companiesOk}/${r.companiesTried} sources.` +
-          (per ? ` — ${per}` : ""),
+        `Refresh dispatched to ${r.dispatched.length} slices: ${r.dispatched.join(", ")}. ` +
+          `Results appear in ~30s as each slice finishes — reload to see new counts.`,
       );
       qc.invalidateQueries({ queryKey: ["job-listings"] });
       qc.invalidateQueries({ queryKey: ["watched-companies"] });
