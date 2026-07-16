@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getMyResume, type MasterResume } from "@/lib/resume.functions";
+import { getNextUnappliedMatch } from "@/lib/matches.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
 
 export const Route = createFileRoute("/_authenticated/apply/")({
