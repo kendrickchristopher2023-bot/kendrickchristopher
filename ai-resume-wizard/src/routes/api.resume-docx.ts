@@ -60,9 +60,13 @@ export const Route = createFileRoute("/api/resume-docx")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const bodyText = await request.text();
+        if (bodyText.length > MAX_BODY_BYTES) {
+          return new Response("Payload too large", { status: 413 });
+        }
         let raw: unknown;
         try {
-          raw = await request.json();
+          raw = JSON.parse(bodyText);
         } catch {
           return new Response("Invalid JSON", { status: 400 });
         }
