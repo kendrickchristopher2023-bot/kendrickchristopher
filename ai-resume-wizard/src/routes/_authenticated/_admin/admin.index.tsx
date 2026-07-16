@@ -802,3 +802,231 @@ function SiteStatusPanel() {
   );
 }
 
+type DraftEntry = {
+  id?: string;
+  title: string;
+  body: string;
+  category: "new" | "improved" | "fixed";
+  published: boolean;
+};
+
+const EMPTY_DRAFT: DraftEntry = {
+  title: "",
+  body: "",
+  category: "improved",
+  published: false,
+};
+
+function ChangelogAdminPanel() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listChangelog);
+  const createFn = useServerFn(createChangelogEntry);
+  const updateFn = useServerFn(updateChangelogEntry);
+  const deleteFn = useServerFn(deleteChangelogEntry);
+
+  const q = useQuery({
+    queryKey: ["admin-changelog"],
+    queryFn: () => listFn(),
+  });
+
+  const [draft, setDraft] = useState<DraftEntry>(EMPTY_DRAFT);
+  const [err, setErr] = useState<string | null>(null);
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-changelog"] });
+    qc.invalidateQueries({ queryKey: ["changelog"] });
+    qc.invalidateQueries({ queryKey: ["changelog-unread"] });
+    qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+  };
+
+  const create = useMutation({
+    mutationFn: (v: DraftEntry) =>
+      createFn({
+        data: {
+          title: v.title,
+          body: v.body,
+          category: v.category,
+          published: v.published,
+        },
+      }),
+    onSuccess: () => {
+      setDraft(EMPTY_DRAFT);
+      setErr(null);
+      invalidate();
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Failed to create"),
+  });
+
+  const update = useMutation({
+    mutationFn: (v: DraftEntry & { id: string }) =>
+      updateFn({
+        data: {
+          id: v.id,
+          title: v.title,
+          body: v.body,
+          category: v.category,
+          published: v.published,
+        },
+      }),
+    onSuccess: () => {
+      setDraft(EMPTY_DRAFT);
+      setErr(null);
+      invalidate();
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Failed to update"),
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => invalidate(),
+  });
+
+  const editing = !!draft.id;
+
+  const startEdit = (e: ChangelogEntry) =>
+    setDraft({
+      id: e.id,
+      title: e.title,
+      body: e.body,
+      category: e.category,
+      published: e.published,
+    });
+
+  const submit = () => {
+    if (!draft.title.trim() || !draft.body.trim()) {
+      setErr("Title and body are required.");
+      return;
+    }
+    if (editing) update.mutate({ ...draft, id: draft.id! });
+    else create.mutate(draft);
+  };
+
+  return (
+    <section className="mt-8 rounded-lg border border-border bg-card p-4">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Changelog / What's new</h2>
+        <p className="text-xs text-muted-foreground">
+          Human-authored release notes for users. Only published entries are visible on{" "}
+          <code>/whats-new</code>.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <input
+          type="text"
+          placeholder="Title"
+          value={draft.title}
+          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+          className="md:col-span-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+        <select
+          value={draft.category}
+          onChange={(e) =>
+            setDraft({ ...draft, category: e.target.value as DraftEntry["category"] })
+          }
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="new">new</option>
+          <option value="improved">improved</option>
+          <option value="fixed">fixed</option>
+        </select>
+      </div>
+      <textarea
+        value={draft.body}
+        onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+        placeholder="Short user-facing description. Plain text or basic markdown."
+        rows={4}
+        className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+      />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <label className="inline-flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={draft.published}
+            onChange={(e) => setDraft({ ...draft, published: e.target.checked })}
+          />
+          Published (visible to users)
+        </label>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={create.isPending || update.isPending}
+          className="ml-auto rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {editing ? "Save changes" : "Create entry"}
+        </button>
+        {editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(EMPTY_DRAFT);
+              setErr(null);
+            }}
+            className="rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-accent"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+      {err && (
+        <p className="mt-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {err}
+        </p>
+      )}
+
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold">All entries ({q.data?.entries.length ?? 0})</h3>
+        <ul className="mt-2 divide-y divide-border">
+          {(q.data?.entries ?? []).map((e) => (
+            <li key={e.id} className="flex items-start justify-between gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={
+                      "rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase " +
+                      (e.published
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
+                        : "border-border bg-muted text-muted-foreground")
+                    }
+                  >
+                    {e.published ? "published" : "draft"}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    {e.category}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatEasternDateTime(e.published_at ?? e.created_at)}
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-sm font-medium">{e.title}</p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{e.body}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => startEdit(e)}
+                  className="rounded-md border border-input px-2 py-1 text-xs hover:bg-accent"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`Delete "${e.title}"?`)) remove.mutate(e.id);
+                  }}
+                  className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+          {(q.data?.entries ?? []).length === 0 && (
+            <li className="py-3 text-xs text-muted-foreground">No entries yet.</li>
+          )}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
