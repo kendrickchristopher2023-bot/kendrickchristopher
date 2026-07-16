@@ -23,6 +23,7 @@ import { Route as ApiExtractRouteImport } from './routes/api.extract'
 import { Route as ApiCoverLetterPdfRouteImport } from './routes/api.cover-letter-pdf'
 import { Route as ApiCoverLetterDocxRouteImport } from './routes/api.cover-letter-docx'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
+import { Route as AuthenticatedWhatsNewRouteImport } from './routes/_authenticated/whats-new'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
@@ -121,6 +122,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWhatsNewRoute = AuthenticatedWhatsNewRouteImport.update({
+  id: '/whats-new',
+  path: '/whats-new',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/whats-new': typeof AuthenticatedWhatsNewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByTo {
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/whats-new': typeof AuthenticatedWhatsNewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
@@ -384,6 +392,7 @@ export interface FileRoutesById {
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/whats-new': typeof AuthenticatedWhatsNewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
@@ -429,6 +438,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/whats-new'
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/resumes'
     | '/settings'
+    | '/whats-new'
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
@@ -516,6 +527,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resume'
     | '/_authenticated/resumes'
     | '/_authenticated/settings'
+    | '/_authenticated/whats-new'
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
@@ -677,6 +689,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/whats-new': {
+      id: '/_authenticated/whats-new'
+      path: '/whats-new'
+      fullPath: '/whats-new'
+      preLoaderRoute: typeof AuthenticatedWhatsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -933,6 +952,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedWhatsNewRoute: typeof AuthenticatedWhatsNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -941,6 +961,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedResumesRoute: AuthenticatedResumesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedWhatsNewRoute: AuthenticatedWhatsNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
