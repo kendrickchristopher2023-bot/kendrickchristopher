@@ -219,11 +219,13 @@ export async function runRefreshJobs(): Promise<{ slices: SliceSummary[]; jobsUp
 export async function dispatchAllRefreshSlices(): Promise<{ dispatched: string[] }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // dispatch_refresh_slices is a new SQL function; the auto-generated
-  // types.ts hasn't picked it up yet, so we cast rpc to a loose signature.
-  const rpc = supabaseAdmin.rpc as unknown as (
-    fn: string,
-  ) => Promise<{ error: { message: string } | null }>;
-  const { error } = await rpc("dispatch_refresh_slices");
+  // types.ts hasn't picked it up yet, so we cast the call to a loose signature.
+  // NOTE: must call as a method (supabaseAdmin.rpc(...)), not a detached
+  // reference — detaching drops the `this` binding and PostgrestClient
+  // fails with "Cannot read properties of undefined (reading 'rest')".
+  const { error } = await (
+    supabaseAdmin.rpc as unknown as (fn: string) => Promise<{ error: { message: string } | null }>
+  ).call(supabaseAdmin, "dispatch_refresh_slices");
   if (error) throw new Error(`dispatch_refresh_slices failed: ${error.message}`);
   return { dispatched: [...REFRESH_SLICES] };
 }
