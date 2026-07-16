@@ -39,6 +39,7 @@ import { Route as AuthenticatedApplyReferralsRouteImport } from './routes/_authe
 import { Route as AuthenticatedApplyMetricsRouteImport } from './routes/_authenticated/apply.metrics'
 import { Route as AuthenticatedApplyMatchesRouteImport } from './routes/_authenticated/apply.matches'
 import { Route as AuthenticatedApplyInterviewPrepRouteImport } from './routes/_authenticated/apply.interview-prep'
+import { Route as AuthenticatedApplyGoRouteImport } from './routes/_authenticated/apply.go'
 import { Route as AuthenticatedApplyDiscoverRouteImport } from './routes/_authenticated/apply.discover'
 import { Route as AuthenticatedApplyAutofillRouteImport } from './routes/_authenticated/apply.autofill'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -210,6 +211,11 @@ const AuthenticatedApplyInterviewPrepRoute =
     path: '/interview-prep',
     getParentRoute: () => AuthenticatedApplyRoute,
   } as any)
+const AuthenticatedApplyGoRoute = AuthenticatedApplyGoRouteImport.update({
+  id: '/go',
+  path: '/go',
+  getParentRoute: () => AuthenticatedApplyRoute,
+} as any)
 const AuthenticatedApplyDiscoverRoute =
   AuthenticatedApplyDiscoverRouteImport.update({
     id: '/discover',
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/apply/discover': typeof AuthenticatedApplyDiscoverRoute
+  '/apply/go': typeof AuthenticatedApplyGoRoute
   '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -358,6 +365,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/apply/discover': typeof AuthenticatedApplyDiscoverRoute
+  '/apply/go': typeof AuthenticatedApplyGoRoute
   '/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/apply/autofill': typeof AuthenticatedApplyAutofillRoute
   '/_authenticated/apply/discover': typeof AuthenticatedApplyDiscoverRoute
+  '/_authenticated/apply/go': typeof AuthenticatedApplyGoRoute
   '/_authenticated/apply/interview-prep': typeof AuthenticatedApplyInterviewPrepRoute
   '/_authenticated/apply/matches': typeof AuthenticatedApplyMatchesRoute
   '/_authenticated/apply/metrics': typeof AuthenticatedApplyMetricsRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
     | '/apply/discover'
+    | '/apply/go'
     | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
@@ -494,6 +504,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/apply/autofill'
     | '/apply/discover'
+    | '/apply/go'
     | '/apply/interview-prep'
     | '/apply/matches'
     | '/apply/metrics'
@@ -540,6 +551,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/apply/autofill'
     | '/_authenticated/apply/discover'
+    | '/_authenticated/apply/go'
     | '/_authenticated/apply/interview-prep'
     | '/_authenticated/apply/matches'
     | '/_authenticated/apply/metrics'
@@ -802,6 +814,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyInterviewPrepRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/_authenticated/apply/go': {
+      id: '/_authenticated/apply/go'
+      path: '/go'
+      fullPath: '/apply/go'
+      preLoaderRoute: typeof AuthenticatedApplyGoRouteImport
+      parentRoute: typeof AuthenticatedApplyRoute
+    }
     '/_authenticated/apply/discover': {
       id: '/_authenticated/apply/discover'
       path: '/discover'
@@ -922,6 +941,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedApplyRouteChildren {
   AuthenticatedApplyAutofillRoute: typeof AuthenticatedApplyAutofillRoute
   AuthenticatedApplyDiscoverRoute: typeof AuthenticatedApplyDiscoverRoute
+  AuthenticatedApplyGoRoute: typeof AuthenticatedApplyGoRoute
   AuthenticatedApplyInterviewPrepRoute: typeof AuthenticatedApplyInterviewPrepRoute
   AuthenticatedApplyMatchesRoute: typeof AuthenticatedApplyMatchesRoute
   AuthenticatedApplyMetricsRoute: typeof AuthenticatedApplyMetricsRoute
@@ -934,6 +954,7 @@ interface AuthenticatedApplyRouteChildren {
 const AuthenticatedApplyRouteChildren: AuthenticatedApplyRouteChildren = {
   AuthenticatedApplyAutofillRoute: AuthenticatedApplyAutofillRoute,
   AuthenticatedApplyDiscoverRoute: AuthenticatedApplyDiscoverRoute,
+  AuthenticatedApplyGoRoute: AuthenticatedApplyGoRoute,
   AuthenticatedApplyInterviewPrepRoute: AuthenticatedApplyInterviewPrepRoute,
   AuthenticatedApplyMatchesRoute: AuthenticatedApplyMatchesRoute,
   AuthenticatedApplyMetricsRoute: AuthenticatedApplyMetricsRoute,
