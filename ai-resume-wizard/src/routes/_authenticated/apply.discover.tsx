@@ -284,6 +284,7 @@ function DiscoverPage() {
               <option value="jobicy">Jobicy (remote, US)</option>
               <option value="arbeitnow">Arbeitnow</option>
               <option value="themuse">The Muse (US metros)</option>
+              <option value="usajobs">USAJOBS (federal, US metros)</option>
             </select>
 
           </div>
