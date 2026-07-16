@@ -61,6 +61,8 @@ function TailorPage() {
   const [loading, setLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [docxLoading, setDocxLoading] = useState(false);
+  const [clPdfLoading, setClPdfLoading] = useState(false);
+  const [clDocxLoading, setClDocxLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -165,6 +167,51 @@ function TailorPage() {
     }
   };
 
+  const downloadCoverLetter = async (kind: "pdf" | "docx") => {
+    if (!result) return;
+    if (!resumeData?.resume) {
+      setErr("No resume found. Visit /resume to set one up first.");
+      return;
+    }
+    kind === "pdf" ? setClPdfLoading(true) : setClDocxLoading(true);
+    try {
+      const url = kind === "pdf" ? "/api/cover-letter-pdf" : "/api/cover-letter-docx";
+      const R = resumeData.resume;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: {
+            name: R.name || "",
+            email: R.email || "",
+            phone: R.phone || "",
+            location: R.location || "",
+          },
+          company,
+          role,
+          coverLetter: result.coverLetter,
+        }),
+      });
+      if (!res.ok) throw new Error(`Cover letter ${kind.toUpperCase()} failed (${res.status})`);
+      const blob = await res.blob();
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const slug = (R.name || "Cover_Letter").replace(/[^a-z0-9]/gi, "_");
+      a.href = href;
+      a.download = company
+        ? `${slug}_Cover_Letter_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
+        : `${slug}_Cover_Letter.${kind}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : `Cover letter ${kind.toUpperCase()} export failed.`);
+    } finally {
+      kind === "pdf" ? setClPdfLoading(false) : setClDocxLoading(false);
+    }
+  };
+
   const copy = async (label: string, text: string) => {
     await navigator.clipboard.writeText(text);
     setCopied(label);
@@ -252,7 +299,7 @@ function TailorPage() {
                   disabled={pdfLoading || docxLoading}
                   className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
-                  {pdfLoading ? "Building PDF…" : "Download tailored PDF"}
+                  {pdfLoading ? "Building PDF…" : "Resume PDF"}
                 </button>
                 <button
                   type="button"
@@ -260,7 +307,34 @@ function TailorPage() {
                   disabled={pdfLoading || docxLoading}
                   className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
-                  {docxLoading ? "Building DOCX…" : "Download tailored DOCX"}
+                  {docxLoading ? "Building DOCX…" : "Resume DOCX"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCoverLetter("pdf")}
+                  disabled={clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {clPdfLoading ? "Building PDF…" : "Cover letter PDF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadCoverLetter("docx")}
+                  disabled={clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                >
+                  {clDocxLoading ? "Building DOCX…" : "Cover letter DOCX"}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await download("pdf");
+                    await downloadCoverLetter("pdf");
+                  }}
+                  disabled={pdfLoading || docxLoading || clPdfLoading || clDocxLoading}
+                  className="inline-flex items-center justify-center rounded-md bg-primary/10 border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary disabled:opacity-50 hover:bg-primary/20"
+                >
+                  Download both (PDF)
                 </button>
               </>
             )}
@@ -274,6 +348,17 @@ function TailorPage() {
 
         {result && (
           <section className="mt-12 space-y-8">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-medium text-foreground">
+                ✓ Tailored resume + cover letter ready · Match{" "}
+                <span className="font-bold text-primary">{result.matchScore}/100</span>
+              </p>
+              <div className="flex items-center gap-3 text-xs">
+                <a href="#tailored-summary" className="text-primary hover:underline">Resume</a>
+                <span className="text-muted-foreground">·</span>
+                <a href="#cover-letter" className="text-primary hover:underline">Cover letter</a>
+              </div>
+            </div>
             <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -297,12 +382,14 @@ function TailorPage() {
               </div>
             </div>
 
-            <Block
-              label="Tailored summary"
-              text={result.summary}
-              copied={copied === "summary"}
-              onCopy={() => copy("summary", result.summary)}
-            />
+            <div id="tailored-summary">
+              <Block
+                label="Tailored summary"
+                text={result.summary}
+                copied={copied === "summary"}
+                onCopy={() => copy("summary", result.summary)}
+              />
+            </div>
 
             {result.bullets.map((b) => (
               <Block
@@ -314,12 +401,14 @@ function TailorPage() {
               />
             ))}
 
-            <Block
-              label="Cover letter"
-              text={result.coverLetter}
-              copied={copied === "cover"}
-              onCopy={() => copy("cover", result.coverLetter)}
-            />
+            <div id="cover-letter">
+              <Block
+                label="Cover letter"
+                text={result.coverLetter}
+                copied={copied === "cover"}
+                onCopy={() => copy("cover", result.coverLetter)}
+              />
+            </div>
 
             <Block
               label="Full tailored resume text (copy-paste into any form)"
