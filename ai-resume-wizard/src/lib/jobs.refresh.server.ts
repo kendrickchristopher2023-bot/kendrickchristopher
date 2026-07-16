@@ -1,19 +1,34 @@
 // Shared refresh logic: iterate watched_companies, hit each ATS API,
 // upsert normalized rows into public.job_listings.
-// Called from both the daily pg_cron webhook and the admin "Refresh now" button.
+//
+// Architecture: the refresh is split into independent "slices" so each fits
+// in one HTTP request budget and one slow source can never block the others.
+// The daily pg_cron fires one net.http_post per slice; the manual admin
+// trigger and the /api/public/hooks/refresh-jobs no-arg call both fan out
+// via the same dispatch_refresh_slices() SQL function. Partial success is
+// far better than a 502 that saves nothing.
 
-import { fetchAllAggregators, fetchOne, type RawJob } from "./job-sources.server";
+import { AGGREGATOR_SOURCES, fetchOne, type RawJob } from "./job-sources.server";
 
-type Summary = {
+type SliceSummary = {
+  slice: string;
+  jobsUpserted: number;
   companiesTried: number;
   companiesOk: number;
   companiesFailed: number;
-  jobsUpserted: number;
-  perSource: Record<string, { ok: number; failed: number; jobs: number }>;
   errors: Array<{ source: string; slug: string; error: string }>;
+  ms: number;
 };
 
 const CONCURRENCY = 8;
+
+// Slice names: every aggregator source name, plus "watched" for per-company.
+export const REFRESH_SLICES = [...AGGREGATOR_SOURCES, "watched"] as const;
+export type RefreshSlice = (typeof REFRESH_SLICES)[number];
+
+export function isRefreshSlice(x: string): x is RefreshSlice {
+  return (REFRESH_SLICES as readonly string[]).includes(x);
+}
 
 async function runWithConcurrency<T, R>(
   items: T[],
@@ -48,21 +63,34 @@ async function upsertChunks(rows: RawJob[]): Promise<{ inserted: number; error?:
   return { inserted };
 }
 
-export async function runRefreshJobs(): Promise<Summary> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+async function runAggregatorSlice(source: string, summary: SliceSummary): Promise<void> {
+  summary.companiesTried += 1;
+  let jobs: RawJob[] = [];
+  try {
+    jobs = await fetchOne(source, "", "");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    summary.companiesFailed += 1;
+    summary.errors.push({ source, slug: "*", error: msg });
+    return;
+  }
+  if (jobs.length > 0) {
+    const { inserted, error: upErr } = await upsertChunks(jobs);
+    summary.jobsUpserted += inserted;
+    if (upErr) summary.errors.push({ source, slug: "*", error: `upsert: ${upErr}` });
+  }
+  summary.companiesOk += 1;
+}
 
+async function runWatchedSlice(summary: SliceSummary): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: watchedRaw, error } = await supabaseAdmin
     .from("watched_companies")
     .select("id, source, slug, company_name")
-    // Aggregators handled below — skip any watched rows for them so we don't
-    // double-fetch or require a bogus slug.
-    .not("source", "in", "(remotive,remoteok,jobicy,arbeitnow,themuse,usajobs)");
+    .not("source", "in", `(${AGGREGATOR_SOURCES.join(",")})`);
   if (error) throw error;
 
-  // Deduplicate (source, slug) across users: if two users both watch Stripe,
-  // fetch it once and let both benefit from the shared cache. `id` and
-  // `company_name` come from an arbitrary "winner" row — the ATS API is the
-  // source of truth for the company name, so this is safe.
+  // Dedupe (source, slug) across users — one fetch benefits every watcher.
   const dedupMap = new Map<
     string,
     { ids: string[]; source: string; slug: string; company_name: string }
@@ -75,62 +103,11 @@ export async function runRefreshJobs(): Promise<Summary> {
   }>) {
     const key = `${w.source}:${w.slug}`;
     const existing = dedupMap.get(key);
-    if (existing) {
-      existing.ids.push(w.id);
-    } else {
-      dedupMap.set(key, {
-        ids: [w.id],
-        source: w.source,
-        slug: w.slug,
-        company_name: w.company_name,
-      });
-    }
+    if (existing) existing.ids.push(w.id);
+    else dedupMap.set(key, { ids: [w.id], source: w.source, slug: w.slug, company_name: w.company_name });
   }
   const watched = Array.from(dedupMap.values());
-
-  const summary: Summary = {
-    companiesTried: 0,
-    companiesOk: 0,
-    companiesFailed: 0,
-    jobsUpserted: 0,
-    perSource: {},
-    errors: [],
-  };
-  const bump = (src: string, patch: Partial<{ ok: number; failed: number; jobs: number }>) => {
-    const s = summary.perSource[src] ?? { ok: 0, failed: 0, jobs: 0 };
-    s.ok += patch.ok ?? 0;
-    s.failed += patch.failed ?? 0;
-    s.jobs += patch.jobs ?? 0;
-    summary.perSource[src] = s;
-  };
-
-  // ---- Aggregators (already parallel via Promise.all in fetchAllAggregators) ----
-  const aggResults = await fetchAllAggregators();
-  await Promise.all(
-    aggResults.map(async (r) => {
-      summary.companiesTried += 1;
-      if (r.error) {
-        summary.companiesFailed += 1;
-        bump(r.source, { failed: 1 });
-        summary.errors.push({ source: r.source, slug: "*", error: r.error });
-        return;
-      }
-      if (r.jobs.length > 0) {
-        const { inserted, error: upErr } = await upsertChunks(r.jobs);
-        summary.jobsUpserted += inserted;
-        bump(r.source, { jobs: inserted });
-        if (upErr) summary.errors.push({ source: r.source, slug: "*", error: `upsert: ${upErr}` });
-      }
-      summary.companiesOk += 1;
-      bump(r.source, { ok: 1 });
-    }),
-  );
-
-  // ---- Per-company (parallel with concurrency cap), one fetch per unique
-  // (source, slug); result is mirrored to every user's watched row so per-row
-  // last_fetched_at/status stay accurate.
   summary.companiesTried += watched.length;
-
 
   await runWithConcurrency(watched, CONCURRENCY, async (w) => {
     let jobs: RawJob[] = [];
@@ -139,9 +116,7 @@ export async function runRefreshJobs(): Promise<Summary> {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       summary.companiesFailed += 1;
-      bump(w.source, { failed: 1 });
       summary.errors.push({ source: w.source, slug: w.slug, error: msg });
-      // Mirror the error status onto every user's row for this (source, slug).
       await supabaseAdmin
         .from("watched_companies")
         .update({
@@ -161,9 +136,7 @@ export async function runRefreshJobs(): Promise<Summary> {
     }
     summary.jobsUpserted += inserted;
     summary.companiesOk += 1;
-    bump(w.source, { ok: 1, jobs: inserted });
 
-    // Mirror the successful status onto every user's row for this (source, slug).
     await supabaseAdmin
       .from("watched_companies")
       .update({
@@ -173,7 +146,60 @@ export async function runRefreshJobs(): Promise<Summary> {
       } as never)
       .in("id", w.ids);
   });
+}
 
-
+export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary> {
+  const started = Date.now();
+  const summary: SliceSummary = {
+    slice,
+    jobsUpserted: 0,
+    companiesTried: 0,
+    companiesOk: 0,
+    companiesFailed: 0,
+    errors: [],
+    ms: 0,
+  };
+  if (slice === "watched") {
+    await runWatchedSlice(summary);
+  } else {
+    await runAggregatorSlice(slice, summary);
+  }
+  summary.ms = Date.now() - started;
   return summary;
+}
+
+// Legacy in-process refresh (kept for scripts/tests). Runs slices sequentially
+// in one worker isolate; DO NOT call this from HTTP-timeout-bound paths — use
+// dispatchAllRefreshSlices() instead.
+export async function runRefreshJobs(): Promise<{ slices: SliceSummary[]; jobsUpserted: number }> {
+  const slices: SliceSummary[] = [];
+  let jobsUpserted = 0;
+  for (const s of REFRESH_SLICES) {
+    try {
+      const r = await runRefreshSlice(s);
+      slices.push(r);
+      jobsUpserted += r.jobsUpserted;
+    } catch (e) {
+      slices.push({
+        slice: s,
+        jobsUpserted: 0,
+        companiesTried: 0,
+        companiesOk: 0,
+        companiesFailed: 1,
+        errors: [{ source: s, slug: "*", error: e instanceof Error ? e.message : String(e) }],
+        ms: 0,
+      });
+    }
+  }
+  return { slices, jobsUpserted };
+}
+
+// Fan out one HTTP request per slice via pg_net. Returns immediately after
+// dispatch — each slice request has its own request-timeout budget on the
+// Worker, so a slow source cannot 502 the others.
+export async function dispatchAllRefreshSlices(): Promise<{ dispatched: string[] }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.rpc("dispatch_refresh_slices");
+  if (error) throw new Error(`dispatch_refresh_slices failed: ${error.message}`);
+  return { dispatched: [...REFRESH_SLICES] };
 }
