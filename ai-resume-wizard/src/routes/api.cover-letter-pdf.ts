@@ -143,6 +143,12 @@ export const Route = createFileRoute("/api/cover-letter-pdf")({
           .map((p) => p.replace(/\s+\n/g, " ").replace(/\n/g, " ").trim())
           .filter(Boolean);
 
+        // Strip a leading "Dear ...," greeting the model may include — we
+        // render our own greeting above.
+        if (paragraphs.length && /^dear\b[^.\n]{0,60}[,:]/i.test(paragraphs[0])) {
+          paragraphs.shift();
+        }
+
         // Strip a trailing "Sincerely, Name" the model may add.
         const lastPara = paragraphs[paragraphs.length - 1] ?? "";
         if (/^(sincerely|regards|best|thank you)[\s,]/i.test(lastPara) && lastPara.length < 160) {
