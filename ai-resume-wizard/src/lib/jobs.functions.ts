@@ -45,11 +45,11 @@ export type WatchedCompany = {
   last_fetch_count: number | null;
 };
 
-const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "smartrecruiters", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+const KNOWN_SOURCES = ["greenhouse", "lever", "ashby", "smartrecruiters", "remotive", "remoteok", "jobicy", "arbeitnow", "themuse", "usajobs"] as const;
 
 // Aggregate (non-company-specific) feeds. These rows have source_slug = null
 // and are gated per-user by profiles.enabled_feeds (default = all on).
-export const AGGREGATE_FEEDS = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse"] as const;
+export const AGGREGATE_FEEDS = ["remotive", "remoteok", "jobicy", "arbeitnow", "themuse", "usajobs"] as const;
 export type AggregateFeed = (typeof AGGREGATE_FEEDS)[number];
 
 // Escape a user string for safe inclusion in a PostgREST `.or()` filter value.
