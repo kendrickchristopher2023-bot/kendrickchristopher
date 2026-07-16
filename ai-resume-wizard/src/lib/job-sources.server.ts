@@ -598,11 +598,13 @@ export async function fetchSmartRecruiters(slug: string, companyName: string): P
     };
     const items = data.content ?? [];
     for (const j of items) {
-      const loc =
+      const composed =
         j.location?.fullLocation ??
         [j.location?.city, j.location?.region, j.location?.country?.toUpperCase()]
           .filter(Boolean)
-          .join(", ") || null;
+          .join(", ");
+      const loc = composed && composed.length > 0 ? composed : null;
+
       out.push(
         withParsed(
           {
