@@ -348,6 +348,17 @@ function TailorPage() {
 
         {result && (
           <section className="mt-12 space-y-8">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-medium text-foreground">
+                ✓ Tailored resume + cover letter ready · Match{" "}
+                <span className="font-bold text-primary">{result.matchScore}/100</span>
+              </p>
+              <div className="flex items-center gap-3 text-xs">
+                <a href="#tailored-summary" className="text-primary hover:underline">Resume</a>
+                <span className="text-muted-foreground">·</span>
+                <a href="#cover-letter" className="text-primary hover:underline">Cover letter</a>
+              </div>
+            </div>
             <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
