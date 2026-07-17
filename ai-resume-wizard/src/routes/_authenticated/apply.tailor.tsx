@@ -238,6 +238,12 @@ function TailorPage() {
     setTimeout(() => setCopied(null), 1500);
   };
 
+  const [tab, setTab] = useState<"resume" | "cover">(mode === "cover" ? "cover" : "resume");
+  useEffect(() => {
+    if (mode === "resume") setTab("resume");
+    else if (mode === "cover") setTab("cover");
+  }, [mode]);
+
   const wantResume = mode !== "cover";
   const wantCover = mode !== "resume";
 
