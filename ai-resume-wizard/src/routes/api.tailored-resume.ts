@@ -62,10 +62,12 @@ export const Route = createFileRoute("/api/tailored-resume")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try {
         const bodyText = await request.text();
         if (bodyText.length > MAX_BODY_BYTES) {
           return new Response("Payload too large", { status: 413 });
         }
+
         let raw: unknown;
         try {
           raw = JSON.parse(bodyText);
@@ -320,7 +322,16 @@ export const Route = createFileRoute("/api/tailored-resume")({
             "Content-Disposition": `attachment; filename="${filename}"`,
           },
         });
+        } catch (err) {
+          console.error("[api/tailored-resume] error", err);
+          const message = err instanceof Error ? err.message : String(err);
+          return new Response(
+            JSON.stringify({ error: "PDF generation failed", message }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          );
+        }
       },
+
     },
   },
 });
