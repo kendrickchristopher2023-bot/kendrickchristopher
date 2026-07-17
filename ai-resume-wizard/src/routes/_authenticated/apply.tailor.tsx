@@ -1,11 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { getMyResume } from "@/lib/resume.functions";
 import { getMatchPrefill } from "@/lib/matches.functions";
+import {
+  EditableBlock,
+  InjectionNotice,
+  TailorModePicker,
+  type TailorMode,
+} from "@/components/TailorEdit";
 
 const tailorSearchSchema = z.object({
   matchId: z.string().uuid().optional(),
