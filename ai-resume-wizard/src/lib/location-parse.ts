@@ -92,8 +92,15 @@ export function parseLocation(loc: string | null | undefined): ParsedLocation {
 
   // Multi-location postings: only parse the first segment for the single-value
   // columns. The full string stays in `location` for ilike fallback matches.
+  // Semicolons (USAJOBS) and " | " (some Greenhouse boards) both signal
+  // "several distinct locations in one string" — never a single address.
   if (s.includes(";")) {
     const first = s.split(";")[0]?.trim();
+    if (!first) return empty;
+    s = first;
+  }
+  if (s.includes(" | ")) {
+    const first = s.split(" | ")[0]?.trim();
     if (!first) return empty;
     s = first;
   }
@@ -117,6 +124,14 @@ export function parseLocation(loc: string | null | undefined): ParsedLocation {
   };
 
   if (parts.length >= 3) {
+    // USAJOBS commonly prefixes a facility/street to a "City, State" address
+    // (e.g. "Naval Medical Center, Portsmouth, Virginia"). When the LAST part
+    // is a US state, take the last two as (city, state) and force country=US.
+    const last = parts[parts.length - 1];
+    const secondLast = parts[parts.length - 2];
+    if (isUsState(last)) {
+      return { city: secondLast || null, region: normalizeRegion(last), country: "US" };
+    }
     const [city, region, country] = parts;
     return {
       city: city || null,
