@@ -160,8 +160,8 @@ function TailorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           resume: resumeData.resume,
-          summary: result.summary,
-          bullets: result.bullets,
+          summary: editSummary,
+          bullets: editBullets,
           company,
           role,
         }),
