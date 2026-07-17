@@ -426,6 +426,45 @@ export type Database = {
         }
         Relationships: []
       }
+      refresh_runs: {
+        Row: {
+          companies_failed: number
+          companies_ok: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          jobs_upserted: number
+          ms: number | null
+          ok: boolean | null
+          slice: string
+          started_at: string
+        }
+        Insert: {
+          companies_failed?: number
+          companies_ok?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          jobs_upserted?: number
+          ms?: number | null
+          ok?: boolean | null
+          slice: string
+          started_at?: string
+        }
+        Update: {
+          companies_failed?: number
+          companies_ok?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          jobs_upserted?: number
+          ms?: number | null
+          ok?: boolean | null
+          slice?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       resumes: {
         Row: {
           created_at: string

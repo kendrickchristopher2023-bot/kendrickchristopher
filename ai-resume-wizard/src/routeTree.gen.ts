@@ -21,6 +21,7 @@ import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
 import { Route as ApiResumeDocxRouteImport } from './routes/api.resume-docx'
 import { Route as ApiExtractRouteImport } from './routes/api.extract'
+import { Route as ApiExportRouteImport } from './routes/api.export'
 import { Route as ApiCoverLetterPdfRouteImport } from './routes/api.cover-letter-pdf'
 import { Route as ApiCoverLetterDocxRouteImport } from './routes/api.cover-letter-docx'
 import { Route as ApiChatRouteImport } from './routes/api.chat'
@@ -113,6 +114,11 @@ const ApiResumeDocxRoute = ApiResumeDocxRouteImport.update({
 const ApiExtractRoute = ApiExtractRouteImport.update({
   id: '/api/extract',
   path: '/api/extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExportRoute = ApiExportRouteImport.update({
+  id: '/api/export',
+  path: '/api/export',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCoverLetterPdfRoute = ApiCoverLetterPdfRouteImport.update({
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
+  '/api/export': typeof ApiExportRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
+  '/api/export': typeof ApiExportRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/cover-letter-docx': typeof ApiCoverLetterDocxRoute
   '/api/cover-letter-pdf': typeof ApiCoverLetterPdfRoute
+  '/api/export': typeof ApiExportRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/resume-docx': typeof ApiResumeDocxRoute
   '/api/tailored-resume': typeof ApiTailoredResumeRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
+    | '/api/export'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
+    | '/api/export'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/cover-letter-docx'
     | '/api/cover-letter-pdf'
+    | '/api/export'
     | '/api/extract'
     | '/api/resume-docx'
     | '/api/tailored-resume'
@@ -597,6 +609,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiCoverLetterDocxRoute: typeof ApiCoverLetterDocxRoute
   ApiCoverLetterPdfRoute: typeof ApiCoverLetterPdfRoute
+  ApiExportRoute: typeof ApiExportRoute
   ApiExtractRoute: typeof ApiExtractRoute
   ApiResumeDocxRoute: typeof ApiResumeDocxRoute
   ApiTailoredResumeRoute: typeof ApiTailoredResumeRoute
@@ -699,6 +712,13 @@ declare module '@tanstack/react-router' {
       path: '/api/extract'
       fullPath: '/api/extract'
       preLoaderRoute: typeof ApiExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/export': {
+      id: '/api/export'
+      path: '/api/export'
+      fullPath: '/api/export'
+      preLoaderRoute: typeof ApiExportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cover-letter-pdf': {
@@ -1022,6 +1042,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiCoverLetterDocxRoute: ApiCoverLetterDocxRoute,
   ApiCoverLetterPdfRoute: ApiCoverLetterPdfRoute,
+  ApiExportRoute: ApiExportRoute,
   ApiExtractRoute: ApiExtractRoute,
   ApiResumeDocxRoute: ApiResumeDocxRoute,
   ApiTailoredResumeRoute: ApiTailoredResumeRoute,
@@ -1042,13 +1063,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

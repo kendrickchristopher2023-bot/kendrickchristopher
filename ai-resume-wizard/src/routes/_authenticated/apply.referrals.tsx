@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { generateReferralDm } from "@/lib/referral.functions";
+import { TxtDownloadButton } from "@/components/DownloadButtons";
 
 export const Route = createFileRoute("/_authenticated/apply/referrals")({
   head: () => ({
@@ -128,13 +129,19 @@ function ReferralPage() {
 
         {dm && (
           <div className="mt-8 rounded-lg border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2 gap-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Draft DM · edit before sending
               </p>
-              <button onClick={onCopy} className="text-xs font-medium text-primary hover:underline">
-                {copied ? "Copied ✓" : "Copy"}
-              </button>
+              <div className="flex items-center gap-3">
+                <TxtDownloadButton
+                  text={dm}
+                  filename={`Referral_DM_${company || "Draft"}`}
+                />
+                <button onClick={onCopy} className="text-xs font-medium text-primary hover:underline">
+                  {copied ? "Copied ✓" : "Copy"}
+                </button>
+              </div>
             </div>
             <textarea
               value={dm}
