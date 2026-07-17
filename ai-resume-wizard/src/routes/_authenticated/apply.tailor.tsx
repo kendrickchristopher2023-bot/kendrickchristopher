@@ -289,7 +289,7 @@ function TailorPage() {
               disabled={loading}
               className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {loading ? "Tailoring…" : "Tailor my resume"}
+              {loading ? "Tailoring resume + cover letter…" : "Tailor my resume + cover letter"}
             </button>
             {result && (
               <>
@@ -347,76 +347,12 @@ function TailorPage() {
         </section>
 
         {result && (
-          <section className="mt-12 space-y-8">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm font-medium text-foreground">
-                ✓ Tailored resume + cover letter ready · Match{" "}
-                <span className="font-bold text-primary">{result.matchScore}/100</span>
-              </p>
-              <div className="flex items-center gap-3 text-xs">
-                <a href="#tailored-summary" className="text-primary hover:underline">Resume</a>
-                <span className="text-muted-foreground">·</span>
-                <a href="#cover-letter" className="text-primary hover:underline">Cover letter</a>
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Match score
-                </p>
-                <p className="text-2xl font-bold text-primary">{result.matchScore}/100</p>
-              </div>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-semibold text-foreground">Matched keywords</p>
-                  <p className="mt-1 text-muted-foreground">
-                    {result.matchedKeywords.join(", ") || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">Missing keywords</p>
-                  <p className="mt-1 text-muted-foreground">
-                    {result.missingKeywords.join(", ") || "—"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div id="tailored-summary">
-              <Block
-                label="Tailored summary"
-                text={result.summary}
-                copied={copied === "summary"}
-                onCopy={() => copy("summary", result.summary)}
-              />
-            </div>
-
-            {result.bullets.map((b) => (
-              <Block
-                key={b.company}
-                label={`${b.company} — tailored bullets`}
-                text={b.bullets.map((x) => `• ${x}`).join("\n")}
-                copied={copied === b.company}
-                onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
-              />
-            ))}
-
-            <div id="cover-letter">
-              <Block
-                label="Cover letter"
-                text={result.coverLetter}
-                copied={copied === "cover"}
-                onCopy={() => copy("cover", result.coverLetter)}
-              />
-            </div>
-
-            <Block
-              label="Full tailored resume text (copy-paste into any form)"
-              text={fullResumeText}
-              copied={copied === "full"}
-              onCopy={() => copy("full", fullResumeText)}
-            />
-          </section>
+          <ResultsTabs
+            result={result}
+            fullResumeText={fullResumeText}
+            copied={copied}
+            copy={copy}
+          />
         )}
 
         {history.length > 0 && (
@@ -484,5 +420,121 @@ function Block({
         {text}
       </pre>
     </div>
+  );
+}
+
+function ResultsTabs({
+  result,
+  fullResumeText,
+  copied,
+  copy,
+}: {
+  result: TailorResult;
+  fullResumeText: string;
+  copied: string | null;
+  copy: (key: string, text: string) => void;
+}) {
+  const [tab, setTab] = useState<"resume" | "cover">("resume");
+  return (
+    <section className="mt-10 space-y-6">
+      <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-medium text-foreground">
+          ✓ Tailored resume + cover letter ready · Match{" "}
+          <span className="font-bold text-primary">{result.matchScore}/100</span>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Downloads for both are in the button row above.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-1 border-b border-border">
+        <TabBtn active={tab === "resume"} onClick={() => setTab("resume")}>
+          Tailored resume
+        </TabBtn>
+        <TabBtn active={tab === "cover"} onClick={() => setTab("cover")}>
+          Cover letter
+        </TabBtn>
+      </div>
+
+      {tab === "resume" ? (
+        <div className="space-y-6">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Match score
+              </p>
+              <p className="text-2xl font-bold text-primary">{result.matchScore}/100</p>
+            </div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold text-foreground">Matched keywords</p>
+                <p className="mt-1 text-muted-foreground">
+                  {result.matchedKeywords.join(", ") || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Missing keywords</p>
+                <p className="mt-1 text-muted-foreground">
+                  {result.missingKeywords.join(", ") || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Block
+            label="Tailored summary"
+            text={result.summary}
+            copied={copied === "summary"}
+            onCopy={() => copy("summary", result.summary)}
+          />
+          {result.bullets.map((b) => (
+            <Block
+              key={b.company}
+              label={`${b.company} — tailored bullets`}
+              text={b.bullets.map((x) => `• ${x}`).join("\n")}
+              copied={copied === b.company}
+              onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
+            />
+          ))}
+          <Block
+            label="Full tailored resume text (copy-paste into any form)"
+            text={fullResumeText}
+            copied={copied === "full"}
+            onCopy={() => copy("full", fullResumeText)}
+          />
+        </div>
+      ) : (
+        <Block
+          label="Cover letter"
+          text={result.coverLetter}
+          copied={copied === "cover"}
+          onCopy={() => copy("cover", result.coverLetter)}
+        />
+      )}
+    </section>
+  );
+}
+
+function TabBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
+        (active
+          ? "border-primary text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground")
+      }
+    >
+      {children}
+    </button>
   );
 }

@@ -6,6 +6,7 @@ import { getMyResume, type MasterResume } from "@/lib/resume.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
 import { AtsLintPanel } from "@/components/AtsLintPanel";
 import { lintResumeForAts } from "@/lib/ats-lint";
+import { ResumeTabs } from "@/components/ResumeTabs";
 
 export const Route = createFileRoute("/_authenticated/resume")({
   validateSearch: (search: Record<string, unknown>): { id?: string } =>
@@ -115,6 +116,7 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
   return (
     <main className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
+        <div className="print:hidden"><ResumeTabs /></div>
         <div className="mb-10 flex flex-wrap items-center justify-between gap-4 print:hidden">
           <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             ← Back home

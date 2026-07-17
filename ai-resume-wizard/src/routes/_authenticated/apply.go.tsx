@@ -392,10 +392,10 @@ function ApplyGoPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground disabled:opacity-50"
               >
                 {tailorLoading
-                  ? "Preparing… (20–40s)"
+                  ? "Preparing resume + cover letter… (20–40s)"
                   : result
-                    ? "Re-prepare"
-                    : "Prepare application"}
+                    ? "Re-prepare resume + cover letter"
+                    : "Prepare resume + cover letter"}
               </button>
               <p className="mt-2 text-xs text-muted-foreground">
                 One AI call → tailored resume, cover letter, match score, and keyword gap.
@@ -411,60 +411,13 @@ function ApplyGoPage() {
             {/* Results */}
             {result && (
               <section className="mt-10 space-y-6">
-                <div className="rounded-lg border border-border bg-card p-5">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Match score
-                    </p>
-                    <p className="text-2xl font-bold text-primary">
-                      {result.matchScore}/100
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-foreground">
+                      ✓ Tailored resume + cover letter ready · Match{" "}
+                      <span className="font-bold text-primary">{result.matchScore}/100</span>
                     </p>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="font-semibold text-foreground">Matched</p>
-                      <p className="mt-1 text-muted-foreground">
-                        {result.matchedKeywords.join(", ") || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Missing</p>
-                      <p className="mt-1 text-muted-foreground">
-                        {result.missingKeywords.join(", ") || "—"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Block
-                  label="Tailored summary"
-                  text={result.summary}
-                  copied={copied === "summary"}
-                  onCopy={() => copy("summary", result.summary)}
-                />
-
-                {result.bullets.map((b) => (
-                  <Block
-                    key={b.company}
-                    label={`${b.company} — tailored bullets`}
-                    text={b.bullets.map((x) => `• ${x}`).join("\n")}
-                    copied={copied === b.company}
-                    onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
-                  />
-                ))}
-
-                <Block
-                  label="Cover letter"
-                  text={result.coverLetter}
-                  copied={copied === "cover"}
-                  onCopy={() => copy("cover", result.coverLetter)}
-                />
-
-                {/* Downloads */}
-                <div className="rounded-lg border border-border bg-card p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Downloads
-                  </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {[
                       ["resume-pdf", "Resume PDF"],
@@ -477,7 +430,7 @@ function ApplyGoPage() {
                         type="button"
                         onClick={() => download(k as never)}
                         disabled={!!dl}
-                        className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                        className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                       >
                         {dl === k ? "Building…" : label}
                       </button>
@@ -489,14 +442,17 @@ function ApplyGoPage() {
                         await download("cl-pdf");
                       }}
                       disabled={!!dl}
-                      className="rounded-md bg-primary/10 border border-primary/30 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:opacity-50"
+                      className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                     >
                       Download both (PDF)
                     </button>
                   </div>
                 </div>
+
+                <GoResultsTabs result={result} />
               </section>
             )}
+
 
             {/* Referral DM */}
             <section className="mt-10 rounded-lg border border-border bg-card p-5">
@@ -643,6 +599,93 @@ function Block({
       <pre className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground font-sans">
         {text}
       </pre>
+    </div>
+  );
+}
+
+function GoResultsTabs({ result }: { result: TailorResult }) {
+  const [tab, setTab] = useState<"resume" | "cover">("resume");
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-1 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setTab("resume")}
+          className={
+            "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
+            (tab === "resume"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground")
+          }
+        >
+          Tailored resume
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("cover")}
+          className={
+            "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
+            (tab === "cover"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground")
+          }
+        >
+          Cover letter
+        </button>
+      </div>
+
+      {tab === "resume" ? (
+        <div className="space-y-6">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold text-foreground">Matched</p>
+                <p className="mt-1 text-muted-foreground">
+                  {result.matchedKeywords.join(", ") || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Missing</p>
+                <p className="mt-1 text-muted-foreground">
+                  {result.missingKeywords.join(", ") || "—"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <Block
+            label="Tailored summary"
+            text={result.summary}
+            copied={copied === "summary"}
+            onCopy={() => copy("summary", result.summary)}
+          />
+          {result.bullets.map((b) => (
+            <Block
+              key={b.company}
+              label={`${b.company} — tailored bullets`}
+              text={b.bullets.map((x) => `• ${x}`).join("\n")}
+              copied={copied === b.company}
+              onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
+            />
+          ))}
+        </div>
+      ) : (
+        <Block
+          label="Cover letter"
+          text={result.coverLetter}
+          copied={copied === "cover"}
+          onCopy={() => copy("cover", result.coverLetter)}
+        />
+      )}
     </div>
   );
 }

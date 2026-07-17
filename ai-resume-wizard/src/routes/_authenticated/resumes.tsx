@@ -9,6 +9,7 @@ import {
   renameResume,
   setPrimaryResume,
 } from "@/lib/resume.functions";
+import { ResumeTabs } from "@/components/ResumeTabs";
 
 export const Route = createFileRoute("/_authenticated/resumes")({
   head: () => ({
@@ -57,8 +58,8 @@ function ResumesPage() {
   return (
     <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="mx-auto max-w-3xl">
-        <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">← Application kit</Link>
-        <h1 className="mt-6 text-3xl font-bold tracking-tight">Resume tracks</h1>
+        <ResumeTabs />
+        <h1 className="text-3xl font-bold tracking-tight">Resume tracks</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Keep multiple named master resumes (e.g. "AI-focused", "Product management"). The
           primary one is used by default for tailoring and export.
