@@ -160,7 +160,7 @@ function ApplyGoPage() {
       let filename: string;
       if (kind.startsWith("resume")) {
         url = kind === "resume-pdf" ? "/api/tailored-resume" : "/api/resume-docx";
-        body = { resume: R, summary: result.summary, bullets: result.bullets, company, role };
+        body = { resume: R, summary: editSummary, bullets: editBullets, company, role };
         const ext = kind === "resume-pdf" ? "pdf" : "docx";
         const slug = (R.name || "Resume").replace(/[^a-z0-9]/gi, "_");
         filename = company
