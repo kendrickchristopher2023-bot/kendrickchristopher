@@ -8,6 +8,7 @@ import {
   saveRewrittenResume,
 } from "@/lib/rewrite.functions";
 import type { MasterResume } from "@/lib/resume-data";
+import { ResumeTabs } from "@/components/ResumeTabs";
 
 export const Route = createFileRoute("/_authenticated/apply/rewrite")({
   head: () => ({
