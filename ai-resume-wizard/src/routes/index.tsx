@@ -194,7 +194,7 @@ function Landing() {
       <section className="mx-auto max-w-3xl px-6 mt-16">
         <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Also from The Kenroe Collective
+            Also from The Kenroe Collective<sup className="ml-0.5 text-[0.7em] font-normal align-super tracking-normal">™</sup>
           </p>
           <h2
             className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
