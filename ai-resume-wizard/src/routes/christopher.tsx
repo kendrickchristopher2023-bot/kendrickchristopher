@@ -132,7 +132,13 @@ function Portfolio() {
               const inner = (
                 <>
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base font-semibold text-foreground">{p.title}</h3>
+                    <h3 className="text-base font-semibold text-foreground">
+                      {p.title === "The Kenroe Collective" ? (
+                        <>The Kenroe Collective<sup className="ml-0.5 text-[0.6em] font-normal align-super">™</sup></>
+                      ) : (
+                        p.title
+                      )}
+                    </h3>
                     <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
                       {p.stack}
                     </span>
