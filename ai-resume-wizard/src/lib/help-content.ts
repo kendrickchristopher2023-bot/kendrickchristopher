@@ -32,7 +32,7 @@ export const RECENT_CHANGES: string[] = [
   "Some job postings contain instructions aimed at applicants (hidden codes, 'include this word', etc.). The app now surfaces those as a notice instead of copying them into your letter or answers.",
   "You can export your applications and matches to CSV from /apply/matches and /apply/metrics.",
   "USAJOBS and SmartRecruiters are live in the job pool; US state names are normalized to 2-letter codes so regional filters work correctly.",
-  "There's a sister product for event planning: The Kenroe Collective (thekenroecollective.com), linked from the landing page.",
+  "There's a sister product for event planning: The Kenroe Collective™ (thekenroecollective.com), linked from the landing page.",
 ];
 
 export const ROUTE_MAP: string[] = [

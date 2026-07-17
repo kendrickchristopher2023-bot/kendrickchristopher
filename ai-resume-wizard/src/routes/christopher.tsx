@@ -62,7 +62,7 @@ function Portfolio() {
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Portfolio · 2026 · A Kenroe Collective project
+            Portfolio · 2026 · A Kenroe Collective<sup className="ml-0.5 text-[0.6em] font-normal align-super">™</sup> project
           </p>
           {user ? (
             <div className="flex items-center gap-3 text-xs">
@@ -194,7 +194,7 @@ function Portfolio() {
             {" · "}
             <Link to="/legal" className="text-primary hover:underline">Terms &amp; Privacy</Link>
             {" · "}
-            Built by <a href="https://thekenroecollective.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
+            Built by <a href="https://thekenroecollective.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">The Kenroe Collective<sup className="ml-0.5 text-[0.6em] font-normal align-super">™</sup></a> · Last updated {RESUME.lastUpdated}
           </span>
         </footer>
       </div>
