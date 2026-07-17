@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RequestAccessRouteImport } from './routes/request-access'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LegalRouteImport } from './routes/legal'
+import { Route as ChristopherRouteImport } from './routes/christopher'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as HelpGettingStartedRouteImport } from './routes/help.getting-started'
 import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
@@ -70,6 +70,11 @@ const LegalRoute = LegalRouteImport.update({
   path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChristopherRoute = ChristopherRouteImport.update({
+  id: '/christopher',
+  path: '/christopher',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -77,11 +82,6 @@ const AuthRoute = AuthRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpGettingStartedRoute = HelpGettingStartedRouteImport.update({
@@ -297,8 +297,9 @@ const AuthenticatedAdminAdminInvitesRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedAdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -342,8 +343,9 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedAdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -387,9 +389,9 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -438,6 +440,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -483,6 +486,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -525,9 +529,9 @@ export interface FileRouteTypes {
     | '/admin'
   id:
     | '__root__'
-    | '/'
     | '/_authenticated'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -573,9 +577,9 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ChristopherRoute: typeof ChristopherRoute
   LegalRoute: typeof LegalRoute
   McpRoute: typeof McpRoute
   RequestAccessRoute: typeof RequestAccessRoute
@@ -625,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/christopher': {
+      id: '/christopher'
+      path: '/christopher'
+      fullPath: '/christopher'
+      preLoaderRoute: typeof ChristopherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -637,13 +648,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help/getting-started': {
@@ -989,9 +993,9 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ChristopherRoute: ChristopherRoute,
   LegalRoute: LegalRoute,
   McpRoute: McpRoute,
   RequestAccessRoute: RequestAccessRoute,

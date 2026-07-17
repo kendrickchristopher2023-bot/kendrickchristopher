@@ -22,7 +22,7 @@ function hasClientSession(): boolean {
 
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/christopher")({
   // Client-side gate. On the server there's no localStorage session, so this
   // is a no-op during SSR and the portfolio still renders for signed-out
   // visitors, crawlers, and social scrapers. On client-side navigation (e.g.
