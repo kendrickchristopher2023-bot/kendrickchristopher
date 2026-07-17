@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RequestAccessRouteImport } from './routes/request-access'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LegalRouteImport } from './routes/legal'
+import { Route as ChristopherRouteImport } from './routes/christopher'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -68,6 +69,11 @@ const McpRoute = McpRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChristopherRoute = ChristopherRouteImport.update({
+  id: '/christopher',
+  path: '/christopher',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -299,6 +305,7 @@ const AuthenticatedAdminAdminInvitesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
   '/mcp': typeof McpRoute
   '/request-access': typeof RequestAccessRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -528,6 +539,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/christopher'
     | '/legal'
     | '/mcp'
     | '/request-access'
@@ -576,6 +588,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ChristopherRoute: typeof ChristopherRoute
   LegalRoute: typeof LegalRoute
   McpRoute: typeof McpRoute
   RequestAccessRoute: typeof RequestAccessRoute
@@ -623,6 +636,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/christopher': {
+      id: '/christopher'
+      path: '/christopher'
+      fullPath: '/christopher'
+      preLoaderRoute: typeof ChristopherRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -992,6 +1012,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ChristopherRoute: ChristopherRoute,
   LegalRoute: LegalRoute,
   McpRoute: McpRoute,
   RequestAccessRoute: RequestAccessRoute,

@@ -1,12 +1,9 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { RESUME } from "@/lib/resume-data";
-import { useSession, signOut } from "@/lib/session";
 import { supabase } from "@/integrations/supabase/client";
-import { currentUserIsAdmin } from "@/lib/admin.functions";
 
-// True on the client when Supabase has a persisted session in localStorage.
-// Used both by beforeLoad and by a synchronous render gate below.
+// Client-side session sniff so signed-in users redirect straight to /apply
+// without a flash. SSR / signed-out visitors render the landing normally.
 function hasClientSession(): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -15,48 +12,30 @@ function hasClientSession(): boolean {
       if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) return true;
     }
   } catch {
-    /* private mode / disabled storage */
+    /* ignore */
   }
   return false;
 }
 
-
-
 export const Route = createFileRoute("/")({
-  // Client-side gate. On the server there's no localStorage session, so this
-  // is a no-op during SSR and the portfolio still renders for signed-out
-  // visitors, crawlers, and social scrapers. On client-side navigation (e.g.
-  // magic-link → /auth → /) this runs before render and redirects non-owners
-  // straight to /apply with no flash.
   beforeLoad: async () => {
     if (!hasClientSession()) return;
     const { data } = await supabase.auth.getUser();
-    if (!data.user) return; // stale token, treat as signed-out
-    try {
-      const res = await currentUserIsAdmin();
-      if (!res.isAdmin) throw redirect({ to: "/apply" });
-    } catch (err) {
-      // If the admin check itself throws a redirect, rethrow it. Otherwise
-      // (network hiccup, etc.) fall through to render — the component-level
-      // gate below will retry.
-      if (err && typeof err === "object" && "to" in (err as Record<string, unknown>)) {
-        throw err;
-      }
-    }
+    if (data.user) throw redirect({ to: "/apply" });
   },
   head: () => ({
     meta: [
-      { title: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      { title: "Application Kit — Land the job, on your terms" },
       {
         name: "description",
         content:
-          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
+          "Application Kit helps you find real job openings, tailor your resume and cover letter to each one, and keep track of every application. Invite-only.",
       },
-      { property: "og:title", content: "Christopher Kendrick — AI Deployment & Enablement Manager" },
+      { property: "og:title", content: "Application Kit — Land the job, on your terms" },
       {
         property: "og:description",
         content:
-          "AI deployment and customer enablement specialist. 10+ years accelerating enterprise product adoption. Hands-on builder with Claude, Lovable, and ChatGPT.",
+          "Find real job openings, tailor your resume and cover letter to each one, and track every application in one calm workspace. Invite-only.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -68,25 +47,26 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: Index,
+  component: Landing,
 });
 
-const WINS = [
-  { metric: "60%", label: "Reduction in training time (5 days → 2)" },
-  { metric: "50%", label: "Reduction in implementation time (2 mo → 1 mo)" },
-  { metric: "10–20", label: "Enterprise accounts managed concurrently" },
+const PILLARS = [
+  {
+    title: "Find real openings",
+    body: "A curated feed of live listings from public job boards, refreshed daily. Filter by location, remote, and salary — no ghost jobs, no marketing fluff.",
+  },
+  {
+    title: "Tailor in one click",
+    body: "Paste a job description. Get a resume rewritten to speak that role's language and a cover letter drafted from your real experience — never fabricated.",
+  },
+  {
+    title: "Track every application",
+    body: "One place to log what you applied to, what came back, and what's next. No spreadsheets. Interview prep and follow-up drafts included.",
+  },
 ];
 
-function Index() {
-  const [copied, setCopied] = useState(false);
-  const email = RESUME.email;
-  const { user } = useSession();
-  const navigate = useNavigate();
-
-  // Hard-refresh flash guard: if a Supabase session exists in localStorage on
-  // first client render, hide the portfolio immediately and resolve identity
-  // async. Non-owners get redirected; the owner (admin) sees the portfolio.
-  // SSR + signed-out clients render the portfolio normally.
+function Landing() {
+  // Second-pass client-side redirect in case beforeLoad didn't fire (SSR path)
   const [hidden, setHidden] = useState(() => hasClientSession());
   useEffect(() => {
     if (!hidden) return;
@@ -94,180 +74,140 @@ function Index() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (cancelled) return;
-      if (!data.user) {
-        setHidden(false);
-        return;
-      }
-      try {
-        const res = await currentUserIsAdmin();
-        if (cancelled) return;
-        if (res.isAdmin) setHidden(false);
-        else navigate({ to: "/apply", replace: true });
-      } catch {
-        if (!cancelled) setHidden(false);
-      }
+      if (data.user) window.location.replace("/apply");
+      else setHidden(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [hidden, navigate]);
+  }, [hidden]);
 
-
-
-
-  const copyEmail = async () => {
-    try {
-      await navigator.clipboard.writeText(email);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const mailtoHref = `mailto:${email}?subject=${encodeURIComponent(
-    "Introduction — Christopher Kendrick",
-  )}&body=${encodeURIComponent("Hi Christopher,\n\n")}`;
-
-  if (hidden) {
-    return <main className="min-h-screen bg-background" aria-hidden />;
-  }
+  if (hidden) return <main className="min-h-screen bg-background" aria-hidden />;
 
   return (
-    <main className="min-h-screen bg-background px-6 py-16 sm:py-24" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Portfolio · 2026 · A Kenroe Collective project
-          </p>
-          {user ? (
-            <div className="flex items-center gap-3 text-xs">
-              <Link to="/apply" className="font-medium text-primary hover:underline">
-                Open kit →
-              </Link>
-              <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <Link to="/auth" className="text-xs font-medium text-primary hover:underline">
-              Sign in →
-            </Link>
-          )}
+    <main
+      className="min-h-screen bg-background"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      <div className="mx-auto max-w-4xl px-6 py-6 flex items-center justify-between">
+        <p
+          className="text-sm font-semibold tracking-tight text-foreground"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Application Kit
+        </p>
+        <div className="flex items-center gap-4 text-xs">
+          <Link to="/request-access" className="text-muted-foreground hover:text-foreground">
+            Request access
+          </Link>
+          <Link
+            to="/auth"
+            className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Sign in
+          </Link>
         </div>
+      </div>
 
-        <h1 className="mt-4 text-5xl sm:text-6xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-          {RESUME.name}
+      <section className="mx-auto max-w-3xl px-6 pt-16 pb-8 sm:pt-24">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          Invite-only · A Kenroe Collective project
+        </p>
+        <h1
+          className="mt-5 text-5xl sm:text-6xl font-bold tracking-tight text-foreground leading-[1.05]"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Land the job,
+          <br />
+          on your terms.
         </h1>
-        <p className="mt-3 text-xl sm:text-2xl font-medium text-primary">{RESUME.title}</p>
-        <p className="mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-foreground">
-          I help enterprise teams put AI into production — from onboarding playbooks
-          to Claude and Lovable-powered automations that replace manual work. 10+
-          years translating complex technical capabilities into measurable adoption.
+        <p className="mt-6 max-w-2xl text-lg sm:text-xl leading-relaxed text-foreground">
+          Application Kit helps you find real job openings, tailor your resume and
+          cover letter to each one, and track every application — in one calm
+          workspace.
+        </p>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          It prepares your materials. It does not auto-apply, submit forms on your
+          behalf, or try to trick screening software. You stay in the driver's seat.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link to="/resume" className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-            View resume
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <Link
+            to="/auth"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Sign in
           </Link>
-          <a href="/Christopher_Kendrick_Resume.pdf" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent">
-            Download PDF
-          </a>
-          <a href={mailtoHref} className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent">
-            Email me
-          </a>
-          <button type="button" onClick={copyEmail} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            {copied ? "copied ✓" : "or copy email"}
-          </button>
-          <Link to="/apply" className="inline-flex items-center justify-center rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Application kit →
+          <Link
+            to="/request-access"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Request access
           </Link>
+          <span className="text-xs text-muted-foreground">Access is admin-approved.</span>
         </div>
+      </section>
 
-        {/* Selected wins */}
-        <section className="mt-16 border-t border-border pt-10">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Selected wins</h2>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {WINS.map((w) => (
-              <div key={w.metric}>
-                <p className="text-4xl font-bold text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                  {w.metric}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <section className="mx-auto max-w-3xl px-6 mt-16 border-t border-border pt-12">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          What's inside
+        </h2>
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {PILLARS.map((p) => (
+            <div key={p.title} className="rounded-lg border border-border bg-card p-5">
+              <h3
+                className="text-base font-semibold text-foreground"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                {p.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        {/* Projects */}
-        <section className="mt-14 border-t border-border pt-10">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Projects</h2>
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {RESUME.projects.map((p) => {
-              const linkHref = p.href ?? p.repoUrl;
-              const inner = (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-base font-semibold text-foreground">{p.title}</h3>
-                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
-                      {p.stack}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.outcome}</p>
-                  <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">
-                    {p.loomUrl && (
-                      <a href={p.loomUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                        ▶ Demo (60s)
-                      </a>
-                    )}
-                    {p.repoUrl && (
-                      <a href={p.repoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                        GitHub
-                      </a>
-                    )}
-                    {p.href && <span className="text-primary">Visit →</span>}
-                    {p.internal && <span className="text-muted-foreground">You're looking at it.</span>}
-                  </div>
-                </>
-              );
-              return linkHref && !p.repoUrl ? (
-                <a key={p.title} href={linkHref} target="_blank" rel="noreferrer" className="group rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors">
-                  {inner}
-                </a>
-              ) : (
-                <div key={p.title} className="rounded-lg border border-border bg-card p-5 hover:border-primary/60 transition-colors">
-                  {inner}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+      <section className="mx-auto max-w-3xl px-6 mt-16 border-t border-border pt-12">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Honest about what it is
+        </h2>
+        <ul className="mt-6 space-y-3 text-sm leading-relaxed text-foreground">
+          <li>
+            <span className="font-semibold">Human in the loop.</span> Nothing submits
+            without you. "Mark as applied" only logs what you already did.
+          </li>
+          <li>
+            <span className="font-semibold">Truthful tailoring.</span> Rewrites rephrase
+            your real experience — they never invent employers, titles, or metrics.
+          </li>
+          <li>
+            <span className="font-semibold">No dark patterns.</span> No hidden keywords,
+            no CAPTCHA bypass, no tricks aimed at applicant tracking systems.
+          </li>
+        </ul>
+      </section>
 
-        {/* Focus */}
-        <section className="mt-14 border-t border-border pt-10">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Currently exploring</h2>
-          <p className="mt-4 text-base leading-relaxed text-foreground">
-            AI Deployment Manager · Forward Deployed Engineer · Solutions Architect ·
-            Implementation Manager · Customer Engineer roles at frontier AI companies.
-            Open to relocation to New York.
-          </p>
-        </section>
-
-        <footer className="mt-16 border-t border-border pt-6 text-xs text-muted-foreground">
-          Concord, NC · {email} · {RESUME.phone} ·{" "}
-          <a href={`https://${RESUME.github}`} target="_blank" rel="noreferrer" className="hover:text-primary">{RESUME.github}</a>
-          <br />
-          <span className="mt-2 inline-block">
-            <Link to="/help/getting-started" className="text-primary hover:underline">Getting started</Link>
-            {" · "}
-            <Link to="/help/faq" className="text-primary hover:underline">FAQ</Link>
-            {" · "}
-            <Link to="/legal" className="text-primary hover:underline">Terms &amp; Privacy</Link>
-            {" · "}
-            Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
-          </span>
-        </footer>
-      </div>
+      <footer className="mx-auto max-w-3xl px-6 mt-20 border-t border-border pt-6 pb-10 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-3">
+        <span>
+          <Link to="/legal" className="hover:text-foreground hover:underline">
+            Terms &amp; Privacy
+          </Link>
+          {" · "}
+          <Link to="/help/getting-started" className="hover:text-foreground hover:underline">
+            Getting started
+          </Link>
+          {" · "}
+          <Link to="/help/faq" className="hover:text-foreground hover:underline">
+            FAQ
+          </Link>
+        </span>
+        <span>
+          Built by{" "}
+          <Link to="/christopher" className="hover:text-foreground hover:underline">
+            Christopher Kendrick
+          </Link>
+        </span>
+      </footer>
     </main>
   );
 }

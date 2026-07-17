@@ -151,10 +151,10 @@ export const RESUME: MasterResume = {
     },
     {
       title: "The Kenroe Collective",
-      stack: "Consulting practice",
+      stack: "AI event-planning platform",
       outcome:
-        "Advisory work on AI deployment and internal-tooling for enterprise teams. Positioning shop and launchpad for the automations above.",
-      href: "https://kenroecollective.com",
+        "Shipped AI-powered event-planning platform for weddings, corporate events, and memorials — AI-driven menu and design curation, vendor curation, and multi-language support. A working AI product I designed, built, and run end-to-end.",
+      href: "https://thekenroecollective.com",
     },
     {
       title: "This site (Resume + Application Kit)",
