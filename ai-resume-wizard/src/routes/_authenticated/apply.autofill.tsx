@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { generateScreenerAnswers, getMyScreenerAnswers, type ScreenerQA } from "@/lib/screener.functions";
+import { DownloadButtons } from "@/components/DownloadButtons";
 
 export const Route = createFileRoute("/_authenticated/apply/autofill")({
   head: () => ({
@@ -141,6 +142,23 @@ function AutofillPage() {
               skipped by the browser extension. Edit them by hand per application, or regenerate to get fresh drafts
               (older answers may have unnecessary placeholders — regenerating fixes that).
             </p>
+          </div>
+        )}
+
+        {answers.length > 0 && (
+          <div className="mt-6 flex items-center justify-end">
+            <DownloadButtons
+              ready={answers.length > 0}
+              build={() => ({
+                filename: `Application_Autofill${company ? `_${company}` : ""}`,
+                title: "Application Autofill",
+                subtitle: company ? `Reference for ${company}` : "Screener Q&A reference",
+                sections: answers.map((a) => ({
+                  heading: fill(a.q),
+                  body: fill(a.a),
+                })),
+              })}
+            />
           </div>
         )}
 

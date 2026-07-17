@@ -12,6 +12,7 @@ import {
   listAdminAuditLog,
   getAdminAnalytics,
 } from "@/lib/admin.functions";
+import { listRefreshRuns, type RefreshRun } from "@/lib/refresh-runs.functions";
 import { getAppStatus, setAppStatus } from "@/lib/app-status.functions";
 import {
   listChangelog,
@@ -255,6 +256,10 @@ function AdminDashboard() {
         </header>
 
         <SiteStatusPanel />
+
+        <RefreshHealthPanel />
+
+
 
 
 
@@ -1029,4 +1034,111 @@ function ChangelogAdminPanel() {
     </section>
   );
 }
+
+function RefreshHealthPanel() {
+  const listFn = useServerFn(listRefreshRuns);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["admin", "refresh-runs"], queryFn: () => listFn(), refetchInterval: 60_000 });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const trigger = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const res = await fetch("/api/public/hooks/refresh-jobs", { method: "POST", headers: { "x-admin-trigger": "1" } });
+      // No cron secret from browser — this WILL return 401 unless proxied.
+      // Instead of exposing the secret, admin uses the "refresh now" flow to
+      // dispatch the cron job via SQL. Here we just poll and let the daily
+      // cron do its work. If the button 401s, that's expected.
+      if (!res.ok && res.status !== 401) {
+        setErr(`Trigger returned ${res.status}`);
+      }
+    } finally {
+      setBusy(false);
+      setTimeout(() => qc.invalidateQueries({ queryKey: ["admin", "refresh-runs"] }), 500);
+    }
+  };
+
+  const now = Date.now();
+  const stale = (r: RefreshRun) =>
+    !r.finished_at || (now - new Date(r.finished_at).getTime()) > 36 * 3600 * 1000;
+
+  const rows = q.data?.latestBySlice ?? [];
+  const totalOk = rows.filter((r) => r.ok === true).length;
+  const totalFail = rows.filter((r) => r.ok === false).length;
+  const totalStale = rows.filter((r) => stale(r)).length;
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">Refresh health</h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Every job-source slice writes its outcome here. Anything older than 36h shows red — that means the daily cron didn't reach it.
+          </p>
+          <p className="mt-2 text-xs">
+            <span className="text-emerald-600">{totalOk} ok</span>
+            {" · "}
+            <span className="text-destructive">{totalFail} failed</span>
+            {" · "}
+            <span className={totalStale > 0 ? "text-destructive" : "text-muted-foreground"}>{totalStale} stale</span>
+            {" · "}
+            <span className="text-muted-foreground">{rows.length} slices</span>
+          </p>
+        </div>
+        <button
+          onClick={trigger}
+          disabled={busy}
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+          title="Note: browser trigger requires cron secret; use for future admin-authenticated dispatch"
+        >
+          {busy ? "…" : "Refresh view"}
+        </button>
+      </div>
+
+      {q.isLoading && <p className="mt-4 text-sm text-muted-foreground">Loading…</p>}
+      {q.error && <p className="mt-4 text-sm text-destructive">{(q.error as Error).message}</p>}
+
+      {rows.length > 0 && (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="text-left text-muted-foreground">
+              <tr>
+                <th className="py-1 pr-3 font-medium">Slice</th>
+                <th className="py-1 pr-3 font-medium">Status</th>
+                <th className="py-1 pr-3 font-medium">Last finish</th>
+                <th className="py-1 pr-3 font-medium">Jobs upserted</th>
+                <th className="py-1 pr-3 font-medium">Duration</th>
+                <th className="py-1 pr-3 font-medium">Error</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {rows.map((r) => {
+                const isStale = stale(r);
+                const badge = r.ok === true && !isStale
+                  ? <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">ok</span>
+                  : r.ok === false
+                    ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">failed</span>
+                    : isStale
+                      ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">stale</span>
+                      : <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">running</span>;
+                return (
+                  <tr key={r.id} className={isStale ? "bg-destructive/5" : ""}>
+                    <td className="py-1 pr-3 font-mono">{r.slice}</td>
+                    <td className="py-1 pr-3">{badge}</td>
+                    <td className="py-1 pr-3 text-muted-foreground">{formatEasternDateTime(r.finished_at ?? r.started_at)}</td>
+                    <td className="py-1 pr-3">{r.jobs_upserted}</td>
+                    <td className="py-1 pr-3 text-muted-foreground">{r.ms != null ? `${(r.ms / 1000).toFixed(1)}s` : "—"}</td>
+                    <td className="py-1 pr-3 text-destructive max-w-md truncate" title={r.error ?? ""}>{r.error ?? ""}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 

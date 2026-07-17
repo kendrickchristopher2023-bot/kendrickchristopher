@@ -169,6 +169,7 @@ async function runWatchedSlice(summary: SliceSummary): Promise<void> {
 
 export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary> {
   const started = Date.now();
+  const startedAt = new Date().toISOString();
   const summary: SliceSummary = {
     slice,
     jobsUpserted: 0,
@@ -178,12 +179,60 @@ export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary
     errors: [],
     ms: 0,
   };
-  if (slice === "watched") {
-    await runWatchedSlice(summary);
-  } else {
-    await runAggregatorSlice(slice, summary);
+
+  // Insert a "started" row up front so a mid-run crash still leaves a trail.
+  let runId: string | null = null;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await (supabaseAdmin as unknown as {
+      from: (t: string) => { insert: (v: unknown) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null }> } } };
+    })
+      .from("refresh_runs")
+      .insert({ slice, started_at: startedAt })
+      .select("id")
+      .single();
+    runId = data?.id ?? null;
+  } catch {
+    // observability failure must never break the actual refresh
   }
-  summary.ms = Date.now() - started;
+
+  let thrown: unknown = null;
+  try {
+    if (slice === "watched") await runWatchedSlice(summary);
+    else await runAggregatorSlice(slice, summary);
+  } catch (e) {
+    thrown = e;
+  } finally {
+    summary.ms = Date.now() - started;
+    if (runId) {
+      const ok = thrown == null && summary.companiesFailed === 0 && summary.errors.length === 0;
+      const errText = thrown
+        ? (thrown instanceof Error ? thrown.message : String(thrown))
+        : summary.errors.length > 0
+          ? summary.errors.slice(0, 5).map((e) => `${e.source}/${e.slug}: ${e.error}`).join(" | ").slice(0, 2000)
+          : null;
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await (supabaseAdmin as unknown as {
+          from: (t: string) => { update: (v: unknown) => { eq: (c: string, v: string) => Promise<unknown> } };
+        })
+          .from("refresh_runs")
+          .update({
+            finished_at: new Date().toISOString(),
+            ok,
+            jobs_upserted: summary.jobsUpserted,
+            companies_ok: summary.companiesOk,
+            companies_failed: summary.companiesFailed,
+            error: errText,
+            ms: summary.ms,
+          })
+          .eq("id", runId);
+      } catch {
+        // ignore
+      }
+    }
+  }
+  if (thrown) throw thrown;
   return summary;
 }
 

@@ -21,6 +21,7 @@ import {
 } from "@/lib/applications.functions";
 import { batchTailorResume } from "@/lib/tailor.functions";
 import { draftFollowup, listFollowupsDue, type FollowupCandidate } from "@/lib/followup.functions";
+import { CsvDownloadButton } from "@/components/DownloadButtons";
 
 
 export const Route = createFileRoute("/_authenticated/apply/matches")({
@@ -130,9 +131,27 @@ function MatchesPage() {
           <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">
             ← Application kit
           </Link>
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-            {matches.length} target{matches.length === 1 ? "" : "s"}
-          </span>
+          <div className="flex items-center gap-3">
+            <CsvDownloadButton
+              ready={matches.length > 0}
+              label="Export CSV"
+              build={() => ({
+                filename: `My_Jobs_${new Date().toISOString().slice(0, 10)}`,
+                headers: ["company", "role", "location", "tier", "url", "notes"],
+                rows: matches.map((m) => [
+                  m.company ?? "",
+                  m.role ?? "",
+                  m.location ?? "",
+                  m.tier ?? "",
+                  m.role_url ?? "",
+                  m.notes ?? "",
+                ]),
+              })}
+            />
+            <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+              {matches.length} target{matches.length === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
         <header className="mt-8 border-b border-border pb-8">

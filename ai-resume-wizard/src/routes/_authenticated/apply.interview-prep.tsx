@@ -10,6 +10,7 @@ import {
   type StarAnswer,
 } from "@/lib/interview.functions";
 import { getMatchPrefill } from "@/lib/matches.functions";
+import { DownloadButtons } from "@/components/DownloadButtons";
 
 const prepSearchSchema = z.object({
   matchId: z.string().uuid().optional(),
@@ -153,7 +154,15 @@ function InterviewPrepPage() {
                 </button>
               ))}
             </div>
-            {active && <SessionEditor key={active.id} sessionId={active.id} initial={active.answers} />}
+            {active && (
+              <SessionEditor
+                key={active.id}
+                sessionId={active.id}
+                initial={active.answers}
+                company={active.company ?? ""}
+                role={active.role ?? ""}
+              />
+            )}
           </section>
         )}
       </div>
@@ -161,7 +170,9 @@ function InterviewPrepPage() {
   );
 }
 
-function SessionEditor({ sessionId, initial }: { sessionId: string; initial: StarAnswer[] }) {
+function SessionEditor({
+  sessionId, initial, company, role,
+}: { sessionId: string; initial: StarAnswer[]; company: string; role: string }) {
   const [answers, setAnswers] = useState<StarAnswer[]>(initial);
   const saveFn = useServerFn(saveInterviewAnswers);
   const save = useMutation({
@@ -176,8 +187,33 @@ function SessionEditor({ sessionId, initial }: { sessionId: string; initial: Sta
     await navigator.clipboard.writeText(text);
   };
 
+  const titleBits = [role, company].filter(Boolean).join(" @ ");
+  const fnameBits = [company, role].filter(Boolean).join("_") || "Session";
+
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Downloads use your current edited answers.
+        </p>
+        <DownloadButtons
+          ready={answers.length > 0}
+          build={() => ({
+            filename: `Interview_Prep_${fnameBits}`,
+            title: "Interview Prep",
+            subtitle: titleBits || undefined,
+            sections: answers.map((a) => ({
+              heading: a.question,
+              kv: [
+                { label: "Situation", value: a.situation },
+                { label: "Task", value: a.task },
+                { label: "Action", value: a.action },
+                { label: "Result", value: a.result },
+              ],
+            })),
+          })}
+        />
+      </div>
       {answers.map((a, i) => (
         <div key={i} className="rounded-lg border border-border bg-card p-5">
           <input
