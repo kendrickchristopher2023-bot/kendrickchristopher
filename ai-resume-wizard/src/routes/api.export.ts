@@ -228,7 +228,16 @@ export const Route = createFileRoute("/api/export")({
             "Content-Disposition": `attachment; filename="${filename}"`,
           },
         });
+        } catch (err) {
+          console.error("[api/export] error", err);
+          const message = err instanceof Error ? err.message : String(err);
+          return new Response(
+            JSON.stringify({ error: "Export failed", message }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          );
+        }
       },
+
     },
   },
 });
