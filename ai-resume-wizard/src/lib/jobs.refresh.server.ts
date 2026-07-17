@@ -181,19 +181,24 @@ export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary
   };
 
   // Insert a "started" row up front so a mid-run crash still leaves a trail.
+  // If the initial insert fails for any reason (silent RLS block, transient
+  // net error, cold-start abort), fall back at the end to a single full-row
+  // insert so we never lose the record entirely.
   let runId: string | null = null;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await (supabaseAdmin as unknown as {
-      from: (t: string) => { insert: (v: unknown) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null }> } } };
+    const { data, error } = await (supabaseAdmin as unknown as {
+      from: (t: string) => { insert: (v: unknown) => { select: (s: string) => { single: () => Promise<{ data: { id: string } | null; error: { message: string } | null }> } } };
     })
       .from("refresh_runs")
       .insert({ slice, started_at: startedAt })
       .select("id")
       .single();
+    if (error) console.error(`refresh_runs initial insert failed for slice=${slice}:`, error.message);
     runId = data?.id ?? null;
-  } catch {
+  } catch (e) {
     // observability failure must never break the actual refresh
+    console.error(`refresh_runs initial insert threw for slice=${slice}:`, e instanceof Error ? e.message : String(e));
   }
 
   let thrown: unknown = null;
@@ -204,21 +209,22 @@ export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary
     thrown = e;
   } finally {
     summary.ms = Date.now() - started;
-    if (runId) {
-      const ok = thrown == null && summary.companiesFailed === 0 && summary.errors.length === 0;
-      const errText = thrown
-        ? (thrown instanceof Error ? thrown.message : String(thrown))
-        : summary.errors.length > 0
-          ? summary.errors.slice(0, 5).map((e) => `${e.source}/${e.slug}: ${e.error}`).join(" | ").slice(0, 2000)
-          : null;
-      try {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await (supabaseAdmin as unknown as {
-          from: (t: string) => { update: (v: unknown) => { eq: (c: string, v: string) => Promise<unknown> } };
+    const ok = thrown == null && summary.companiesFailed === 0 && summary.errors.length === 0;
+    const errText = thrown
+      ? (thrown instanceof Error ? thrown.message : String(thrown))
+      : summary.errors.length > 0
+        ? summary.errors.slice(0, 5).map((e) => `${e.source}/${e.slug}: ${e.error}`).join(" | ").slice(0, 2000)
+        : null;
+    const finishedAt = new Date().toISOString();
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      if (runId) {
+        const { error } = await (supabaseAdmin as unknown as {
+          from: (t: string) => { update: (v: unknown) => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } };
         })
           .from("refresh_runs")
           .update({
-            finished_at: new Date().toISOString(),
+            finished_at: finishedAt,
             ok,
             jobs_upserted: summary.jobsUpserted,
             companies_ok: summary.companiesOk,
@@ -227,9 +233,29 @@ export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary
             ms: summary.ms,
           })
           .eq("id", runId);
-      } catch {
-        // ignore
+        if (error) console.error(`refresh_runs update failed for slice=${slice}:`, error.message);
+      } else {
+        // Fallback: initial insert never landed. Write the full record now so
+        // this slice still shows up in observability.
+        const { error } = await (supabaseAdmin as unknown as {
+          from: (t: string) => { insert: (v: unknown) => Promise<{ error: { message: string } | null }> };
+        })
+          .from("refresh_runs")
+          .insert({
+            slice,
+            started_at: startedAt,
+            finished_at: finishedAt,
+            ok,
+            jobs_upserted: summary.jobsUpserted,
+            companies_ok: summary.companiesOk,
+            companies_failed: summary.companiesFailed,
+            error: errText,
+            ms: summary.ms,
+          });
+        if (error) console.error(`refresh_runs fallback insert failed for slice=${slice}:`, error.message);
       }
+    } catch (e) {
+      console.error(`refresh_runs write threw for slice=${slice}:`, e instanceof Error ? e.message : String(e));
     }
   }
   if (thrown) throw thrown;
