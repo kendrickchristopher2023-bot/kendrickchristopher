@@ -15,6 +15,7 @@ import { Route as LegalRouteImport } from './routes/legal'
 import { Route as ChristopherRouteImport } from './routes/christopher'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as HelpGettingStartedRouteImport } from './routes/help.getting-started'
 import { Route as HelpFaqRouteImport } from './routes/help.faq'
 import { Route as ApiTailoredResumeRouteImport } from './routes/api.tailored-resume'
@@ -82,6 +83,11 @@ const AuthRoute = AuthRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpGettingStartedRoute = HelpGettingStartedRouteImport.update({
@@ -297,7 +303,7 @@ const AuthenticatedAdminAdminInvitesRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
@@ -343,7 +349,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminAdminIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/christopher': typeof ChristopherRoute
   '/legal': typeof LegalRoute
@@ -389,6 +395,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/christopher': typeof ChristopherRoute
@@ -529,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin'
   id:
     | '__root__'
+    | '/'
     | '/_authenticated'
     | '/auth'
     | '/christopher'
@@ -577,6 +585,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ChristopherRoute: typeof ChristopherRoute
@@ -648,6 +657,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help/getting-started': {
@@ -993,6 +1009,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ChristopherRoute: ChristopherRoute,
