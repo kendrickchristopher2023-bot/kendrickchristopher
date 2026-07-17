@@ -66,10 +66,14 @@ const PILLARS = [
 ];
 
 function Landing() {
-  // Second-pass client-side redirect in case beforeLoad didn't fire (SSR path)
-  const [hidden, setHidden] = useState(() => hasClientSession());
+  // Server always renders the landing (hidden=false). If a signed-in user
+  // slips past beforeLoad (typical SSR case with no client cookies yet), we
+  // hide+redirect after mount. Reading localStorage in the initial state
+  // caused an SSR/CSR hydration mismatch — do it in useEffect instead.
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
-    if (!hidden) return;
+    if (!hasClientSession()) return;
+    setHidden(true);
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.getUser();
@@ -80,7 +84,7 @@ function Landing() {
     return () => {
       cancelled = true;
     };
-  }, [hidden]);
+  }, []);
 
   if (hidden) return <main className="min-h-screen bg-background" aria-hidden />;
 
