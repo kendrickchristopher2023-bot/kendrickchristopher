@@ -101,10 +101,8 @@ function RewritePage() {
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Application kit
-          </Link>
+        <ResumeTabs />
+        <div className="flex items-center justify-end">
           <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
             {ent.data?.reason === "founder_unlimited" ? "Unlimited · Founder" : "One-time · Pro"}
           </span>
