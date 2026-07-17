@@ -209,7 +209,7 @@ function TailorPage() {
           },
           company,
           role,
-          coverLetter: result.coverLetter,
+          coverLetter: editCover,
         }),
       });
       if (!res.ok) throw new Error(`Cover letter ${kind.toUpperCase()} failed (${res.status})`);
