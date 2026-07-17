@@ -8,6 +8,12 @@ import { getMyResume } from "@/lib/resume.functions";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { generateReferralDm } from "@/lib/referral.functions";
 import { upsertApplication } from "@/lib/applications.functions";
+import {
+  EditableBlock,
+  InjectionNotice,
+  TailorModePicker,
+  type TailorMode,
+} from "@/components/TailorEdit";
 
 // Plain zod (NOT @tanstack/zod-adapter — that dependency broke production once).
 const searchSchema = z.object({
