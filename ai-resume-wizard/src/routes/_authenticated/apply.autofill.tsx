@@ -287,8 +287,8 @@ function AutofillPage() {
             <p className="font-semibold">Some answers need your attention.</p>
             <p className="mt-1 text-muted-foreground">
               Answers marked <strong>Needs customizing</strong> contain <code>{"{{...}}"}</code> placeholders and will be
-              skipped by the browser extension. Fill Company above to substitute, edit by hand, or switch to targeted mode
-              for a version written specifically for a job.
+              skipped by the browser extension. Fill Company above to substitute, edit by hand, or add a company or role
+              above to regenerate a version written for that specific job.
             </p>
           </div>
         )}
