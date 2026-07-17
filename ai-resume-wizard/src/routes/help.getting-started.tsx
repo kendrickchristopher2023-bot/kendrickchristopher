@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { HelpTabs } from "@/components/HelpTabs";
 
 export const Route = createFileRoute("/help/getting-started")({
   head: () => ({
