@@ -402,7 +402,11 @@ function ApplyGoPage() {
             </section>
 
             {/* Primary action */}
-            <section className="mt-8">
+            <section className="mt-8 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-muted-foreground">Generate:</span>
+                <TailorModePicker mode={mode} onChange={setMode} disabled={tailorLoading} />
+              </div>
               <button
                 type="button"
                 onClick={onTailor}
@@ -410,17 +414,28 @@ function ApplyGoPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground disabled:opacity-50"
               >
                 {tailorLoading
-                  ? "Preparing resume + cover letter… (20–40s)"
+                  ? mode === "resume"
+                    ? "Tailoring resume… (20–40s)"
+                    : mode === "cover"
+                      ? "Drafting cover letter… (20–40s)"
+                      : "Preparing resume + cover letter… (20–40s)"
                   : result
-                    ? "Re-prepare resume + cover letter"
-                    : "Prepare resume + cover letter"}
+                    ? mode === "resume"
+                      ? "Re-tailor resume"
+                      : mode === "cover"
+                        ? "Re-draft cover letter"
+                        : "Re-prepare resume + cover letter"
+                    : mode === "resume"
+                      ? "Tailor resume"
+                      : mode === "cover"
+                        ? "Draft cover letter"
+                        : "Prepare resume + cover letter"}
               </button>
-              <p className="mt-2 text-xs text-muted-foreground">
-                One AI call → tailored resume, cover letter, match score, and keyword gap.
-                Grounded in your saved resume — no fabrication.
+              <p className="text-xs text-muted-foreground">
+                One AI call, grounded in your saved resume — no fabrication. Edit anything below before you download.
               </p>
               {tailorErr && (
-                <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {tailorErr}
                 </p>
               )}
@@ -429,47 +444,75 @@ function ApplyGoPage() {
             {/* Results */}
             {result && (
               <section className="mt-10 space-y-6">
+                <InjectionNotice injection={result.injection} />
+
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm font-medium text-foreground">
-                      ✓ Tailored resume + cover letter ready · Match{" "}
+                      ✓ Ready · Match{" "}
                       <span className="font-bold text-primary">{result.matchScore}/100</span>
                     </p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      ["resume-pdf", "Resume PDF"],
-                      ["resume-docx", "Resume DOCX"],
-                      ["cl-pdf", "Cover letter PDF"],
-                      ["cl-docx", "Cover letter DOCX"],
-                    ].map(([k, label]) => (
+                    {mode !== "cover" && (
+                      <>
+                        {(["resume-pdf", "resume-docx"] as const).map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => download(k)}
+                            disabled={!!dl}
+                            className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          >
+                            {dl === k ? "Building…" : k === "resume-pdf" ? "Resume PDF" : "Resume DOCX"}
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {mode !== "resume" && (
+                      <>
+                        {(["cl-pdf", "cl-docx"] as const).map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => download(k)}
+                            disabled={!!dl}
+                            className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          >
+                            {dl === k ? "Building…" : k === "cl-pdf" ? "Cover letter PDF" : "Cover letter DOCX"}
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {mode === "both" && (
                       <button
-                        key={k}
                         type="button"
-                        onClick={() => download(k as never)}
+                        onClick={async () => {
+                          await download("resume-pdf");
+                          await download("cl-pdf");
+                        }}
                         disabled={!!dl}
-                        className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                        className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                       >
-                        {dl === k ? "Building…" : label}
+                        Download both (PDF)
                       </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await download("resume-pdf");
-                        await download("cl-pdf");
-                      }}
-                      disabled={!!dl}
-                      className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      Download both (PDF)
-                    </button>
+                    )}
                   </div>
                 </div>
 
-                <GoResultsTabs result={result} />
+                <GoResultsEditor
+                  result={result}
+                  mode={mode}
+                  editSummary={editSummary}
+                  setEditSummary={setEditSummary}
+                  editCover={editCover}
+                  setEditCover={setEditCover}
+                  editBullets={editBullets}
+                  setEditBullets={setEditBullets}
+                />
               </section>
             )}
+
 
 
             {/* Referral DM */}
