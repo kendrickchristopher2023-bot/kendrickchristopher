@@ -87,10 +87,8 @@ function FaqPage() {
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <div className="mx-auto max-w-3xl">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Home
-        </Link>
-        <header className="mt-8 border-b border-border pb-8">
+        <HelpTabs />
+        <header className="border-b border-border pb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Help
           </p>
