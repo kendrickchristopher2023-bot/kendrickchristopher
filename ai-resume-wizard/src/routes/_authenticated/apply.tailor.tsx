@@ -130,7 +130,7 @@ function TailorPage() {
     }
     setLoading(true);
     try {
-      const r = await tailor({ data: { jobDescription: jd, company, role } });
+      const r = await tailor({ data: { jobDescription: jd, company, role, mode } });
       setResult(r);
       saveHistory({
         id: crypto.randomUUID(),
