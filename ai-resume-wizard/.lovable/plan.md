@@ -1,61 +1,44 @@
-## Part A — Refresh reliability (higher priority)
 
-**Diagnose first, then fix.** Before assuming a code change I'll:
-1. Curl dispatch mode (`POST /api/public/hooks/refresh-jobs`) and the `?slice=usajobs:charlotte` slice against the live URL and read the actual error body (500 / 502 root cause). Common culprits given the stack:
-   - Dispatch: the SQL `dispatch_refresh_slices()` uses `x-cron-secret` header, but `refresh-jobs` now goes through `verifyCronRequest` which likely expects `apikey` / bearer. Header mismatch = 401, but a thrown error on unknown header shape = 500.
-   - USAJOBS 502: adapter throws → route re-throws → Worker returns 502. Likely `USAJOBS_API_KEY` missing at handler scope, `LocationName` mismatch, or per-metro request timeout blowing the whole slice.
-2. Report the actual error text back before patching.
+## What the chatbot doesn't know today
 
-**Observability (the real lesson):**
-- Migration: `public.refresh_runs` (id, slice, started_at, finished_at, ok, jobs_upserted, companies_ok, companies_failed, error text, request_id). RLS: only admins select via `has_role`. GRANTS for authenticated + service_role.
-- `runRefreshSlice` in `src/lib/jobs.refresh.server.ts` writes a row on entry (started_at) and updates on exit with outcome — inside a try/finally so a throw still records `ok=false, error=…`. Dispatch mode also records a row per slice it fans out (or a single dispatch row with request_ids).
-- `/admin` (in `src/routes/_authenticated/_admin/admin.index.tsx`) gets a "Refresh health" panel listing every known slice with: last run time, ok/failed badge, jobs upserted, age (red if >36h), last error truncated. Uses a new `listRefreshRuns` server fn (admin-gated).
+Reading `src/routes/api.chat.ts`, the system prompt was written before the last two weeks of shipping. It still describes the app as it was, so the assistant will confidently give wrong answers about anything recent. Specifically, it doesn't know:
 
-**Fixes to the two known breakages:**
-- Dispatch 500: align auth. Either update `dispatch_refresh_slices()` to send whatever `verifyCronRequest` accepts, or make `verifyCronRequest` accept both `x-cron-secret` and `apikey`. I'll pick the smaller diff after reading `cron-auth.server.ts`.
-- USAJOBS 502: wrap the metro loop's outer error path, cap per-metro time, and if `USAJOBS_API_KEY` is missing return a structured `{ ok:false, error:"USAJOBS_API_KEY missing" }` recorded to `refresh_runs` rather than a Worker 502.
+- The landing page is no longer Christopher's portfolio; that lives at `/christopher`. Signed-out users land on the product page.
+- Tailor + Autofill outputs are **editable** before copy/download, via `TailorEdit` / `DownloadButtons`.
+- Autofill has **two modes**: generic (saves to profile, used by the extension) vs targeted (component-state only, uses company/role/JD/matchId).
+- Job postings sometimes contain instructions aimed at the applicant; the app now surfaces those instead of pasting them into letters (`src/lib/prompt-safety.ts`).
+- CSV exports for applications/matches now exist (`/api/export`).
+- USAJOBS + SmartRecruiters feeds are live; state names are normalized to 2-letter codes for regional filters.
+- The Kenroe Collective cross-promo exists on `/` and `/christopher`.
+- Getting-started and FAQ live at `/help/getting-started` and `/help/faq` — the assistant should paraphrase from them rather than redirecting for every "how do I..." question.
 
-**Verification (real, not status-code):**
-- Curl dispatch, wait, then `select slice, ok, jobs_upserted, error, finished_at from refresh_runs order by finished_at desc` and paste the actual numbers back — including per-source counts and the SE (`region in ('NC','SC','GA','TN','VA','FL')`) count for usajobs. If USAJOBS 401s, I'll say so and stop.
+## Plan
 
-## Part B — Generic export system
+**1. Rewrite the SYSTEM prompt in `src/routes/api.chat.ts`** to:
+- Import the canonical FAQ + steps arrays from `src/routes/help.faq.tsx` and `src/routes/help.getting-started.tsx` (extract them into a shared `src/lib/help-content.ts` so the chatbot and the help pages read from one source — no drift). The help routes then import from `help-content.ts`; behavior unchanged.
+- Add a "RECENT CHANGES" section covering the seven bullets above so the model stops describing the old behavior.
+- Add explicit route map: `/apply`, `/apply/tailor`, `/apply/autofill`, `/apply/matches`, `/apply/interview-prep`, `/apply/referrals`, `/apply/metrics`, `/apply/rewrite`, `/resume`, `/resumes`, `/settings`, `/help/*`, `/whats-new`, `/christopher`.
+- Instruct the model: when the user asks a "how do I / what is / is my data private" question, answer directly from the embedded FAQ instead of only linking out.
 
-**One endpoint, one component. Existing 4 endpoints untouched.**
+**2. No new tools, no client changes.** Widget UI, tool set, usage caps stay as-is. This is a grounding refresh, not a feature.
 
-- New `POST /api/export`: body `{ format: "pdf"|"docx"|"csv", filename, title?, subtitle?, sections?: [{heading?, body?, items?:string[], kv?:{label,value}[]}], rows?: string[][], headers?: string[] }`. PDF uses pdf-lib (mirroring resume export's sanitize/wrap), DOCX uses `docx` package, CSV built with a proper escaper (quote wrap, `"` doubling, CRLF, handles commas/newlines/quotes). Zod-validated body, size cap.
-- New `src/components/DownloadButtons.tsx` — PDF + DOCX (or CSV) buttons; only renders when content exists; posts to `/api/export`; triggers browser download; disabled while pending.
-- CSV helper `src/lib/csv.ts` with unit-safe escaping; also `sanitizeFilename` helper.
+**3. Verification:** `bunx tsgo --noEmit` clean; headless `/` `/help/*` `/apply` load with no console errors (the runtime-error report shows an existing hydration mismatch on `/` unrelated to this change — I'll note it separately, not fix it in this scope unless you want it in); ask the widget three questions ("what changed recently?", "how do I export my applications?", "is the landing page my portfolio?") and confirm answers reflect current reality. Changelog entry: user-facing, "The in-app assistant now knows about recent changes and can answer setup questions directly."
 
-**Wired into:**
-1. **Interview Prep** (`/apply/interview-prep`) — PDF+DOCX; sends current edited `answers` state; sections = one per Q with S/T/A/R. Filename `{Name}_Interview_{Company}.pdf`.
-2. **Autofill** (`/apply/autofill`) — PDF+DOCX of screener Q&A as reference.
-3. **Referral DM** & **Follow-up** — small secondary "Download .txt" (uses `/api/export` with `format:"txt"` — actually simpler to do a client-side blob download for plain text; no endpoint needed). Copy stays primary.
-4. **LinkedIn About/headlines** on `/apply` — PDF+DOCX+txt.
-5. **Applications tracker** → "Export CSV" (company, role, stage, source, applied_at, jd_url, notes).
-6. **My Jobs / matches** → "Export CSV".
-7. Remove stale `public/application_tracker.csv` (confirmed leftover — not referenced anywhere in code).
+---
 
-**Rules I'll enforce:** downloads read live component state (never a stale server round-trip), consistent filenames, button hidden when empty.
+## "What else can you check" — proactive audit I'd run next
 
-## Testing
+You're right that my previous audits missed things. Here's what I'd sweep for, ranked by likely payoff. **I'm not doing these in this plan** — flag which you want and I'll scope each.
 
-- Curl `/api/export` for pdf/docx/csv, save the files, actually open with `python3 -c "import pypdf..."` / `unzip -p ... word/document.xml` / open in a CSV reader, assert non-empty and contain the sample text — including a note field with commas + newlines + quotes for CSV escaping.
-- Existing 4 endpoints: curl one PDF & one DOCX to confirm unchanged bytes-good.
-- Playwright headless load `/admin`, `/apply/interview-prep`, `/apply/autofill`, `/apply/matches`, `/apply` — zero console errors.
-- `bunx tsgo --noEmit` zero output.
-- Publish, confirm live, add ONE user-facing changelog entry covering both ("Job pool refresh now visible in admin + fixed silently-broken sources" and "Download anything the app generates — PDF, Word, or spreadsheet").
+1. **Stale copy across the app.** Grep for strings that reference old behavior: "portfolio", "Christopher", "{{Company}}", hardcoded route names, "coming soon", "TODO", plus any UI text that predates editable outputs / CSV export / two-mode autofill. Same drift problem as the chatbot, just in JSX.
+2. **Route inventory vs nav vs sitemap.** Enumerate every file under `src/routes/`, confirm each is reachable from `AppNav` or a documented deep-link, and check for orphaned routes or broken `<Link to>` targets. Would have caught the `/christopher` split earlier.
+3. **RLS + column-grant audit.** Re-verify `profiles` column grants (only `full_name`, `email_notifications`, `screener_answers`, `enabled_feeds`, `changelog_seen_at` writable by `authenticated`); `user_roles` still has no INSERT policy; `cron_secret` has zero grants; `admin_audit_log`/`changelog`/`refresh_runs` are SELECT-only for admins.
+4. **Server-function auth boundaries.** Walk every `*.functions.ts` and confirm each either uses `requireSupabaseAuth` or is intentionally public. Unauthenticated `createServerFn` is a public endpoint.
+5. **Prompt-injection coverage.** `tailor` and `autofill` sanitize JD input; check `interview-prep`, `referrals`, `rewrite`, and the chat `tailor_resume` tool use the same `prompt-safety` helpers.
+6. **CSV correctness.** Round-trip test: notes containing `,`, `"`, `\n`, and Excel formula-injection prefixes (`=`, `+`, `-`, `@`) — confirm the exporter escapes and prefix-guards them.
+7. **Refresh pipeline health.** Query `refresh_runs` for the last 7 days per slice; alert on slices with 0 successful runs or stale `fetched_at`. This is the class of bug that keeps recurring.
+8. **Placeholder discipline.** Grep generator outputs (`tailor`, `autofill`, `referral`, `followup`) for hardcoded `{{Company}}`-style substitution; enforce the "placeholders are stop signs" rule.
+9. **Runtime error report.** Two hydration mismatches currently logged on `/` and `/auth` — likely a `typeof window` branch or locale-dependent `Date` in a `useState` initializer. Small standalone fix.
+10. **Free-plan quota reality-check.** Confirm `increment_usage` caps match what the pricing/FAQ copy claims.
 
-## Technical notes
-
-- Migration ordering: CREATE TABLE → GRANT (authenticated read-own-none, service_role all; admin reads via `has_role` policy) → ENABLE RLS → POLICY.
-- `refresh_runs` writes use `supabaseAdmin` (loaded inside handler, never at module scope of `.functions.ts`).
-- No changes to `jobs.functions.ts` (per hard rule).
-- `/api/export` lives at `src/routes/api.export.ts` (not `api/public/`) — it's app-internal.
-
-## Out of scope
-
-- Rewriting the 4 existing bespoke resume/cover-letter endpoints.
-- Any UX/nav change beyond adding download buttons where content exists.
-- New job sources / adapters.
-
-If you approve, I'll start with Part A step 1 (curl the live endpoints and read the real errors) before writing any code.
+Tell me which of 1–10 to fold in and I'll expand the plan.
