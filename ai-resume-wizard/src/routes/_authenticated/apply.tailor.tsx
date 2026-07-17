@@ -72,6 +72,20 @@ function TailorPage() {
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [mode, setMode] = useState<TailorMode>("both");
+
+  // Editable overlays keyed off the latest AI result. Reset whenever a new
+  // tailor run lands (see the effect below).
+  const [editSummary, setEditSummary] = useState("");
+  const [editCover, setEditCover] = useState("");
+  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+
+  useEffect(() => {
+    if (!result) return;
+    setEditSummary(result.summary ?? "");
+    setEditCover(result.coverLetter ?? "");
+    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+  }, [result]);
 
   // Init empty on SSR; hydrate from localStorage post-mount to avoid mismatch.
   const [history, setHistory] = useState<HistoryEntry[]>([]);
