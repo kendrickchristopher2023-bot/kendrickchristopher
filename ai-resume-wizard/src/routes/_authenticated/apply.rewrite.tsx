@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import {
   saveRewrittenResume,
 } from "@/lib/rewrite.functions";
 import type { MasterResume } from "@/lib/resume-data";
+import { ResumeTabs } from "@/components/ResumeTabs";
 
 export const Route = createFileRoute("/_authenticated/apply/rewrite")({
   head: () => ({
@@ -100,10 +101,8 @@ function RewritePage() {
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
-          <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Application kit
-          </Link>
+        <ResumeTabs />
+        <div className="flex items-center justify-end">
           <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
             {ent.data?.reason === "founder_unlimited" ? "Unlimited · Founder" : "One-time · Pro"}
           </span>

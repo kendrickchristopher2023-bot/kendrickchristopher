@@ -407,21 +407,21 @@ function MatchRow({
           <Link
             to="/apply/go"
             search={{ matchId: match.id }}
-            className="text-xs font-semibold text-primary hover:underline"
+            className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            Apply
+            Apply →
           </Link>
           <Link
             to="/apply/tailor"
             search={{ matchId: match.id }}
-            className="ml-3 text-xs font-medium text-primary hover:underline"
+            className="ml-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
           >
             Tailor
           </Link>
           <Link
             to="/apply/interview-prep"
             search={{ matchId: match.id }}
-            className="ml-3 text-xs font-medium text-primary hover:underline"
+            className="ml-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
           >
             Prep
           </Link>
