@@ -177,53 +177,54 @@ function AutofillPage() {
           </p>
         </header>
 
-        <div className="mt-6 rounded-lg border border-border bg-card p-4 text-sm">
-          <p className="font-semibold text-foreground">Two modes:</p>
-          <ul className="mt-2 space-y-1 text-muted-foreground">
-            <li>
-              <strong className="text-foreground">Generic</strong> — leave company/role blank.
-              Reusable answers with <code>{"{{Company}}"}</code> stop-signs on the few questions
-              that need a company name. This set is what the browser extension autofills from.
-            </li>
-            <li>
-              <strong className="text-foreground">Targeted</strong> — fill company, role, or a
-              job description. Answers name the company naturally with no placeholders. These stay
-              on this page only (they don't overwrite your reusable set).
-            </li>
-          </ul>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Currently:{" "}
-            <span className="font-semibold text-foreground">
-              {targetedIntent ? "targeted" : "generic"}
-            </span>{" "}
-            mode.
-          </p>
-        </div>
+        <p className="mt-6 text-sm text-muted-foreground">
+          Leave blank for reusable answers (what your browser extension fills from). Add a
+          company, role, or job description to get answers written for that specific job.
+        </p>
 
-        <div className="mt-6 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="Company (optional)"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <div className="mt-4 space-y-3">
+          <div
+            className={
+              "rounded-lg p-3 transition-colors " +
+              (targetedIntent
+                ? "border border-primary/40 bg-primary/5"
+                : "border border-transparent")
+            }
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Company (optional)"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Position / role (optional)"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <textarea
+              placeholder="Optional: paste the job description for sharper, targeted answers"
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              rows={4}
+              className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
             />
-            <input
-              type="text"
-              placeholder="Position / role (optional)"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
+            {targetedIntent && (
+              <p className="mt-2 text-xs text-primary">
+                → Answers will be written for{" "}
+                <span className="font-medium">
+                  {[company.trim(), role.trim()].filter(Boolean).join(" · ") ||
+                    "this job description"}
+                </span>
+                .
+              </p>
+            )}
           </div>
-          <textarea
-            placeholder="Optional: paste the job description for sharper, targeted answers"
-            value={jd}
-            onChange={(e) => setJd(e.target.value)}
-            rows={4}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-          />
           <textarea
             placeholder="Optional context: target salary, notice period, relocation preferences, etc."
             value={extraContext}
@@ -286,8 +287,8 @@ function AutofillPage() {
             <p className="font-semibold">Some answers need your attention.</p>
             <p className="mt-1 text-muted-foreground">
               Answers marked <strong>Needs customizing</strong> contain <code>{"{{...}}"}</code> placeholders and will be
-              skipped by the browser extension. Fill Company above to substitute, edit by hand, or switch to targeted mode
-              for a version written specifically for a job.
+              skipped by the browser extension. Fill Company above to substitute, edit by hand, or add a company or role
+              above to regenerate a version written for that specific job.
             </p>
           </div>
         )}
