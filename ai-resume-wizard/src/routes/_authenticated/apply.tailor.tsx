@@ -238,13 +238,28 @@ function TailorPage() {
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const fullResumeText = result
-    ? [
-        `${result.summary}`,
-        "",
-        ...result.bullets.flatMap((b) => [`# ${b.company}`, ...b.bullets.map((x) => `• ${x}`), ""]),
-      ].join("\n")
-    : "";
+  const wantResume = mode !== "cover";
+  const wantCover = mode !== "resume";
+
+  const fullResumeText = useMemo(() => {
+    if (!result) return "";
+    return [
+      editSummary,
+      "",
+      ...editBullets.flatMap((b) => [`# ${b.company}`, ...b.bullets.map((x) => `• ${x}`), ""]),
+    ].join("\n");
+  }, [result, editSummary, editBullets]);
+
+  const primaryLabel = (loading: boolean) => {
+    if (loading) {
+      if (mode === "resume") return "Tailoring resume…";
+      if (mode === "cover") return "Drafting cover letter…";
+      return "Tailoring resume + cover letter…";
+    }
+    if (mode === "resume") return "Tailor my resume";
+    if (mode === "cover") return "Draft my cover letter";
+    return "Tailor my resume + cover letter";
+  };
 
   return (
     <main
@@ -273,8 +288,7 @@ function TailorPage() {
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Reweights and rewrites your existing bullets to match the role's language.
-            No fabrication — same experience, sharper framing. Download as a fresh PDF or
-            copy the text into any application form.
+            No fabrication — same experience, sharper framing. Edit before you download.
           </p>
         </header>
 
@@ -302,6 +316,12 @@ function TailorPage() {
             rows={10}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono leading-relaxed"
           />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs text-muted-foreground">Generate:</span>
+            <TailorModePicker mode={mode} onChange={setMode} disabled={loading} />
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -309,15 +329,15 @@ function TailorPage() {
               disabled={loading}
               className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {loading ? "Tailoring resume + cover letter…" : "Tailor my resume + cover letter"}
+              {primaryLabel(loading)}
             </button>
-            {result && (
+            {result && wantResume && (
               <>
                 <button
                   type="button"
                   onClick={() => download("pdf")}
                   disabled={pdfLoading || docxLoading}
-                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                  className="inline-flex items-center justify-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
                   {pdfLoading ? "Building PDF…" : "Resume PDF"}
                 </button>
@@ -325,15 +345,19 @@ function TailorPage() {
                   type="button"
                   onClick={() => download("docx")}
                   disabled={pdfLoading || docxLoading}
-                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                  className="inline-flex items-center justify-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
                   {docxLoading ? "Building DOCX…" : "Resume DOCX"}
                 </button>
+              </>
+            )}
+            {result && wantCover && (
+              <>
                 <button
                   type="button"
                   onClick={() => downloadCoverLetter("pdf")}
                   disabled={clPdfLoading || clDocxLoading}
-                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                  className="inline-flex items-center justify-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
                   {clPdfLoading ? "Building PDF…" : "Cover letter PDF"}
                 </button>
@@ -341,20 +365,9 @@ function TailorPage() {
                   type="button"
                   onClick={() => downloadCoverLetter("docx")}
                   disabled={clPdfLoading || clDocxLoading}
-                  className="inline-flex items-center justify-center rounded-md border border-input px-5 py-2.5 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
+                  className="inline-flex items-center justify-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground disabled:opacity-50 hover:bg-accent"
                 >
                   {clDocxLoading ? "Building DOCX…" : "Cover letter DOCX"}
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await download("pdf");
-                    await downloadCoverLetter("pdf");
-                  }}
-                  disabled={pdfLoading || docxLoading || clPdfLoading || clDocxLoading}
-                  className="inline-flex items-center justify-center rounded-md bg-primary/10 border border-primary/30 px-5 py-2.5 text-sm font-medium text-primary disabled:opacity-50 hover:bg-primary/20"
-                >
-                  Download both (PDF)
                 </button>
               </>
             )}
@@ -367,12 +380,109 @@ function TailorPage() {
         </section>
 
         {result && (
-          <ResultsTabs
-            result={result}
-            fullResumeText={fullResumeText}
-            copied={copied}
-            copy={copy}
-          />
+          <section className="mt-10 space-y-6">
+            <InjectionNotice injection={result.injection} />
+
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4">
+              <p className="text-sm font-medium text-foreground">
+                ✓ Ready · Match{" "}
+                <span className="font-bold text-primary">{result.matchScore}/100</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Edit anything below — your changes will be in the downloaded file.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-foreground">Matched keywords</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {result.matchedKeywords.join(", ") || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Missing keywords</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {result.missingKeywords.join(", ") || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 border-b border-border">
+              {wantResume && (
+                <TabBtn active={tab === "resume"} onClick={() => setTab("resume")}>
+                  Tailored resume
+                </TabBtn>
+              )}
+              {wantCover && (
+                <TabBtn active={tab === "cover"} onClick={() => setTab("cover")}>
+                  Cover letter
+                </TabBtn>
+              )}
+            </div>
+
+            {tab === "resume" && wantResume && (
+              <div className="space-y-6">
+                <EditableBlock
+                  label="Tailored summary"
+                  original={result.summary}
+                  value={editSummary}
+                  onChange={setEditSummary}
+                  rows={4}
+                />
+                {editBullets.map((b, i) => {
+                  const originalCompany = result.bullets[i];
+                  const text = b.bullets.join("\n");
+                  const origText = originalCompany ? originalCompany.bullets.join("\n") : "";
+                  return (
+                    <EditableBlock
+                      key={b.company + i}
+                      label={`${b.company} — tailored bullets (one per line)`}
+                      original={origText}
+                      value={text}
+                      onChange={(v) => {
+                        const next = [...editBullets];
+                        next[i] = {
+                          company: b.company,
+                          bullets: v.split("\n").map((s) => s.replace(/^[•\-\s]+/, "").trim()).filter(Boolean),
+                        };
+                        setEditBullets(next);
+                      }}
+                      rows={Math.max(4, b.bullets.length + 1)}
+                    />
+                  );
+                })}
+                <div className="rounded-lg border border-border bg-card">
+                  <div className="flex items-center justify-between border-b border-border px-4 py-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Full tailored resume text (copy-paste into any form)
+                    </p>
+                    <button
+                      onClick={() => copy("full", fullResumeText)}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {copied === "full" ? "Copied ✓" : "Copy"}
+                    </button>
+                  </div>
+                  <pre className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground font-sans">
+                    {fullResumeText}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {tab === "cover" && wantCover && (
+              <EditableBlock
+                label="Cover letter"
+                original={result.coverLetter}
+                value={editCover}
+                onChange={setEditCover}
+                rows={14}
+              />
+            )}
+          </section>
         )}
 
         {history.length > 0 && (
@@ -415,124 +525,6 @@ function TailorPage() {
   );
 }
 
-function Block({
-  label,
-  text,
-  copied,
-  onCopy,
-}: {
-  label: string;
-  text: string;
-  copied: boolean;
-  onCopy: () => void;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </p>
-        <button onClick={onCopy} className="text-xs font-medium text-primary hover:underline">
-          {copied ? "Copied ✓" : "Copy"}
-        </button>
-      </div>
-      <pre className="whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-foreground font-sans">
-        {text}
-      </pre>
-    </div>
-  );
-}
-
-function ResultsTabs({
-  result,
-  fullResumeText,
-  copied,
-  copy,
-}: {
-  result: TailorResult;
-  fullResumeText: string;
-  copied: string | null;
-  copy: (key: string, text: string) => void;
-}) {
-  const [tab, setTab] = useState<"resume" | "cover">("resume");
-  return (
-    <section className="mt-10 space-y-6">
-      <div className="rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-medium text-foreground">
-          ✓ Tailored resume + cover letter ready · Match{" "}
-          <span className="font-bold text-primary">{result.matchScore}/100</span>
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Downloads for both are in the button row above.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-1 border-b border-border">
-        <TabBtn active={tab === "resume"} onClick={() => setTab("resume")}>
-          Tailored resume
-        </TabBtn>
-        <TabBtn active={tab === "cover"} onClick={() => setTab("cover")}>
-          Cover letter
-        </TabBtn>
-      </div>
-
-      {tab === "resume" ? (
-        <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-card p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Match score
-              </p>
-              <p className="text-2xl font-bold text-primary">{result.matchScore}/100</p>
-            </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="font-semibold text-foreground">Matched keywords</p>
-                <p className="mt-1 text-muted-foreground">
-                  {result.matchedKeywords.join(", ") || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Missing keywords</p>
-                <p className="mt-1 text-muted-foreground">
-                  {result.missingKeywords.join(", ") || "—"}
-                </p>
-              </div>
-            </div>
-          </div>
-          <Block
-            label="Tailored summary"
-            text={result.summary}
-            copied={copied === "summary"}
-            onCopy={() => copy("summary", result.summary)}
-          />
-          {result.bullets.map((b) => (
-            <Block
-              key={b.company}
-              label={`${b.company} — tailored bullets`}
-              text={b.bullets.map((x) => `• ${x}`).join("\n")}
-              copied={copied === b.company}
-              onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
-            />
-          ))}
-          <Block
-            label="Full tailored resume text (copy-paste into any form)"
-            text={fullResumeText}
-            copied={copied === "full"}
-            onCopy={() => copy("full", fullResumeText)}
-          />
-        </div>
-      ) : (
-        <Block
-          label="Cover letter"
-          text={result.coverLetter}
-          copied={copied === "cover"}
-          onCopy={() => copy("cover", result.coverLetter)}
-        />
-      )}
-    </section>
-  );
-}
 
 function TabBtn({
   active,
