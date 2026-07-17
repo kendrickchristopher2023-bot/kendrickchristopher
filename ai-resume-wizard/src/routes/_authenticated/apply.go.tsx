@@ -87,6 +87,18 @@ function ApplyGoPage() {
   const [tailorErr, setTailorErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [mode, setMode] = useState<TailorMode>("both");
+
+  // Editable overlays; reset when a new AI result arrives.
+  const [editSummary, setEditSummary] = useState("");
+  const [editCover, setEditCover] = useState("");
+  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+  useEffect(() => {
+    if (!result) return;
+    setEditSummary(result.summary ?? "");
+    setEditCover(result.coverLetter ?? "");
+    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+  }, [result]);
 
   // Downloads
   const [dl, setDl] = useState<string | null>(null);
