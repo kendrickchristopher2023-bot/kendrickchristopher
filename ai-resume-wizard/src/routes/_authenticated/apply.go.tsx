@@ -177,7 +177,7 @@ function ApplyGoPage() {
           },
           company,
           role,
-          coverLetter: result.coverLetter,
+          coverLetter: editCover,
         };
         const ext = kind === "cl-pdf" ? "pdf" : "docx";
         const slug = (R.name || "Cover_Letter").replace(/[^a-z0-9]/gi, "_");
