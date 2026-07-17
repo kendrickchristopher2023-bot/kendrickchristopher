@@ -8,6 +8,12 @@ import { getMyResume } from "@/lib/resume.functions";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { generateReferralDm } from "@/lib/referral.functions";
 import { upsertApplication } from "@/lib/applications.functions";
+import {
+  EditableBlock,
+  InjectionNotice,
+  TailorModePicker,
+  type TailorMode,
+} from "@/components/TailorEdit";
 
 // Plain zod (NOT @tanstack/zod-adapter — that dependency broke production once).
 const searchSchema = z.object({
@@ -81,6 +87,18 @@ function ApplyGoPage() {
   const [tailorErr, setTailorErr] = useState<string | null>(null);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [mode, setMode] = useState<TailorMode>("both");
+
+  // Editable overlays; reset when a new AI result arrives.
+  const [editSummary, setEditSummary] = useState("");
+  const [editCover, setEditCover] = useState("");
+  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+  useEffect(() => {
+    if (!result) return;
+    setEditSummary(result.summary ?? "");
+    setEditCover(result.coverLetter ?? "");
+    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+  }, [result]);
 
   // Downloads
   const [dl, setDl] = useState<string | null>(null);
@@ -116,7 +134,7 @@ function ApplyGoPage() {
     setTailorLoading(true);
     try {
       const r = await tailorFn({
-        data: { jobDescription: effectiveJd, company, role },
+        data: { jobDescription: effectiveJd, company, role, mode },
       });
       setResult(r);
     } catch (e) {
@@ -142,7 +160,7 @@ function ApplyGoPage() {
       let filename: string;
       if (kind.startsWith("resume")) {
         url = kind === "resume-pdf" ? "/api/tailored-resume" : "/api/resume-docx";
-        body = { resume: R, summary: result.summary, bullets: result.bullets, company, role };
+        body = { resume: R, summary: editSummary, bullets: editBullets, company, role };
         const ext = kind === "resume-pdf" ? "pdf" : "docx";
         const slug = (R.name || "Resume").replace(/[^a-z0-9]/gi, "_");
         filename = company
@@ -159,7 +177,7 @@ function ApplyGoPage() {
           },
           company,
           role,
-          coverLetter: result.coverLetter,
+          coverLetter: editCover,
         };
         const ext = kind === "cl-pdf" ? "pdf" : "docx";
         const slug = (R.name || "Cover_Letter").replace(/[^a-z0-9]/gi, "_");
@@ -384,7 +402,11 @@ function ApplyGoPage() {
             </section>
 
             {/* Primary action */}
-            <section className="mt-8">
+            <section className="mt-8 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs text-muted-foreground">Generate:</span>
+                <TailorModePicker mode={mode} onChange={setMode} disabled={tailorLoading} />
+              </div>
               <button
                 type="button"
                 onClick={onTailor}
@@ -392,17 +414,28 @@ function ApplyGoPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-medium text-primary-foreground disabled:opacity-50"
               >
                 {tailorLoading
-                  ? "Preparing resume + cover letter… (20–40s)"
+                  ? mode === "resume"
+                    ? "Tailoring resume… (20–40s)"
+                    : mode === "cover"
+                      ? "Drafting cover letter… (20–40s)"
+                      : "Preparing resume + cover letter… (20–40s)"
                   : result
-                    ? "Re-prepare resume + cover letter"
-                    : "Prepare resume + cover letter"}
+                    ? mode === "resume"
+                      ? "Re-tailor resume"
+                      : mode === "cover"
+                        ? "Re-draft cover letter"
+                        : "Re-prepare resume + cover letter"
+                    : mode === "resume"
+                      ? "Tailor resume"
+                      : mode === "cover"
+                        ? "Draft cover letter"
+                        : "Prepare resume + cover letter"}
               </button>
-              <p className="mt-2 text-xs text-muted-foreground">
-                One AI call → tailored resume, cover letter, match score, and keyword gap.
-                Grounded in your saved resume — no fabrication.
+              <p className="text-xs text-muted-foreground">
+                One AI call, grounded in your saved resume — no fabrication. Edit anything below before you download.
               </p>
               {tailorErr && (
-                <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {tailorErr}
                 </p>
               )}
@@ -411,47 +444,75 @@ function ApplyGoPage() {
             {/* Results */}
             {result && (
               <section className="mt-10 space-y-6">
+                <InjectionNotice injection={result.injection} />
+
                 <div className="rounded-lg border border-primary/30 bg-primary/5 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="text-sm font-medium text-foreground">
-                      ✓ Tailored resume + cover letter ready · Match{" "}
+                      ✓ Ready · Match{" "}
                       <span className="font-bold text-primary">{result.matchScore}/100</span>
                     </p>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      ["resume-pdf", "Resume PDF"],
-                      ["resume-docx", "Resume DOCX"],
-                      ["cl-pdf", "Cover letter PDF"],
-                      ["cl-docx", "Cover letter DOCX"],
-                    ].map(([k, label]) => (
+                    {mode !== "cover" && (
+                      <>
+                        {(["resume-pdf", "resume-docx"] as const).map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => download(k)}
+                            disabled={!!dl}
+                            className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          >
+                            {dl === k ? "Building…" : k === "resume-pdf" ? "Resume PDF" : "Resume DOCX"}
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {mode !== "resume" && (
+                      <>
+                        {(["cl-pdf", "cl-docx"] as const).map((k) => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => download(k)}
+                            disabled={!!dl}
+                            className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          >
+                            {dl === k ? "Building…" : k === "cl-pdf" ? "Cover letter PDF" : "Cover letter DOCX"}
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {mode === "both" && (
                       <button
-                        key={k}
                         type="button"
-                        onClick={() => download(k as never)}
+                        onClick={async () => {
+                          await download("resume-pdf");
+                          await download("cl-pdf");
+                        }}
                         disabled={!!dl}
-                        className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                        className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                       >
-                        {dl === k ? "Building…" : label}
+                        Download both (PDF)
                       </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await download("resume-pdf");
-                        await download("cl-pdf");
-                      }}
-                      disabled={!!dl}
-                      className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      Download both (PDF)
-                    </button>
+                    )}
                   </div>
                 </div>
 
-                <GoResultsTabs result={result} />
+                <GoResultsEditor
+                  result={result}
+                  mode={mode}
+                  editSummary={editSummary}
+                  setEditSummary={setEditSummary}
+                  editCover={editCover}
+                  setEditCover={setEditCover}
+                  editBullets={editBullets}
+                  setEditBullets={setEditBullets}
+                />
               </section>
             )}
+
 
 
             {/* Referral DM */}
@@ -603,48 +664,67 @@ function Block({
   );
 }
 
-function GoResultsTabs({ result }: { result: TailorResult }) {
-  const [tab, setTab] = useState<"resume" | "cover">("resume");
-  const [copied, setCopied] = useState<string | null>(null);
-  const copy = async (key: string, text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(key);
-      setTimeout(() => setCopied(null), 1600);
-    } catch {
-      /* ignore */
-    }
-  };
+function GoResultsEditor({
+  result,
+  mode,
+  editSummary,
+  setEditSummary,
+  editCover,
+  setEditCover,
+  editBullets,
+  setEditBullets,
+}: {
+  result: TailorResult;
+  mode: TailorMode;
+  editSummary: string;
+  setEditSummary: (v: string) => void;
+  editCover: string;
+  setEditCover: (v: string) => void;
+  editBullets: { company: string; bullets: string[] }[];
+  setEditBullets: (v: { company: string; bullets: string[] }[]) => void;
+}) {
+  const wantResume = mode !== "cover";
+  const wantCover = mode !== "resume";
+  const [tab, setTab] = useState<"resume" | "cover">(mode === "cover" ? "cover" : "resume");
+  useEffect(() => {
+    if (mode === "resume") setTab("resume");
+    else if (mode === "cover") setTab("cover");
+  }, [mode]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1 border-b border-border">
-        <button
-          type="button"
-          onClick={() => setTab("resume")}
-          className={
-            "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
-            (tab === "resume"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground")
-          }
-        >
-          Tailored resume
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("cover")}
-          className={
-            "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
-            (tab === "cover"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground")
-          }
-        >
-          Cover letter
-        </button>
+        {wantResume && (
+          <button
+            type="button"
+            onClick={() => setTab("resume")}
+            className={
+              "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
+              (tab === "resume"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground")
+            }
+          >
+            Tailored resume
+          </button>
+        )}
+        {wantCover && (
+          <button
+            type="button"
+            onClick={() => setTab("cover")}
+            className={
+              "-mb-px inline-flex items-center rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors " +
+              (tab === "cover"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground")
+            }
+          >
+            Cover letter
+          </button>
+        )}
       </div>
 
-      {tab === "resume" ? (
+      {tab === "resume" && wantResume && (
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -662,30 +742,49 @@ function GoResultsTabs({ result }: { result: TailorResult }) {
               </div>
             </div>
           </div>
-          <Block
+          <EditableBlock
             label="Tailored summary"
-            text={result.summary}
-            copied={copied === "summary"}
-            onCopy={() => copy("summary", result.summary)}
+            original={result.summary}
+            value={editSummary}
+            onChange={setEditSummary}
+            rows={4}
           />
-          {result.bullets.map((b) => (
-            <Block
-              key={b.company}
-              label={`${b.company} — tailored bullets`}
-              text={b.bullets.map((x) => `• ${x}`).join("\n")}
-              copied={copied === b.company}
-              onCopy={() => copy(b.company, b.bullets.map((x) => `• ${x}`).join("\n"))}
-            />
-          ))}
+          {editBullets.map((b, i) => {
+            const origText = result.bullets[i] ? result.bullets[i].bullets.join("\n") : "";
+            return (
+              <EditableBlock
+                key={b.company + i}
+                label={`${b.company} — tailored bullets (one per line)`}
+                original={origText}
+                value={b.bullets.join("\n")}
+                onChange={(v) => {
+                  const next = [...editBullets];
+                  next[i] = {
+                    company: b.company,
+                    bullets: v
+                      .split("\n")
+                      .map((s) => s.replace(/^[•\-\s]+/, "").trim())
+                      .filter(Boolean),
+                  };
+                  setEditBullets(next);
+                }}
+                rows={Math.max(4, b.bullets.length + 1)}
+              />
+            );
+          })}
         </div>
-      ) : (
-        <Block
+      )}
+
+      {tab === "cover" && wantCover && (
+        <EditableBlock
           label="Cover letter"
-          text={result.coverLetter}
-          copied={copied === "cover"}
-          onCopy={() => copy("cover", result.coverLetter)}
+          original={result.coverLetter}
+          value={editCover}
+          onChange={setEditCover}
+          rows={14}
         />
       )}
     </div>
   );
 }
+
