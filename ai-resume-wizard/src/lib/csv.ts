@@ -1,10 +1,19 @@
 // CSV helpers — RFC 4180 compliant.
 // Quotes wrap only when required (comma, quote, newline). Embedded quotes doubled.
 // CRLF line endings for maximum spreadsheet compatibility.
+//
+// Formula-injection guard: cells starting with =, +, -, @, or a control
+// character are prefixed with a leading apostrophe so Excel/Sheets/Numbers
+// treat them as text instead of executing them as a formula. This has a
+// mild cost — a user note that literally starts with "-2024 was rough"
+// exports as "'-2024 was rough" — but is standard defense per OWASP.
+
+const FORMULA_LEAD = /^[=+\-@\t\r]/;
 
 export function csvEscape(value: unknown): string {
   if (value == null) return "";
-  const s = String(value);
+  let s = String(value);
+  if (FORMULA_LEAD.test(s)) s = "'" + s;
   if (/[",\r\n]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }
