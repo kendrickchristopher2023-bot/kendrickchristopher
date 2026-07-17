@@ -444,6 +444,13 @@ function MatchRow({
           >
             Prep
           </Link>
+          <Link
+            to="/apply/autofill"
+            search={{ matchId: match.id }}
+            className="ml-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+          >
+            Autofill
+          </Link>
           <button onClick={onMarkApplied} className="ml-3 text-xs text-primary hover:underline">
             Mark applied
           </button>
