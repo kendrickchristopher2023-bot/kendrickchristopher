@@ -187,6 +187,35 @@ function Landing() {
         </ul>
       </section>
 
+      <section className="mx-auto max-w-3xl px-6 mt-16">
+        <div className="rounded-lg border border-border bg-card p-6 sm:p-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Also from The Kenroe Collective
+          </p>
+          <h2
+            className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            The art of gathering, refined.
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm sm:text-base leading-relaxed text-muted-foreground">
+            An event platform for weddings, celebrations, and corporate gatherings —
+            invitations, guest lists, RSVPs, payments, and communications, with
+            AI-assisted menu and design curation.
+          </p>
+          <a
+            href="https://thekenroecollective.com"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Visit The Kenroe Collective →
+          </a>
+        </div>
+      </section>
+
+
+
       <footer className="mx-auto max-w-3xl px-6 mt-20 border-t border-border pt-6 pb-10 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-3">
         <span>
           <Link to="/legal" className="hover:text-foreground hover:underline">

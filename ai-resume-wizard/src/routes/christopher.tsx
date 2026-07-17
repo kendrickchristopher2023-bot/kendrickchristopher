@@ -188,7 +188,7 @@ function Portfolio() {
             {" · "}
             <Link to="/legal" className="text-primary hover:underline">Terms &amp; Privacy</Link>
             {" · "}
-            Built by <a href="https://kenroecollective.com" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
+            Built by <a href="https://thekenroecollective.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">The Kenroe Collective</a> · Last updated {RESUME.lastUpdated}
           </span>
         </footer>
       </div>
