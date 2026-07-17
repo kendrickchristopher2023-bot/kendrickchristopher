@@ -134,7 +134,7 @@ function ApplyGoPage() {
     setTailorLoading(true);
     try {
       const r = await tailorFn({
-        data: { jobDescription: effectiveJd, company, role },
+        data: { jobDescription: effectiveJd, company, role, mode },
       });
       setResult(r);
     } catch (e) {
