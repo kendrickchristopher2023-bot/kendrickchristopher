@@ -78,28 +78,57 @@ function AuthPage() {
     }
   };
 
+  const handleMagicLink = async () => {
+    if (!email) {
+      setMsg({ kind: "error", text: "Enter your email above first." });
+      return;
+    }
+    setBusy(true);
+    setMsg(null);
+    // shouldCreateUser: false — this must only ever email an EXISTING approved
+    // user; it must never become a signup bypass. Supabase silently no-ops for
+    // unknown addresses, and we show the same neutral confirmation either way
+    // to avoid leaking account existence.
+    try {
+      await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: window.location.origin + "/auth",
+        },
+      });
+    } catch {
+      /* swallow — neutral response below */
+    } finally {
+      setBusy(false);
+      setMsg({
+        kind: "info",
+        text: "If that email has an account, we've sent a sign-in link. Check your inbox.",
+      });
+    }
+  };
+
   return (
     <main
       className="min-h-screen bg-background flex items-center justify-center px-6 py-16"
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
       <div className="w-full max-w-md">
-        <a href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+        <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
           ← Home
-        </a>
+        </Link>
         <h1
           className="mt-6 text-3xl font-bold tracking-tight text-foreground"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Sign in
+          Welcome back to Application Kit
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Access is invite-only. If you haven't been approved yet,{" "}
-          <a href="/request-access" className="text-primary hover:underline">
-            request access
-          </a>
-          . Approved users sign in with the magic link the admin sends, or with
-          Google / password below once their account has been created.
+          Sign in to your invite-only workspace. New here?{" "}
+          <Link to="/request-access" className="text-primary hover:underline">
+            Request access
+          </Link>
+          .
         </p>
 
         <div className="mt-8 space-y-3">
@@ -149,6 +178,19 @@ function AuthPage() {
               {busy ? "…" : "Sign in"}
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={handleMagicLink}
+            disabled={busy}
+            className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            Email me a sign-in link
+          </button>
+          <p className="text-xs text-muted-foreground">
+            Forgot your password? Enter your email above and use the sign-in link
+            option — we'll email you a one-click link if your account exists.
+          </p>
 
           {msg && (
             <p
