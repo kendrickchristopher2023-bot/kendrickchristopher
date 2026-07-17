@@ -141,7 +141,7 @@ export const Route = createFileRoute("/api/chat")({
               toolNotes.push({
                 name: "tailor_resume",
                 ok: true,
-                summary: `Match ${r.matchScore}/100 · ${r.matchedKeywords.length} keywords matched`,
+                summary: `Match ${r.matchScore}/100 · ${r.matchedKeywords.length} keywords matched${r.injection?.detected ? " · applicant-instructions detected in JD" : ""}`,
               });
               return {
                 matchScore: r.matchScore,
@@ -150,6 +150,8 @@ export const Route = createFileRoute("/api/chat")({
                 summary: r.summary,
                 bullets: r.bullets,
                 coverLetter: r.coverLetter,
+                applicantInstructionsDetected: r.injection?.detected ?? false,
+                applicantInstructionsSnippets: r.injection?.snippets ?? [],
               };
             } catch (e) {
               const msg = e instanceof Error ? e.message : "Tailor failed";
