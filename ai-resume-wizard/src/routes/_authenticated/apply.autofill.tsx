@@ -349,11 +349,16 @@ function AutofillPage() {
                   </div>
                 </div>
                 <textarea
-                  value={fill(value)}
+                  value={value}
                   onChange={(e) => setEdit(i, e.target.value)}
                   rows={Math.max(3, Math.min(10, Math.ceil(value.length / 90)))}
                   className="w-full resize-y rounded-b-lg bg-transparent px-4 py-4 text-sm leading-relaxed text-foreground font-sans focus:outline-none"
                 />
+                {company && value.includes("{{Company}}") && (
+                  <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+                    Preview with company: <span className="text-foreground">{fill(value)}</span>
+                  </p>
+                )}
               </div>
             );
           })}
