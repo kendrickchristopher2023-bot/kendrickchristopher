@@ -322,7 +322,16 @@ export const Route = createFileRoute("/api/tailored-resume")({
             "Content-Disposition": `attachment; filename="${filename}"`,
           },
         });
+        } catch (err) {
+          console.error("[api/tailored-resume] error", err);
+          const message = err instanceof Error ? err.message : String(err);
+          return new Response(
+            JSON.stringify({ error: "PDF generation failed", message }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          );
+        }
       },
+
     },
   },
 });
