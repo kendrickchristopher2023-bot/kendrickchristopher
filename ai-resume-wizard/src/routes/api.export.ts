@@ -139,7 +139,12 @@ export const Route = createFileRoute("/api/export")({
         }
 
         // PDF path
-        const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+        const { PDFDocument, StandardFonts, rgb } = await import(
+          "pdf-lib/dist/pdf-lib.esm.js"
+        ).catch((error) => {
+          console.error("[pdf-runtime] failed to load bundled pdf-lib ESM", error);
+          throw error;
+        });
         const doc = await PDFDocument.create();
         const helv = await doc.embedFont(StandardFonts.Helvetica);
         const bold = await doc.embedFont(StandardFonts.HelveticaBold);
