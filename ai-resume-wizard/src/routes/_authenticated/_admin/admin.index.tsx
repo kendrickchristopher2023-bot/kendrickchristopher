@@ -1142,6 +1142,7 @@ function RefreshHealthPanel() {
       )}
     </section>
   );
+}
 
 type InviteResult = {
   email: string;
