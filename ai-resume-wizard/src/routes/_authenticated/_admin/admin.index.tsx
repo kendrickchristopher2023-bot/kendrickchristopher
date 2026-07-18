@@ -524,6 +524,8 @@ function AdminDashboard() {
           </p>
         </section>
 
+        <InvitePanel onInvited={(m) => setMagic(m)} />
+
         {/* Access requests */}
         <section>
           <h2 className="text-xl font-semibold">Access requests</h2>
