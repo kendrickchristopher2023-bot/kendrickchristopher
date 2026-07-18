@@ -202,6 +202,148 @@ export const currentUserIsAdmin = createServerFn({ method: "GET" })
   });
 
 const PLAN_VALUES = ["free", "pro", "founder"] as const;
+
+export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { email: string; full_name?: string | null; plan?: (typeof PLAN_VALUES)[number] }) =>
+      z
+        .object({
+          email: z.string().trim().toLowerCase().email().max(254),
+          full_name: z.string().trim().max(200).optional().nullable(),
+          plan: z.enum(PLAN_VALUES).optional(),
+        })
+        .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    const origin = process.env.APP_URL || "https://excel-ai-resume.lovable.app";
+    const redirectTo = `${origin}/auth`;
+
+    // Determine if the auth user already exists (paginate to find them).
+    let existingUserId: string | null = null;
+    let page = 1;
+    while (page <= 20) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage: 200,
+      });
+      if (error) throw error;
+      const users = list?.users ?? [];
+      const match = users.find(
+        (u) => (u.email ?? "").toLowerCase() === data.email,
+      );
+      if (match) {
+        existingUserId = match.id;
+        break;
+      }
+      if (users.length < 200) break;
+      page += 1;
+    }
+
+    let mode: "invite" | "magiclink" = existingUserId ? "magiclink" : "invite";
+    let linkResp = await supabaseAdmin.auth.admin.generateLink({
+      type: mode,
+      email: data.email,
+      options: { redirectTo },
+    });
+    if (linkResp.error) {
+      // Fallback: if invite fails because the user already exists, try magic link.
+      if (mode === "invite") {
+        mode = "magiclink";
+        linkResp = await supabaseAdmin.auth.admin.generateLink({
+          type: "magiclink",
+          email: data.email,
+          options: { redirectTo },
+        });
+        if (linkResp.error) throw linkResp.error;
+      } else {
+        throw linkResp.error;
+      }
+    }
+    const magicLink = linkResp.data?.properties?.action_link ?? null;
+    const userId: string | null =
+      existingUserId ?? (linkResp.data?.user?.id as string | undefined) ?? null;
+
+    // Set the plan if requested and not the default `free`. Row is created by
+    // the profiles trigger when the auth user is created; retry briefly.
+    if (userId && data.plan && data.plan !== "free") {
+      for (let i = 0; i < 5; i += 1) {
+        const { error: planErr } = await supabaseAdmin
+          .from("profiles")
+          .update({ plan: data.plan })
+          .eq("id", userId);
+        if (!planErr) break;
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    }
+    // Persist full_name on the profile if provided (only for freshly-created users).
+    if (userId && data.full_name && !existingUserId) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ full_name: data.full_name })
+        .eq("id", userId);
+    }
+
+    // Record in access_requests so invites show up in the same audit trail.
+    const { data: reqRow } = await supabaseAdmin
+      .from("access_requests")
+      .insert({
+        email: data.email,
+        full_name: data.full_name ?? null,
+        reason: `[admin invite] plan=${data.plan ?? "free"}`,
+        status: "approved",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: context.userId,
+      })
+      .select("id")
+      .single();
+
+    let emailSent = false;
+    let emailError: string | null = null;
+    if (magicLink) {
+      try {
+        const { sendTemplateEmail } = await import(
+          "@/lib/email-templates/send-email"
+        );
+        const result = await sendTemplateEmail("access-approved", data.email, {
+          templateData: {
+            magicLink,
+            fullName: data.full_name ?? null,
+          },
+          idempotencyKey: `admin-invite-${reqRow?.id ?? data.email}-${Date.now()}`,
+        });
+        emailSent = result.sent;
+        if (!result.sent) emailError = result.reason;
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
+        console.error("[admin] invite email failed", err);
+      }
+    }
+
+    await writeAudit(context.userId, "user.invited", userId, {
+      email: data.email,
+      plan: data.plan ?? "free",
+      mode,
+      existing_user: !!existingUserId,
+      access_request_id: reqRow?.id ?? null,
+      email_sent: emailSent,
+      email_error: emailError,
+    });
+
+    return {
+      ok: true,
+      email: data.email,
+      magicLink,
+      emailSent,
+      emailError,
+      mode,
+      existingUser: !!existingUserId,
+    };
+  });
 type PlanTier = (typeof PLAN_VALUES)[number];
 
 export const listUsersAdmin = createServerFn({ method: "GET" })
