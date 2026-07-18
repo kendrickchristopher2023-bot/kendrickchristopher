@@ -245,31 +245,28 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
     }
 
     let mode: "invite" | "magiclink" = existingUserId ? "magiclink" : "invite";
-    const { data: link, error: linkErr } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: mode,
-        email: data.email,
-        options: { redirectTo },
-      });
-    if (linkErr) {
+    let linkResp = await supabaseAdmin.auth.admin.generateLink({
+      type: mode,
+      email: data.email,
+      options: { redirectTo },
+    });
+    if (linkResp.error) {
       // Fallback: if invite fails because the user already exists, try magic link.
       if (mode === "invite") {
         mode = "magiclink";
-        const retry = await supabaseAdmin.auth.admin.generateLink({
+        linkResp = await supabaseAdmin.auth.admin.generateLink({
           type: "magiclink",
           email: data.email,
           options: { redirectTo },
         });
-        if (retry.error) throw retry.error;
-        link.properties = retry.data.properties;
-        link.user = retry.data.user;
+        if (linkResp.error) throw linkResp.error;
       } else {
-        throw linkErr;
+        throw linkResp.error;
       }
     }
-    const magicLink = link.properties?.action_link ?? null;
+    const magicLink = linkResp.data?.properties?.action_link ?? null;
     const userId: string | null =
-      existingUserId ?? (link.user?.id as string | undefined) ?? null;
+      existingUserId ?? (linkResp.data?.user?.id as string | undefined) ?? null;
 
     // Set the plan if requested and not the default `free`. Row is created by
     // the profiles trigger when the auth user is created; retry briefly.
