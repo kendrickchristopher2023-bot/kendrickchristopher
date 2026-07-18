@@ -45,7 +45,12 @@ export const Route = createFileRoute("/api/cover-letter-pdf")({
         const data = parsed.data;
         const S = data.sender;
 
-        const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+        const { PDFDocument, StandardFonts, rgb } = await import(
+          "pdf-lib/dist/pdf-lib.esm.js"
+        ).catch((error) => {
+          console.error("[pdf-runtime] failed to load bundled pdf-lib ESM", error);
+          throw error;
+        });
 
         const doc = await PDFDocument.create();
         const helv = await doc.embedFont(StandardFonts.Helvetica);
