@@ -1142,6 +1142,121 @@ function RefreshHealthPanel() {
       )}
     </section>
   );
+
+type InviteResult = {
+  email: string;
+  link: string;
+  emailSent: boolean;
+  emailError: string | null;
+};
+
+function InvitePanel({
+  onInvited,
+}: {
+  onInvited: (m: InviteResult) => void;
+}) {
+  const qc = useQueryClient();
+  const inviteFn = useServerFn(inviteUserByEmailAdmin);
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [plan, setPlan] = useState<(typeof PLANS)[number]>("free");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const invite = useMutation({
+    mutationFn: (v: {
+      email: string;
+      full_name?: string | null;
+      plan?: (typeof PLANS)[number];
+    }) => inviteFn({ data: v }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+      setErrorMsg(null);
+      setNotice(
+        res.existingUser
+          ? `${res.email} already had an account — sent a fresh sign-in link.`
+          : `Invite sent to ${res.email}.`,
+      );
+      if (res.magicLink) {
+        onInvited({
+          email: res.email,
+          link: res.magicLink,
+          emailSent: !!res.emailSent,
+          emailError: res.emailError ?? null,
+        });
+      }
+      setEmail("");
+      setFullName("");
+      setPlan("free");
+    },
+    onError: (err: unknown) => {
+      setNotice(null);
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    },
+  });
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-4">
+      <h2 className="text-lg font-semibold">Invite someone</h2>
+      <p className="text-xs text-muted-foreground">
+        Creates an approved account and emails a one-click sign-in link. Use
+        this instead of asking them to submit an access request first.
+      </p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-[2fr_1.5fr_1fr_auto]">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="person@example.com"
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+        />
+        <input
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Full name (optional)"
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+        />
+        <select
+          value={plan}
+          onChange={(e) => setPlan(e.target.value as (typeof PLANS)[number])}
+          className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+        >
+          {PLANS.map((p) => (
+            <option key={p} value={p}>
+              Plan: {p}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            const trimmed = email.trim();
+            if (!trimmed) return;
+            invite.mutate({
+              email: trimmed,
+              full_name: fullName.trim() || undefined,
+              plan,
+            });
+          }}
+          disabled={invite.isPending || !email.trim()}
+          className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {invite.isPending ? "Sending…" : "Send invite"}
+        </button>
+      </div>
+      {notice && (
+        <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
+          {notice}
+        </p>
+      )}
+      {errorMsg && (
+        <p className="mt-3 text-xs text-destructive">{errorMsg}</p>
+      )}
+    </section>
+  );
 }
+
 
 
