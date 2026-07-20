@@ -80,14 +80,15 @@ function ResumePage() {
     );
   }
 
-  return <ResumeView resume={data.resume} />;
+  return <ResumeView resume={data.resume} resumeId={data.id} />;
 }
 
-function ResumeView({ resume: R }: { resume: MasterResume }) {
+function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: string | null }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<"pdf" | "docx" | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [showReplace, setShowReplace] = useState(false);
+  const [editing, setEditing] = useState(false);
 
 
   const download = async (kind: "pdf" | "docx") => {
