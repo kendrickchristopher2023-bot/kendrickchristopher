@@ -141,6 +141,13 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
             >
               {busy === "docx" ? "Building…" : "Download DOCX"}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowReplace((v) => !v)}
+              className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
+              {showReplace ? "Cancel" : "Replace resume"}
+            </button>
             <Link
               to="/apply/tailor"
               className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
@@ -149,6 +156,22 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
             </Link>
           </div>
         </div>
+
+        {showReplace && (
+          <div className="mb-8 rounded-lg border border-border bg-card p-5">
+            <h2 className="text-base font-semibold mb-1">Replace your resume</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Upload a new PDF, DOCX, or image, or paste updated text. This overwrites your primary resume.
+            </p>
+            <ResumeOnboarding
+              onSaved={() => {
+                setShowReplace(false);
+                qc.invalidateQueries({ queryKey: ["my-resume"] });
+              }}
+            />
+          </div>
+        )}
+
 
         {err && (
           <p className="mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
