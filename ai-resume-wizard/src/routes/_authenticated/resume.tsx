@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getMyResume, type MasterResume } from "@/lib/resume.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
+import { ResumeEditor } from "@/components/ResumeEditor";
 import { AtsLintPanel } from "@/components/AtsLintPanel";
 import { lintResumeForAts } from "@/lib/ats-lint";
 import { ResumeTabs } from "@/components/ResumeTabs";
