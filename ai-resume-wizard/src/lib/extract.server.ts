@@ -31,11 +31,19 @@ async function extractPdf(bytes: Uint8Array): Promise<string> {
 }
 
 async function extractDocx(bytes: Uint8Array): Promise<string> {
-  const mammoth = await import("mammoth");
-  // mammoth expects a Buffer-like object with .arrayBuffer
-  const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const result = await mammoth.extractRawText({ arrayBuffer: buf });
-  return result.value ?? "";
+  const mammothMod = await import("mammoth");
+  const mammoth = (mammothMod as unknown as { default?: typeof mammothMod }).default ?? mammothMod;
+  // Node build of mammoth's openZip only accepts { path | buffer | file }.
+  // The browser build accepts { arrayBuffer }. In this Worker runtime we resolve
+  // the node entry, so we must pass a Node Buffer.
+  try {
+    const buffer = Buffer.from(bytes);
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value ?? "";
+  } catch (e) {
+    console.error("[extract.docx] mammoth failed", e);
+    throw new Error("We couldn't read that DOCX. Try re-saving it from Word, or paste the text instead.");
+  }
 }
 
 async function extractImage(

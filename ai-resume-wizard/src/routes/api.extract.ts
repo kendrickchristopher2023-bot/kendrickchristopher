@@ -59,7 +59,21 @@ export const Route = createFileRoute("/api/extract")({
         if (!(file instanceof File)) {
           return new Response("Missing file", { status: 400 });
         }
-        const mime = file.type;
+        // Browsers report .docx MIME inconsistently (often "" or "application/octet-stream").
+        // Fall back to the filename extension when the reported type isn't in the allow-list.
+        const EXT_MIME: Record<string, string> = {
+          pdf: "application/pdf",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          webp: "image/webp",
+        };
+        const ext = (file.name.split(".").pop() ?? "").toLowerCase();
+        let mime = file.type;
+        if (!ALLOWED_MIME.has(mime) && EXT_MIME[ext]) {
+          mime = EXT_MIME[ext];
+        }
         if (!ALLOWED_MIME.has(mime)) {
           return Response.json(
             { error: "Only PDF, DOCX, PNG, JPEG, or WEBP files are supported." },
