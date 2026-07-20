@@ -596,11 +596,11 @@ function ApplyGoPage() {
                 <button
                   type="button"
                   onClick={() => markApplied.mutate()}
-                  disabled={markApplied.isPending || ctx.applied}
+                  disabled={markApplied.isPending || markApplied.isSuccess || ctx.applied}
                   className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
                 >
-                  {ctx.applied
-                    ? "Already logged ✓"
+                  {ctx.applied || markApplied.isSuccess
+                    ? "Logged ✓"
                     : markApplied.isPending
                       ? "Logging…"
                       : "Log this application"}
