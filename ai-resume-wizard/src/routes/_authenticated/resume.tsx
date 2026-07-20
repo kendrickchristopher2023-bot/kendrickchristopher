@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getMyResume, type MasterResume } from "@/lib/resume.functions";
 import { ResumeOnboarding } from "@/components/ResumeOnboarding";
+import { ResumeEditor } from "@/components/ResumeEditor";
 import { AtsLintPanel } from "@/components/AtsLintPanel";
 import { lintResumeForAts } from "@/lib/ats-lint";
 import { ResumeTabs } from "@/components/ResumeTabs";
@@ -79,14 +80,15 @@ function ResumePage() {
     );
   }
 
-  return <ResumeView resume={data.resume} />;
+  return <ResumeView resume={data.resume} resumeId={data.id} />;
 }
 
-function ResumeView({ resume: R }: { resume: MasterResume }) {
+function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: string | null }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<"pdf" | "docx" | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [showReplace, setShowReplace] = useState(false);
+  const [editing, setEditing] = useState(false);
 
 
   const download = async (kind: "pdf" | "docx") => {
@@ -143,6 +145,14 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
             </button>
             <button
               type="button"
+              onClick={() => setEditing((v) => !v)}
+              disabled={busy !== null}
+              className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+            >
+              {editing ? "Close editor" : "Edit resume"}
+            </button>
+            <button
+              type="button"
               onClick={() => setShowReplace((v) => !v)}
               className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
@@ -179,9 +189,23 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
           </p>
         )}
 
-        <div className="mb-6">
-          <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
-        </div>
+        {!editing && (
+          <div className="mb-6">
+            <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
+          </div>
+        )}
+
+        {editing && (
+          <ResumeEditor
+            resume={R}
+            resumeId={resumeId}
+            onCancel={() => setEditing(false)}
+            onSaved={() => setEditing(false)}
+          />
+        )}
+
+        {!editing && (<>
+
 
 
         <article className="bg-card text-card-foreground rounded-xl border border-border p-8 sm:p-12 shadow-sm">
@@ -287,6 +311,8 @@ function ResumeView({ resume: R }: { resume: MasterResume }) {
           </Link>
 
         </footer>
+        </>
+        )}
       </div>
     </main>
   );
