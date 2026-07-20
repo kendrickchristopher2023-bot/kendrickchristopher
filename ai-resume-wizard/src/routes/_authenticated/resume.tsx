@@ -83,8 +83,11 @@ function ResumePage() {
 }
 
 function ResumeView({ resume: R }: { resume: MasterResume }) {
+  const qc = useQueryClient();
   const [busy, setBusy] = useState<"pdf" | "docx" | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [showReplace, setShowReplace] = useState(false);
+
 
   const download = async (kind: "pdf" | "docx") => {
     setErr(null);
