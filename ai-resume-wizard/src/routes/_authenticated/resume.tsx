@@ -204,7 +204,7 @@ function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: s
           />
         )}
 
-        {!editing && (
+        {!editing && (<>
 
 
 
