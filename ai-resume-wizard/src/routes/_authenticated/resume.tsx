@@ -189,9 +189,23 @@ function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: s
           </p>
         )}
 
-        <div className="mb-6">
-          <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
-        </div>
+        {!editing && (
+          <div className="mb-6">
+            <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
+          </div>
+        )}
+
+        {editing && (
+          <ResumeEditor
+            resume={R}
+            resumeId={resumeId}
+            onCancel={() => setEditing(false)}
+            onSaved={() => setEditing(false)}
+          />
+        )}
+
+        {!editing && (
+
 
 
         <article className="bg-card text-card-foreground rounded-xl border border-border p-8 sm:p-12 shadow-sm">
