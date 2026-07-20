@@ -847,7 +847,9 @@ function MarkAppliedDialog({
           notes: notes || null,
         } as never,
       }),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      setTimeout(onSaved, 600);
+    },
   });
   return (
     <Modal onClose={onClose} title={`Log application — ${match.company}`}>
@@ -881,14 +883,22 @@ function MarkAppliedDialog({
         </label>
         <Field label="Job posting URL" value={jdUrl} onChange={setJdUrl} />
         <Field label="Notes" value={notes} onChange={setNotes} textarea />
+        {m.isError && (
+          <p className="text-xs text-destructive">
+            {(m.error as Error)?.message || "Failed to save."}
+          </p>
+        )}
+        {m.isSuccess && (
+          <p className="text-xs text-emerald-600">Marked as applied ✓</p>
+        )}
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancel</button>
           <button
             onClick={() => m.mutate()}
-            disabled={m.isPending}
+            disabled={m.isPending || m.isSuccess}
             className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
-            {m.isPending ? "Saving…" : "Save"}
+            {m.isSuccess ? "Saved ✓" : m.isPending ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
