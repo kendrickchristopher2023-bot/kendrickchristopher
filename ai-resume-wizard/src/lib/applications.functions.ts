@@ -71,12 +71,71 @@ export const upsertApplication = createServerFn({ method: "POST" })
       if (error) throw error;
       return row as Application;
     }
+
+    // True upsert on (user_id, lower(company), lower(role)).
+    // Look up existing case-insensitively; update if found, otherwise insert.
+    const { data: existing, error: findErr } = await context.supabase
+      .from("applications")
+      .select("id")
+      .eq("user_id", context.userId)
+      .ilike("company", data.company.trim())
+      .ilike("role", data.role.trim())
+      .maybeSingle();
+    if (findErr) throw findErr;
+
+    if (existing?.id) {
+      const { data: row, error } = await context.supabase
+        .from("applications")
+        .update({
+          stage: payload.stage,
+          jd_url: payload.jd_url,
+          notes: payload.notes,
+          source: payload.source,
+          applied_at: payload.applied_at,
+        })
+        .eq("id", existing.id)
+        .eq("user_id", context.userId)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return row as Application;
+    }
+
     const { data: row, error } = await context.supabase
       .from("applications")
       .insert(payload)
       .select("*")
       .single();
-    if (error) throw error;
+    if (error) {
+      // Race: another concurrent insert won. Fall back to update.
+      if ((error as { code?: string }).code === "23505") {
+        const { data: dupe } = await context.supabase
+          .from("applications")
+          .select("id")
+          .eq("user_id", context.userId)
+          .ilike("company", data.company.trim())
+          .ilike("role", data.role.trim())
+          .maybeSingle();
+        if (dupe?.id) {
+          const { data: updated, error: updErr } = await context.supabase
+            .from("applications")
+            .update({
+              stage: payload.stage,
+              jd_url: payload.jd_url,
+              notes: payload.notes,
+              source: payload.source,
+              applied_at: payload.applied_at,
+            })
+            .eq("id", dupe.id)
+            .eq("user_id", context.userId)
+            .select("*")
+            .single();
+          if (updErr) throw updErr;
+          return updated as Application;
+        }
+      }
+      throw error;
+    }
     return row as Application;
   });
 
