@@ -99,6 +99,11 @@ function SettingsPage() {
             })}
           </div>
           {q.isLoading && <p className="mt-4 text-xs text-muted-foreground">Loading…</p>}
+          {plan === "free" && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              Higher daily limits are a Pro feature.
+            </p>
+          )}
         </section>
 
         <NotificationsSection />
