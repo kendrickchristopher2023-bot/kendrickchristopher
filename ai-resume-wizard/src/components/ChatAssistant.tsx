@@ -28,6 +28,7 @@ export function ChatAssistant() {
   const [busyMsg, setBusyMsg] = useState("Thinking…");
   const [err, setErr] = useState<string | null>(null);
   const [attached, setAttached] = useState<File | null>(null);
+  const [greeting, setGreeting] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -36,6 +37,33 @@ export function ChatAssistant() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, open]);
+
+  // One-time proactive greeting bubble anchored above the closed chat button.
+  // Persisted in localStorage so it never re-pops on navigation or reload.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.localStorage.getItem(GREETING_KEY)) return;
+    } catch {
+      return;
+    }
+    const showTimer = window.setTimeout(() => setGreeting(true), 2500);
+    const hideTimer = window.setTimeout(() => {
+      setGreeting(false);
+      try { window.localStorage.setItem(GREETING_KEY, "1"); } catch { /* ignore */ }
+    }, 2500 + 10_000);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, []);
+
+  const markGreetingSeen = () => {
+    setGreeting(false);
+    try {
+      if (typeof window !== "undefined") window.localStorage.setItem(GREETING_KEY, "1");
+    } catch { /* ignore */ }
+  };
 
   const getToken = async () => {
     const { data: sess } = await supabase.auth.getSession();
