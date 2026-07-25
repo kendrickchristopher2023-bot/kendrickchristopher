@@ -209,12 +209,16 @@ export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary
     thrown = e;
   } finally {
     summary.ms = Date.now() - started;
-    const ok = thrown == null && summary.companiesFailed === 0 && summary.errors.length === 0;
+    // A slice is only "failed" if it produced NOTHING or threw at the top level.
+    // Per-company 404s on the watched slice are a detail, not a wholesale failure —
+    // one dead Greenhouse slug shouldn't turn 6k successful upserts red.
+    const ok = thrown == null && (summary.jobsUpserted > 0 || summary.companiesFailed === 0);
     const errText = thrown
       ? (thrown instanceof Error ? thrown.message : String(thrown))
       : summary.errors.length > 0
         ? summary.errors.slice(0, 5).map((e) => `${e.source}/${e.slug}: ${e.error}`).join(" | ").slice(0, 2000)
         : null;
+
     const finishedAt = new Date().toISOString();
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
