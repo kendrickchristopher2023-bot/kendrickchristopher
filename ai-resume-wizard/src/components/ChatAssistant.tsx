@@ -7,7 +7,11 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Msg = { role: "user" | "assistant"; content: string; tools?: { name: string; ok: boolean; summary: string }[] };
+type Msg = {
+  role: "user" | "assistant";
+  content: string;
+  tools?: { name: string; ok: boolean; summary: string }[];
+};
 
 const WELCOME: Msg = {
   role: "assistant",
@@ -50,7 +54,11 @@ export function ChatAssistant() {
     const showTimer = window.setTimeout(() => setGreeting(true), 2500);
     const hideTimer = window.setTimeout(() => {
       setGreeting(false);
-      try { window.localStorage.setItem(GREETING_KEY, "1"); } catch { /* ignore */ }
+      try {
+        window.localStorage.setItem(GREETING_KEY, "1");
+      } catch {
+        /* ignore */
+      }
     }, 2500 + 10_000);
     return () => {
       window.clearTimeout(showTimer);
@@ -62,7 +70,9 @@ export function ChatAssistant() {
     setGreeting(false);
     try {
       if (typeof window !== "undefined") window.localStorage.setItem(GREETING_KEY, "1");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const getToken = async () => {
@@ -106,7 +116,9 @@ export function ChatAssistant() {
         {
           role: "user",
           content: attached
-            ? (text ? `${text}\n\n📎 ${attached.name}` : `📎 Attached ${attached.name}`)
+            ? text
+              ? `${text}\n\n📎 ${attached.name}`
+              : `📎 Attached ${attached.name}`
             : text,
         },
       ];
@@ -117,7 +129,9 @@ export function ChatAssistant() {
       setBusyMsg("Thinking…");
       const payload = {
         // Send the extracted content to the model, not the emoji preview.
-        messages: nextMessages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))
+        messages: nextMessages
+          .slice(0, -1)
+          .map((m) => ({ role: m.role, content: m.content }))
           .concat([{ role: "user", content: userContent }]),
       };
       const res = await fetch("/api/chat", {
@@ -219,8 +233,7 @@ export function ChatAssistant() {
                   <p
                     key={j}
                     className={
-                      "text-[10px] " +
-                      (t.ok ? "text-muted-foreground" : "text-destructive")
+                      "text-[10px] " + (t.ok ? "text-muted-foreground" : "text-destructive")
                     }
                   >
                     ⚙ {t.name}: {t.summary}
@@ -230,9 +243,7 @@ export function ChatAssistant() {
             )}
           </div>
         ))}
-        {busy && (
-          <p className="text-xs italic text-muted-foreground">{busyMsg}</p>
-        )}
+        {busy && <p className="text-xs italic text-muted-foreground">{busyMsg}</p>}
         {err && <p className="text-xs text-destructive">{err}</p>}
       </div>
 
@@ -296,8 +307,8 @@ export function ChatAssistant() {
           </button>
         </div>
         <p className="mt-2 text-[10px] text-muted-foreground">
-          I can't submit or fill external applications. Files stay in memory — only the
-          extracted text is used.
+          I can't submit or fill external applications. Files stay in memory — only the extracted
+          text is used.
         </p>
       </div>
     </div>

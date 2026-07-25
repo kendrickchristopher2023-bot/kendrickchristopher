@@ -14,7 +14,8 @@ import type { Database } from "@/integrations/supabase/types";
 
 import { helpContentAsPrompt } from "@/lib/help-content";
 
-const SYSTEM = `You are the in-app assistant for a personal AI job-search toolkit. You help one signed-in user prepare and manage their own job applications.
+const SYSTEM =
+  `You are the in-app assistant for a personal AI job-search toolkit. You help one signed-in user prepare and manage their own job applications.
 
 TOP-LEVEL NAV (use these names — the old "Discover / Job Matches / Application Kit" labels are gone):
 - "Find Jobs" → /apply/discover
@@ -279,7 +280,12 @@ export const Route = createFileRoute("/api/chat")({
             model: gateway("google/gemini-3-flash-preview"),
             system: SYSTEM + grounding,
             messages: body.messages,
-            tools: { tailor_resume: tailor, generate_cover_letter: coverLetter, interview_prep: interviewPrep, draft_followup: followup },
+            tools: {
+              tailor_resume: tailor,
+              generate_cover_letter: coverLetter,
+              interview_prep: interviewPrep,
+              draft_followup: followup,
+            },
             stopWhen: stepCountIs(50),
           });
 
@@ -290,7 +296,10 @@ export const Route = createFileRoute("/api/chat")({
           });
         } catch (e) {
           const msg = e instanceof Error ? e.message : "Chat failed";
-          return Response.json({ text: `Something went wrong: ${msg}`, tools: toolNotes, limitReached: false }, { status: 500 });
+          return Response.json(
+            { text: `Something went wrong: ${msg}`, tools: toolNotes, limitReached: false },
+            { status: 500 },
+          );
         }
       },
     },
