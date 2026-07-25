@@ -145,16 +145,40 @@ export function ChatAssistant() {
     }
   };
 
+  const openChat = () => {
+    setOpen(true);
+    markGreetingSeen();
+  };
+
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open assistant"
-        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
-      >
-        <span className="text-xl">💬</span>
-      </button>
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+        {greeting && (
+          <div
+            role="status"
+            className="relative max-w-[260px] rounded-lg border border-border bg-card px-3 py-2 pr-7 text-xs text-foreground shadow-lg motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1"
+          >
+            <button
+              type="button"
+              onClick={markGreetingSeen}
+              aria-label="Dismiss"
+              className="absolute right-1 top-1 text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
+            <p>Hey — need a hand with a job? I'll be parked right here whenever you want me.</p>
+            <span className="absolute -bottom-1 right-5 h-2 w-2 rotate-45 border-b border-r border-border bg-card" />
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={openChat}
+          aria-label="Open assistant"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+        >
+          <span className="text-xl">💬</span>
+        </button>
+      </div>
     );
   }
 
