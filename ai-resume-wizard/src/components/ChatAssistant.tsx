@@ -7,13 +7,19 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Msg = { role: "user" | "assistant"; content: string; tools?: { name: string; ok: boolean; summary: string }[] };
+type Msg = {
+  role: "user" | "assistant";
+  content: string;
+  tools?: { name: string; ok: boolean; summary: string }[];
+};
 
 const WELCOME: Msg = {
   role: "assistant",
   content:
-    "Hi — I'm your job-search assistant. Paste a job description and I'll tailor your resume, draft a cover letter, or prep interview stories. You can also attach a resume PDF or a screenshot of a job posting. I can't submit any applications for you.",
+    "Hi — I'm your job-search assistant. I can tailor your resume + cover letter to any job description, draft interview stories, write a referral DM, or a follow-up email. Paste a job description or ask a question. You can also attach a resume PDF/DOCX or a screenshot of a posting. I never submit applications for you.",
 };
+
+const GREETING_KEY = "chat-assistant-greeting-seen-v1";
 
 const ACCEPT =
   ".pdf,.docx,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp";
@@ -26,6 +32,7 @@ export function ChatAssistant() {
   const [busyMsg, setBusyMsg] = useState("Thinking…");
   const [err, setErr] = useState<string | null>(null);
   const [attached, setAttached] = useState<File | null>(null);
+  const [greeting, setGreeting] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -34,6 +41,39 @@ export function ChatAssistant() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, open]);
+
+  // One-time proactive greeting bubble anchored above the closed chat button.
+  // Persisted in localStorage so it never re-pops on navigation or reload.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.localStorage.getItem(GREETING_KEY)) return;
+    } catch {
+      return;
+    }
+    const showTimer = window.setTimeout(() => setGreeting(true), 2500);
+    const hideTimer = window.setTimeout(() => {
+      setGreeting(false);
+      try {
+        window.localStorage.setItem(GREETING_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    }, 2500 + 10_000);
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, []);
+
+  const markGreetingSeen = () => {
+    setGreeting(false);
+    try {
+      if (typeof window !== "undefined") window.localStorage.setItem(GREETING_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  };
 
   const getToken = async () => {
     const { data: sess } = await supabase.auth.getSession();
@@ -76,7 +116,9 @@ export function ChatAssistant() {
         {
           role: "user",
           content: attached
-            ? (text ? `${text}\n\n📎 ${attached.name}` : `📎 Attached ${attached.name}`)
+            ? text
+              ? `${text}\n\n📎 ${attached.name}`
+              : `📎 Attached ${attached.name}`
             : text,
         },
       ];
@@ -87,7 +129,9 @@ export function ChatAssistant() {
       setBusyMsg("Thinking…");
       const payload = {
         // Send the extracted content to the model, not the emoji preview.
-        messages: nextMessages.slice(0, -1).map((m) => ({ role: m.role, content: m.content }))
+        messages: nextMessages
+          .slice(0, -1)
+          .map((m) => ({ role: m.role, content: m.content }))
           .concat([{ role: "user", content: userContent }]),
       };
       const res = await fetch("/api/chat", {
@@ -115,16 +159,40 @@ export function ChatAssistant() {
     }
   };
 
+  const openChat = () => {
+    setOpen(true);
+    markGreetingSeen();
+  };
+
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open assistant"
-        className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
-      >
-        <span className="text-xl">💬</span>
-      </button>
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+        {greeting && (
+          <div
+            role="status"
+            className="relative max-w-[260px] rounded-lg border border-border bg-card px-3 py-2 pr-7 text-xs text-foreground shadow-lg motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1"
+          >
+            <button
+              type="button"
+              onClick={markGreetingSeen}
+              aria-label="Dismiss"
+              className="absolute right-1 top-1 text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
+            <p>Hey — need a hand with a job? I'll be parked right here whenever you want me.</p>
+            <span className="absolute -bottom-1 right-5 h-2 w-2 rotate-45 border-b border-r border-border bg-card" />
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={openChat}
+          aria-label="Open assistant"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+        >
+          <span className="text-xl">💬</span>
+        </button>
+      </div>
     );
   }
 
@@ -165,8 +233,7 @@ export function ChatAssistant() {
                   <p
                     key={j}
                     className={
-                      "text-[10px] " +
-                      (t.ok ? "text-muted-foreground" : "text-destructive")
+                      "text-[10px] " + (t.ok ? "text-muted-foreground" : "text-destructive")
                     }
                   >
                     ⚙ {t.name}: {t.summary}
@@ -176,9 +243,7 @@ export function ChatAssistant() {
             )}
           </div>
         ))}
-        {busy && (
-          <p className="text-xs italic text-muted-foreground">{busyMsg}</p>
-        )}
+        {busy && <p className="text-xs italic text-muted-foreground">{busyMsg}</p>}
         {err && <p className="text-xs text-destructive">{err}</p>}
       </div>
 
@@ -242,8 +307,8 @@ export function ChatAssistant() {
           </button>
         </div>
         <p className="mt-2 text-[10px] text-muted-foreground">
-          I can't submit or fill external applications. Files stay in memory — only the
-          extracted text is used.
+          I can't submit or fill external applications. Files stay in memory — only the extracted
+          text is used.
         </p>
       </div>
     </div>
