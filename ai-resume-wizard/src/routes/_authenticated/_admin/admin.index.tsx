@@ -1118,13 +1118,16 @@ function RefreshHealthPanel() {
             <tbody className="divide-y divide-border">
               {rows.map((r) => {
                 const isStale = stale(r);
-                const badge = r.ok === true && !isStale
+                const isPartial = r.ok === true && r.companies_failed > 0;
+                const badge = r.ok === true && !isStale && !isPartial
                   ? <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">ok</span>
-                  : r.ok === false
-                    ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">failed</span>
-                    : isStale
-                      ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">stale</span>
-                      : <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">running</span>;
+                  : isPartial && !isStale
+                    ? <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-700 dark:text-amber-400" title={`${r.companies_failed} companies failed but ${r.jobs_upserted} jobs upserted`}>partial</span>
+                    : r.ok === false
+                      ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">failed</span>
+                      : isStale
+                        ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">stale</span>
+                        : <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">running</span>;
                 return (
                   <tr key={r.id} className={isStale ? "bg-destructive/5" : ""}>
                     <td className="py-1 pr-3 font-mono">{r.slice}</td>
@@ -1140,9 +1143,45 @@ function RefreshHealthPanel() {
           </table>
         </div>
       )}
+
+      {(q.data?.badSlugs?.length ?? 0) > 0 && (
+        <div className="mt-6 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+            Watched companies with fetch errors ({q.data?.badSlugs.length})
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            These slugs failed on their last fetch — usually 404 (company moved off the ATS or changed slug). Fix or remove them in "Manage companies".
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="text-left text-muted-foreground">
+                <tr>
+                  <th className="py-1 pr-3 font-medium">Source</th>
+                  <th className="py-1 pr-3 font-medium">Slug</th>
+                  <th className="py-1 pr-3 font-medium">Company</th>
+                  <th className="py-1 pr-3 font-medium">Watchers</th>
+                  <th className="py-1 pr-3 font-medium">Last error</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {q.data?.badSlugs.map((b) => (
+                  <tr key={`${b.source}:${b.slug}`}>
+                    <td className="py-1 pr-3 font-mono">{b.source}</td>
+                    <td className="py-1 pr-3 font-mono">{b.slug}</td>
+                    <td className="py-1 pr-3">{b.company_name}</td>
+                    <td className="py-1 pr-3">{b.watcher_count}</td>
+                    <td className="py-1 pr-3 text-destructive max-w-md truncate" title={b.last_fetch_status ?? ""}>{b.last_fetch_status ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+
 
 type InviteResult = {
   email: string;
