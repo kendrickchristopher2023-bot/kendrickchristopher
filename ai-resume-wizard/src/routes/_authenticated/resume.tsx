@@ -89,6 +89,8 @@ function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: s
   const [err, setErr] = useState<string | null>(null);
   const [showReplace, setShowReplace] = useState(false);
   const [editing, setEditing] = useState(false);
+  const atsFindings = useMemo(() => lintResumeForAts(R), [R]);
+
 
 
   const download = async (kind: "pdf" | "docx") => {
