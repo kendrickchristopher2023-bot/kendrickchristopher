@@ -12,8 +12,10 @@ type Msg = { role: "user" | "assistant"; content: string; tools?: { name: string
 const WELCOME: Msg = {
   role: "assistant",
   content:
-    "Hi — I'm your job-search assistant. Paste a job description and I'll tailor your resume, draft a cover letter, or prep interview stories. You can also attach a resume PDF or a screenshot of a job posting. I can't submit any applications for you.",
+    "Hi — I'm your job-search assistant. I can tailor your resume + cover letter to any job description, draft interview stories, write a referral DM, or a follow-up email. Paste a job description or ask a question. You can also attach a resume PDF/DOCX or a screenshot of a posting. I never submit applications for you.",
 };
+
+const GREETING_KEY = "chat-assistant-greeting-seen-v1";
 
 const ACCEPT =
   ".pdf,.docx,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp";
