@@ -193,9 +193,10 @@ function ResumeView({ resume: R, resumeId }: { resume: MasterResume; resumeId: s
 
         {!editing && (
           <div className="mb-6">
-            <AtsLintPanel findings={useMemo(() => lintResumeForAts(R), [R])} />
+            <AtsLintPanel findings={atsFindings} />
           </div>
         )}
+
 
         {editing && (
           <ResumeEditor
