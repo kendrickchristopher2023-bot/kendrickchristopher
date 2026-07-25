@@ -54,8 +54,51 @@ export const listRefreshRuns = createServerFn({ method: "GET" })
         bySlice.set(r.slice, r);
       }
     }
+
+    // Surface dead watched slugs (404s etc.) so admin can fix/remove them.
+    // Dedupe by (source, slug) — one row per unique upstream, showing how many users watch it.
+    const { data: badWatchedRaw } = await (supabaseAdmin as unknown as {
+      from: (t: string) => {
+        select: (s: string) => {
+          ilike: (c: string, v: string) => {
+            order: (c: string, o: { ascending: boolean }) => Promise<{ data: Array<{ id: string; source: string; slug: string; company_name: string; last_fetch_status: string | null; last_fetched_at: string | null }> | null }>;
+          };
+        };
+      };
+    })
+      .from("watched_companies")
+      .select("id, source, slug, company_name, last_fetch_status, last_fetched_at")
+      .ilike("last_fetch_status", "error:%")
+      .order("last_fetched_at", { ascending: false });
+
+    type BadSlug = {
+      source: string;
+      slug: string;
+      company_name: string;
+      last_fetch_status: string | null;
+      last_fetched_at: string | null;
+      watcher_count: number;
+    };
+    const bySlug = new Map<string, BadSlug>();
+    for (const w of badWatchedRaw ?? []) {
+      const key = `${w.source}:${w.slug}`;
+      const existing = bySlug.get(key);
+      if (existing) existing.watcher_count += 1;
+      else
+        bySlug.set(key, {
+          source: w.source,
+          slug: w.slug,
+          company_name: w.company_name,
+          last_fetch_status: w.last_fetch_status,
+          last_fetched_at: w.last_fetched_at,
+          watcher_count: 1,
+        });
+    }
+
     return {
       latestBySlice: Array.from(bySlice.values()).sort((a, b) => a.slice.localeCompare(b.slice)),
       recent: rows.slice(0, 50),
+      badSlugs: Array.from(bySlug.values()),
     };
   });
+
