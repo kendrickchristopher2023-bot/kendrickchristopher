@@ -1067,7 +1067,8 @@ function RefreshHealthPanel() {
     !r.finished_at || (now - new Date(r.finished_at).getTime()) > 36 * 3600 * 1000;
 
   const rows = q.data?.latestBySlice ?? [];
-  const totalOk = rows.filter((r) => r.ok === true).length;
+  const totalOk = rows.filter((r) => r.ok === true && r.companies_failed === 0).length;
+  const totalPartial = rows.filter((r) => r.ok === true && r.companies_failed > 0).length;
   const totalFail = rows.filter((r) => r.ok === false).length;
   const totalStale = rows.filter((r) => stale(r)).length;
 
@@ -1077,10 +1078,12 @@ function RefreshHealthPanel() {
         <div>
           <h2 className="text-xl font-semibold">Refresh health</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Every job-source slice writes its outcome here. Anything older than 36h shows red — that means the daily cron didn't reach it.
+            Every job-source slice writes its outcome here. Anything older than 36h shows red — that means the daily cron didn't reach it. "Partial" means jobs were upserted but some watched companies 404'd (see list below).
           </p>
           <p className="mt-2 text-xs">
             <span className="text-emerald-600">{totalOk} ok</span>
+            {" · "}
+            <span className="text-amber-600 dark:text-amber-400">{totalPartial} partial</span>
             {" · "}
             <span className="text-destructive">{totalFail} failed</span>
             {" · "}
@@ -1089,6 +1092,7 @@ function RefreshHealthPanel() {
             <span className="text-muted-foreground">{rows.length} slices</span>
           </p>
         </div>
+
         <button
           onClick={trigger}
           disabled={busy}
