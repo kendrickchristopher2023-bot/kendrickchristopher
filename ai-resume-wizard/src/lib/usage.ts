@@ -20,14 +20,15 @@ export type Plan = "free" | "pro" | "founder";
 
 export const PLAN_CAPS: Record<Plan, Record<UsageAction, number>> = {
   free: {
-    tailor: 10,
-    cover_letter: 10,
-    interview_prep: 10,
-    linkedin: 10,
-    referral_dm: 10,
-    parse_resume: 5,
-    chat: 20,
+    tailor: 3,
+    cover_letter: 3,
+    interview_prep: 2,
+    linkedin: 2,
+    referral_dm: 3,
+    parse_resume: 3,
+    chat: 8,
   },
+
   pro: {
     tailor: 200,
     cover_letter: 200,
