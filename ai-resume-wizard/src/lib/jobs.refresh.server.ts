@@ -103,9 +103,12 @@ async function runAggregatorSlice(source: string, summary: SliceSummary): Promis
 
 async function runWatchedSlice(summary: SliceSummary): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  // Skip quarantined rows (active=false) — the healer disabled them and we
+  // stop trying so they don't keep spamming errors.
   const { data: watchedRaw, error } = await supabaseAdmin
     .from("watched_companies")
     .select("id, source, slug, company_name")
+    .eq("active" as never, true as never)
     .not("source", "in", `(${AGGREGATOR_SOURCES.join(",")})`);
   if (error) throw error;
 
@@ -156,15 +159,33 @@ async function runWatchedSlice(summary: SliceSummary): Promise<void> {
     summary.jobsUpserted += inserted;
     summary.companiesOk += 1;
 
+    // Reset consecutive_failures on success — clears the way for the healer
+    // to ignore this row next run.
     await supabaseAdmin
       .from("watched_companies")
       .update({
         last_fetched_at: new Date().toISOString(),
         last_fetch_status: "ok",
         last_fetch_count: jobs.length,
+        consecutive_failures: 0,
       } as never)
       .in("id", w.ids);
   });
+
+  // Self-healer runs after the fetch loop. Only touches rows currently
+  // marked as failed, so the work set is small and bounded.
+  try {
+    const { runWatchedHealer } = await import("./watched-heal.server");
+    const healed = await runWatchedHealer();
+    if (healed.candidates > 0) {
+      console.log(
+        `watched healer: candidates=${healed.candidates} auto_healed=${healed.auto_healed} quarantined=${healed.quarantined} incremented=${healed.incremented} ms=${healed.ms}`,
+      );
+    }
+  } catch (e) {
+    // Healer failure must never take down the refresh.
+    console.error("watched healer failed:", e instanceof Error ? e.message : String(e));
+  }
 }
 
 export async function runRefreshSlice(slice: RefreshSlice): Promise<SliceSummary> {
