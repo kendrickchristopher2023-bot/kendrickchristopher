@@ -12,11 +12,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(context: {
-  supabase: { from: (t: string) => { select: (s: string) => { eq: (c: string, v: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown }> } } } } };
-  userId: string;
-}): Promise<void> {
-  const { data } = await context.supabase
+async function assertAdmin(context: { supabase: unknown; userId: string }): Promise<void> {
+  const sb = context.supabase as {
+    from: (t: string) => {
+      select: (s: string) => {
+        eq: (c: string, v: string) => {
+          eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown }> };
+        };
+      };
+    };
+  };
+  const { data } = await sb
     .from("user_roles")
     .select("role")
     .eq("user_id", context.userId)
