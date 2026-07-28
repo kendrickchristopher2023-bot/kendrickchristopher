@@ -1420,9 +1420,6 @@ function WatchedHealerPanels({
     </>
   );
 }
-    </section>
-  );
-}
 
 
 type InviteResult = {
