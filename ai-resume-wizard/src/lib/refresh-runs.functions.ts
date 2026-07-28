@@ -57,20 +57,42 @@ export const listRefreshRuns = createServerFn({ method: "GET" })
 
     // Surface dead watched slugs (404s etc.) so admin can fix/remove them.
     // Dedupe by (source, slug) — one row per unique upstream, showing how many users watch it.
-    const { data: badWatchedRaw } = await (supabaseAdmin as unknown as {
+    // Pull ALL healer-touched rows (active OR quarantined, plus auto-healed).
+    const { data: watchedRaw } = await (supabaseAdmin as unknown as {
       from: (t: string) => {
         select: (s: string) => {
-          ilike: (c: string, v: string) => {
-            order: (c: string, o: { ascending: boolean }) => Promise<{ data: Array<{ id: string; source: string; slug: string; company_name: string; last_fetch_status: string | null; last_fetched_at: string | null }> | null }>;
-          };
+          order: (c: string, o: { ascending: boolean }) => Promise<{
+            data: Array<{
+              id: string;
+              source: string;
+              slug: string;
+              company_name: string;
+              last_fetch_status: string | null;
+              last_fetched_at: string | null;
+              active: boolean;
+              consecutive_failures: number;
+              disabled_at: string | null;
+              auto_healed_at: string | null;
+              auto_heal_from: string | null;
+              suggestions: unknown;
+            }> | null;
+          }>;
         };
       };
     })
       .from("watched_companies")
-      .select("id, source, slug, company_name, last_fetch_status, last_fetched_at")
-      .ilike("last_fetch_status", "error:%")
+      .select(
+        "id, source, slug, company_name, last_fetch_status, last_fetched_at, active, consecutive_failures, disabled_at, auto_healed_at, auto_heal_from, suggestions",
+      )
       .order("last_fetched_at", { ascending: false });
 
+    type Suggestion = {
+      source: string;
+      slug: string;
+      reason: string;
+      jobs_preview?: number;
+      company_name_returned?: string;
+    };
     type BadSlug = {
       source: string;
       slug: string;
@@ -78,27 +100,90 @@ export const listRefreshRuns = createServerFn({ method: "GET" })
       last_fetch_status: string | null;
       last_fetched_at: string | null;
       watcher_count: number;
+      consecutive_failures: number;
     };
+    type Quarantined = BadSlug & {
+      disabled_at: string | null;
+      suggestions: Suggestion[];
+      ids: string[];
+    };
+    type AutoHealed = {
+      source: string;
+      slug: string;
+      company_name: string;
+      auto_healed_at: string | null;
+      auto_heal_from: string | null;
+      watcher_count: number;
+    };
+
     const bySlug = new Map<string, BadSlug>();
-    for (const w of badWatchedRaw ?? []) {
+    const quarantinedMap = new Map<string, Quarantined>();
+    const healedMap = new Map<string, AutoHealed>();
+    // Auto-healed within last 30 days.
+    const HEALED_CUTOFF = Date.now() - 30 * 24 * 3600 * 1000;
+    for (const w of watchedRaw ?? []) {
       const key = `${w.source}:${w.slug}`;
-      const existing = bySlug.get(key);
-      if (existing) existing.watcher_count += 1;
-      else
-        bySlug.set(key, {
-          source: w.source,
-          slug: w.slug,
-          company_name: w.company_name,
-          last_fetch_status: w.last_fetch_status,
-          last_fetched_at: w.last_fetched_at,
-          watcher_count: 1,
-        });
+      // Active + failing (not yet quarantined) — the classic "bad slug" list.
+      if (w.active && (w.last_fetch_status ?? "").startsWith("error:")) {
+        const existing = bySlug.get(key);
+        if (existing) existing.watcher_count += 1;
+        else
+          bySlug.set(key, {
+            source: w.source,
+            slug: w.slug,
+            company_name: w.company_name,
+            last_fetch_status: w.last_fetch_status,
+            last_fetched_at: w.last_fetched_at,
+            watcher_count: 1,
+            consecutive_failures: w.consecutive_failures ?? 0,
+          });
+      }
+      // Quarantined — needs attention, may have suggestions.
+      if (!w.active) {
+        const existing = quarantinedMap.get(key);
+        if (existing) {
+          existing.watcher_count += 1;
+          existing.ids.push(w.id);
+        } else {
+          quarantinedMap.set(key, {
+            source: w.source,
+            slug: w.slug,
+            company_name: w.company_name,
+            last_fetch_status: w.last_fetch_status,
+            last_fetched_at: w.last_fetched_at,
+            watcher_count: 1,
+            consecutive_failures: w.consecutive_failures ?? 0,
+            disabled_at: w.disabled_at,
+            suggestions: Array.isArray(w.suggestions) ? (w.suggestions as Suggestion[]) : [],
+            ids: [w.id],
+          });
+        }
+      }
+      // Recently auto-healed — informational.
+      if (w.auto_healed_at && new Date(w.auto_healed_at).getTime() >= HEALED_CUTOFF) {
+        const existing = healedMap.get(key);
+        if (existing) existing.watcher_count += 1;
+        else
+          healedMap.set(key, {
+            source: w.source,
+            slug: w.slug,
+            company_name: w.company_name,
+            auto_healed_at: w.auto_healed_at,
+            auto_heal_from: w.auto_heal_from,
+            watcher_count: 1,
+          });
+      }
     }
 
     return {
       latestBySlice: Array.from(bySlice.values()).sort((a, b) => a.slice.localeCompare(b.slice)),
       recent: rows.slice(0, 50),
       badSlugs: Array.from(bySlug.values()),
+      quarantined: Array.from(quarantinedMap.values()),
+      autoHealed: Array.from(healedMap.values()).sort(
+        (a, b) => new Date(b.auto_healed_at ?? 0).getTime() - new Date(a.auto_healed_at ?? 0).getTime(),
+      ),
     };
   });
+
 
