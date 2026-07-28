@@ -14,6 +14,11 @@ import {
   inviteUserByEmailAdmin,
 } from "@/lib/admin.functions";
 import { listRefreshRuns, type RefreshRun } from "@/lib/refresh-runs.functions";
+import {
+  applyWatchedSuggestion,
+  removeWatchedCompanyAdmin,
+  reenableWatchedCompanyAdmin,
+} from "@/lib/watched-heal.functions";
 import { getAppStatus, setAppStatus } from "@/lib/app-status.functions";
 import {
   listChangelog,
