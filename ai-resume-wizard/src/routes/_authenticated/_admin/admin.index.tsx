@@ -30,10 +30,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/_admin/admin/")({
   head: () => ({
-    meta: [
-      { title: "Admin dashboard" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Admin dashboard" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: AdminDashboard,
 });
@@ -128,18 +125,15 @@ function AdminDashboard() {
     emailError: string | null;
   } | null>(null);
 
-
   const changePlan = useMutation({
-    mutationFn: (v: { userId: string; plan: (typeof PLANS)[number] }) =>
-      planFn({ data: v }),
+    mutationFn: (v: { userId: string; plan: (typeof PLANS)[number] }) => planFn({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
     },
   });
   const toggleAccess = useMutation({
-    mutationFn: (v: { userId: string; revoked: boolean }) =>
-      accessFn({ data: v }),
+    mutationFn: (v: { userId: string; revoked: boolean }) => accessFn({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
@@ -181,9 +175,7 @@ function AdminDashboard() {
     const q = search.trim().toLowerCase();
     const filtered = q
       ? list.filter(
-          (u) =>
-            u.email.toLowerCase().includes(q) ||
-            (u.full_name ?? "").toLowerCase().includes(q),
+          (u) => u.email.toLowerCase().includes(q) || (u.full_name ?? "").toLowerCase().includes(q),
         )
       : list;
     const t = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
@@ -208,10 +200,7 @@ function AdminDashboard() {
         );
         break;
       case "login_never_first":
-        sorted.sort(
-          (a, b) =>
-            (t(a.last_sign_in_at) || -1) - (t(b.last_sign_in_at) || -1),
-        );
+        sorted.sort((a, b) => (t(a.last_sign_in_at) || -1) - (t(b.last_sign_in_at) || -1));
         break;
       case "active_desc":
         sorted.sort((a, b) => t(b.last_active_at) - t(a.last_active_at));
@@ -227,19 +216,9 @@ function AdminDashboard() {
     return sorted;
   }, [users.data, search, sortBy]);
 
-
-  const maxUsage = Math.max(
-    1,
-    ...Object.values(analytics.data?.usageTotals ?? { x: 0 }),
-  );
-  const maxFunnel = Math.max(
-    1,
-    ...FUNNEL_STAGES.map((s) => analytics.data?.funnel?.[s] ?? 0),
-  );
-  const maxSignups = Math.max(
-    1,
-    ...(analytics.data?.signups ?? []).map((s) => s.count),
-  );
+  const maxUsage = Math.max(1, ...Object.values(analytics.data?.usageTotals ?? { x: 0 }));
+  const maxFunnel = Math.max(1, ...FUNNEL_STAGES.map((s) => analytics.data?.funnel?.[s] ?? 0));
+  const maxSignups = Math.max(1, ...(analytics.data?.signups ?? []).map((s) => s.count));
 
   return (
     <main className="min-h-screen bg-background px-6 py-10">
@@ -252,22 +231,14 @@ function AdminDashboard() {
             >
               ← Back to kit
             </Link>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight">
-              Admin dashboard
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Users, usage, and access requests.
-            </p>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight">Admin dashboard</h1>
+            <p className="text-sm text-muted-foreground">Users, usage, and access requests.</p>
           </div>
         </header>
 
         <SiteStatusPanel />
 
         <RefreshHealthPanel />
-
-
-
-
 
         {/* Analytics */}
         <section className="grid gap-6 md:grid-cols-3">
@@ -286,31 +257,25 @@ function AdminDashboard() {
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Total:{" "}
-              {(analytics.data?.signups ?? []).reduce(
-                (a, b) => a + b.count,
-                0,
-              )}
+              Total: {(analytics.data?.signups ?? []).reduce((a, b) => a + b.count, 0)}
             </p>
           </Card>
           <Card title="Usage by action (last 30 days)">
             <ul className="space-y-1 text-xs">
-              {Object.entries(analytics.data?.usageTotals ?? {}).map(
-                ([k, v]) => (
-                  <li key={k}>
-                    <div className="flex justify-between">
-                      <span>{k}</span>
-                      <span className="font-medium">{v}</span>
-                    </div>
-                    <div className="h-1 rounded bg-muted">
-                      <div
-                        className="h-1 rounded bg-primary"
-                        style={{ width: `${(v / maxUsage) * 100}%` }}
-                      />
-                    </div>
-                  </li>
-                ),
-              )}
+              {Object.entries(analytics.data?.usageTotals ?? {}).map(([k, v]) => (
+                <li key={k}>
+                  <div className="flex justify-between">
+                    <span>{k}</span>
+                    <span className="font-medium">{v}</span>
+                  </div>
+                  <div className="h-1 rounded bg-muted">
+                    <div
+                      className="h-1 rounded bg-primary"
+                      style={{ width: `${(v / maxUsage) * 100}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
             </ul>
           </Card>
           <Card title="Application funnel (all-time)">
@@ -427,9 +392,7 @@ function AdminDashboard() {
                     <td className="px-3 py-2">
                       <div className="font-medium">{u.email}</div>
                       {u.full_name && (
-                        <div className="text-xs text-muted-foreground">
-                          {u.full_name}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{u.full_name}</div>
                       )}
                     </td>
                     <td className="px-3 py-2">
@@ -455,9 +418,7 @@ function AdminDashboard() {
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
-                      {u.onboarded_at
-                        ? new Date(u.onboarded_at).toLocaleDateString()
-                        : "—"}
+                      {u.onboarded_at ? new Date(u.onboarded_at).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">
                       {formatEasternDateTime(u.last_sign_in_at)}
@@ -471,17 +432,12 @@ function AdminDashboard() {
                       )}
                     </td>
 
-
-                    <td className="px-3 py-2 text-xs">
-                      {u.has_primary_resume ? "✓" : "—"}
-                    </td>
+                    <td className="px-3 py-2 text-xs">{u.has_primary_resume ? "✓" : "—"}</td>
                     <td className="px-3 py-2 text-xs">{u.usage_today}</td>
                     <td className="px-3 py-2">
                       {u.banned ? (
                         <button
-                          onClick={() =>
-                            toggleAccess.mutate({ userId: u.id, revoked: false })
-                          }
+                          onClick={() => toggleAccess.mutate({ userId: u.id, revoked: false })}
                           disabled={toggleAccess.isPending}
                           className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
                         >
@@ -514,18 +470,15 @@ function AdminDashboard() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Metadata only — resume content, tailored output, and cover letters
-            aren't shown here.
+            Metadata only — resume content, tailored output, and cover letters aren't shown here.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            <span className="font-medium">Last login</span> is the last time
-            the user signed in (from auth). <span className="font-medium">Last active</span>{" "}
-            is bumped whenever an authenticated server call is made on their
-            behalf (Discover search, Matches, Tailor, saving a resume, etc.),
-            throttled to once every 5 minutes. Purely client-side interactions
-            that never hit the server (typing in a filter box, scrolling) are
-            not counted, so this is a coarse "still using the app" signal, not
-            precise session tracking.
+            <span className="font-medium">Last login</span> is the last time the user signed in
+            (from auth). <span className="font-medium">Last active</span> is bumped whenever an
+            authenticated server call is made on their behalf (Discover search, Matches, Tailor,
+            saving a resume, etc.), throttled to once every 5 minutes. Purely client-side
+            interactions that never hit the server (typing in a filter box, scrolling) are not
+            counted, so this is a coarse "still using the app" signal, not precise session tracking.
           </p>
         </section>
 
@@ -546,7 +499,9 @@ function AdminDashboard() {
               <p
                 className={
                   "text-xs font-semibold uppercase tracking-wider " +
-                  (magic.emailSent ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300")
+                  (magic.emailSent
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : "text-amber-700 dark:text-amber-300")
                 }
               >
                 {magic.emailSent
@@ -594,80 +549,80 @@ function AdminDashboard() {
                     </td>
                   </tr>
                 )}
-                {(requests.data?.requests ?? []).map((r: {
-                  id: string;
-                  email: string;
-                  full_name: string | null;
-                  reason: string | null;
-                  status: string;
-                }) => (
-                  <tr key={r.id}>
-                    <td className="px-3 py-2 font-medium">{r.email}</td>
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {r.full_name ?? "—"}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground max-w-sm">
-                      <span className="line-clamp-2">{r.reason ?? "—"}</span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={
-                          r.status === "approved"
-                            ? "text-primary"
-                            : r.status === "denied"
-                              ? "text-muted-foreground line-through"
-                              : ""
-                        }
-                      >
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="inline-flex gap-2">
-                        {r.status === "pending" && (
-                          <>
+                {(requests.data?.requests ?? []).map(
+                  (r: {
+                    id: string;
+                    email: string;
+                    full_name: string | null;
+                    reason: string | null;
+                    status: string;
+                  }) => (
+                    <tr key={r.id}>
+                      <td className="px-3 py-2 font-medium">{r.email}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{r.full_name ?? "—"}</td>
+                      <td className="px-3 py-2 text-muted-foreground max-w-sm">
+                        <span className="line-clamp-2">{r.reason ?? "—"}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={
+                            r.status === "approved"
+                              ? "text-primary"
+                              : r.status === "denied"
+                                ? "text-muted-foreground line-through"
+                                : ""
+                          }
+                        >
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="inline-flex gap-2">
+                          {r.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  review.mutate({
+                                    id: r.id,
+                                    approve: true,
+                                    email: r.email,
+                                  })
+                                }
+                                disabled={review.isPending}
+                                className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() =>
+                                  review.mutate({
+                                    id: r.id,
+                                    approve: false,
+                                    email: r.email,
+                                  })
+                                }
+                                disabled={review.isPending}
+                                className="rounded-md border border-input px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                              >
+                                Deny
+                              </button>
+                            </>
+                          )}
+                          {r.status !== "denied" && (
                             <button
-                              onClick={() =>
-                                review.mutate({
-                                  id: r.id,
-                                  approve: true,
-                                  email: r.email,
-                                })
-                              }
-                              disabled={review.isPending}
-                              className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() =>
-                                review.mutate({
-                                  id: r.id,
-                                  approve: false,
-                                  email: r.email,
-                                })
-                              }
-                              disabled={review.isPending}
+                              onClick={() => resend.mutate({ id: r.id })}
+                              disabled={resend.isPending}
+                              title="Mint a fresh magic link (use if the previous one expired)"
                               className="rounded-md border border-input px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
                             >
-                              Deny
+                              Resend link
                             </button>
-                          </>
-                        )}
-                        {r.status !== "denied" && (
-                          <button
-                            onClick={() => resend.mutate({ id: r.id })}
-                            disabled={resend.isPending}
-                            title="Mint a fresh magic link (use if the previous one expired)"
-                            className="rounded-md border border-input px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
-                          >
-                            Resend link
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
@@ -745,8 +700,7 @@ function SiteStatusPanel() {
   const shownMessage = dirty ? message : currentMessage;
 
   const save = useMutation({
-    mutationFn: (v: { active: boolean; message: string | null }) =>
-      setFn({ data: v }),
+    mutationFn: (v: { active: boolean; message: string | null }) => setFn({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["app-status"] });
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
@@ -788,18 +742,14 @@ function SiteStatusPanel() {
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <button
-          onClick={() =>
-            save.mutate({ active: true, message: shownMessage.trim() || null })
-          }
+          onClick={() => save.mutate({ active: true, message: shownMessage.trim() || null })}
           disabled={save.isPending}
           className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
         >
           {active ? "Update banner" : "Turn on"}
         </button>
         <button
-          onClick={() =>
-            save.mutate({ active: false, message: shownMessage.trim() || null })
-          }
+          onClick={() => save.mutate({ active: false, message: shownMessage.trim() || null })}
           disabled={save.isPending || !active}
           className="rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
         >
@@ -1046,14 +996,22 @@ function ChangelogAdminPanel() {
 function RefreshHealthPanel() {
   const listFn = useServerFn(listRefreshRuns);
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["admin", "refresh-runs"], queryFn: () => listFn(), refetchInterval: 60_000 });
+  const q = useQuery({
+    queryKey: ["admin", "refresh-runs"],
+    queryFn: () => listFn(),
+    refetchInterval: 60_000,
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const trigger = async () => {
-    setBusy(true); setErr(null);
+    setBusy(true);
+    setErr(null);
     try {
-      const res = await fetch("/api/public/hooks/refresh-jobs", { method: "POST", headers: { "x-admin-trigger": "1" } });
+      const res = await fetch("/api/public/hooks/refresh-jobs", {
+        method: "POST",
+        headers: { "x-admin-trigger": "1" },
+      });
       // No cron secret from browser — this WILL return 401 unless proxied.
       // Instead of exposing the secret, admin uses the "refresh now" flow to
       // dispatch the cron job via SQL. Here we just poll and let the daily
@@ -1069,7 +1027,7 @@ function RefreshHealthPanel() {
 
   const now = Date.now();
   const stale = (r: RefreshRun) =>
-    !r.finished_at || (now - new Date(r.finished_at).getTime()) > 36 * 3600 * 1000;
+    !r.finished_at || now - new Date(r.finished_at).getTime() > 36 * 3600 * 1000;
 
   const rows = q.data?.latestBySlice ?? [];
   const totalOk = rows.filter((r) => r.ok === true && r.companies_failed === 0).length;
@@ -1083,7 +1041,9 @@ function RefreshHealthPanel() {
         <div>
           <h2 className="text-xl font-semibold">Refresh health</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Every job-source slice writes its outcome here. Anything older than 36h shows red — that means the daily cron didn't reach it. "Partial" means jobs were upserted but some watched companies 404'd (see list below).
+            Every job-source slice writes its outcome here. Anything older than 36h shows red — that
+            means the daily cron didn't reach it. "Partial" means jobs were upserted but some
+            watched companies 404'd (see list below).
           </p>
           <p className="mt-2 text-xs">
             <span className="text-emerald-600">{totalOk} ok</span>
@@ -1092,7 +1052,9 @@ function RefreshHealthPanel() {
             {" · "}
             <span className="text-destructive">{totalFail} failed</span>
             {" · "}
-            <span className={totalStale > 0 ? "text-destructive" : "text-muted-foreground"}>{totalStale} stale</span>
+            <span className={totalStale > 0 ? "text-destructive" : "text-muted-foreground"}>
+              {totalStale} stale
+            </span>
             {" · "}
             <span className="text-muted-foreground">{rows.length} slices</span>
           </p>
@@ -1128,23 +1090,48 @@ function RefreshHealthPanel() {
               {rows.map((r) => {
                 const isStale = stale(r);
                 const isPartial = r.ok === true && r.companies_failed > 0;
-                const badge = r.ok === true && !isStale && !isPartial
-                  ? <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">ok</span>
-                  : isPartial && !isStale
-                    ? <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-700 dark:text-amber-400" title={`${r.companies_failed} companies failed but ${r.jobs_upserted} jobs upserted`}>partial</span>
-                    : r.ok === false
-                      ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">failed</span>
-                      : isStale
-                        ? <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">stale</span>
-                        : <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">running</span>;
+                const badge =
+                  r.ok === true && !isStale && !isPartial ? (
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-emerald-700 dark:text-emerald-400">
+                      ok
+                    </span>
+                  ) : isPartial && !isStale ? (
+                    <span
+                      className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-700 dark:text-amber-400"
+                      title={`${r.companies_failed} companies failed but ${r.jobs_upserted} jobs upserted`}
+                    >
+                      partial
+                    </span>
+                  ) : r.ok === false ? (
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">
+                      failed
+                    </span>
+                  ) : isStale ? (
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">
+                      stale
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                      running
+                    </span>
+                  );
                 return (
                   <tr key={r.id} className={isStale ? "bg-destructive/5" : ""}>
                     <td className="py-1 pr-3 font-mono">{r.slice}</td>
                     <td className="py-1 pr-3">{badge}</td>
-                    <td className="py-1 pr-3 text-muted-foreground">{formatEasternDateTime(r.finished_at ?? r.started_at)}</td>
+                    <td className="py-1 pr-3 text-muted-foreground">
+                      {formatEasternDateTime(r.finished_at ?? r.started_at)}
+                    </td>
                     <td className="py-1 pr-3">{r.jobs_upserted}</td>
-                    <td className="py-1 pr-3 text-muted-foreground">{r.ms != null ? `${(r.ms / 1000).toFixed(1)}s` : "—"}</td>
-                    <td className="py-1 pr-3 text-destructive max-w-md truncate" title={r.error ?? ""}>{r.error ?? ""}</td>
+                    <td className="py-1 pr-3 text-muted-foreground">
+                      {r.ms != null ? `${(r.ms / 1000).toFixed(1)}s` : "—"}
+                    </td>
+                    <td
+                      className="py-1 pr-3 text-destructive max-w-md truncate"
+                      title={r.error ?? ""}
+                    >
+                      {r.error ?? ""}
+                    </td>
                   </tr>
                 );
               })}
@@ -1213,12 +1200,20 @@ function WatchedHealerPanels({
 
   const runApply = async (b: Quarantined, s: Suggestion) => {
     setBusy(`apply:${b.source}:${b.slug}:${s.source}:${s.slug}`);
-    setErr(null); setNotice(null);
+    setErr(null);
+    setNotice(null);
     try {
       const res = await applyFn({
-        data: { currentSource: b.source, currentSlug: b.slug, newSource: s.source as "greenhouse" | "lever" | "ashby" | "smartrecruiters", newSlug: s.slug },
+        data: {
+          currentSource: b.source,
+          currentSlug: b.slug,
+          newSource: s.source as "greenhouse" | "lever" | "ashby" | "smartrecruiters",
+          newSlug: s.slug,
+        },
       });
-      setNotice(`Applied ${s.source}/${s.slug} — ${res.jobs_preview} jobs, ${res.watchers} watcher(s).`);
+      setNotice(
+        `Applied ${s.source}/${s.slug} — ${res.jobs_preview} jobs, ${res.watchers} watcher(s).`,
+      );
       refresh();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -1228,9 +1223,15 @@ function WatchedHealerPanels({
   };
 
   const runRemove = async (b: BadSlug | Quarantined) => {
-    if (!confirm(`Remove ${b.source}/${b.slug} (${b.company_name}) for ${b.watcher_count} watcher(s)?`)) return;
+    if (
+      !confirm(
+        `Remove ${b.source}/${b.slug} (${b.company_name}) for ${b.watcher_count} watcher(s)?`,
+      )
+    )
+      return;
     setBusy(`remove:${b.source}:${b.slug}`);
-    setErr(null); setNotice(null);
+    setErr(null);
+    setNotice(null);
     try {
       const res = await removeFn({ data: { source: b.source, slug: b.slug } });
       setNotice(`Removed — ${res.removed} row(s).`);
@@ -1244,7 +1245,8 @@ function WatchedHealerPanels({
 
   const runReenable = async (b: Quarantined) => {
     setBusy(`re:${b.source}:${b.slug}`);
-    setErr(null); setNotice(null);
+    setErr(null);
+    setNotice(null);
     try {
       await reenableFn({ data: { source: b.source, slug: b.slug } });
       setNotice(`Re-enabled ${b.source}/${b.slug}.`);
@@ -1271,18 +1273,23 @@ function WatchedHealerPanels({
             Auto-fixed by the healer ({autoHealed.length}, last 30 days)
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            The system detected the same slug worked on a different supported platform and remapped it automatically.
+            The system detected the same slug worked on a different supported platform and remapped
+            it automatically.
           </p>
           <ul className="mt-2 space-y-1 text-xs">
             {autoHealed.map((h) => (
               <li key={`${h.source}:${h.slug}`}>
                 <span className="font-medium">{h.company_name}</span>{" "}
-                <span className="font-mono text-muted-foreground">{h.slug}</span>:{" "}
-                moved <span className="font-mono">{h.auto_heal_from ?? "?"}</span> →{" "}
+                <span className="font-mono text-muted-foreground">{h.slug}</span>: moved{" "}
+                <span className="font-mono">{h.auto_heal_from ?? "?"}</span> →{" "}
                 <span className="font-mono text-emerald-700 dark:text-emerald-400">{h.source}</span>
                 {" · "}
-                <span className="text-muted-foreground">{formatEasternDateTime(h.auto_healed_at)}</span>
-                {h.watcher_count > 1 && <span className="text-muted-foreground"> · {h.watcher_count} watchers</span>}
+                <span className="text-muted-foreground">
+                  {formatEasternDateTime(h.auto_healed_at)}
+                </span>
+                {h.watcher_count > 1 && (
+                  <span className="text-muted-foreground"> · {h.watcher_count} watchers</span>
+                )}
               </li>
             ))}
           </ul>
@@ -1295,19 +1302,31 @@ function WatchedHealerPanels({
             Needs your attention ({quarantined.length} quarantined)
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            These persistently failed and are now paused — the refresh skips them so they stop erroring. Review candidate slugs (unverified guesses) below, apply one, remove, or re-enable if the upstream is back.
+            These persistently failed and are now paused — the refresh skips them so they stop
+            erroring. Review candidate slugs (unverified guesses) below, apply one, remove, or
+            re-enable if the upstream is back.
           </p>
           <div className="mt-3 space-y-3">
             {quarantined.map((b) => (
-              <div key={`${b.source}:${b.slug}`} className="rounded border border-border bg-background p-3">
+              <div
+                key={`${b.source}:${b.slug}`}
+                className="rounded border border-border bg-background p-3"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-sm font-medium">{b.company_name}</div>
                     <div className="text-xs text-muted-foreground">
-                      <span className="font-mono">{b.source}/{b.slug}</span> · {b.watcher_count} watcher(s) · {b.consecutive_failures} consecutive fails · quarantined {formatEasternDateTime(b.disabled_at)}
+                      <span className="font-mono">
+                        {b.source}/{b.slug}
+                      </span>{" "}
+                      · {b.watcher_count} watcher(s) · {b.consecutive_failures} consecutive fails ·
+                      quarantined {formatEasternDateTime(b.disabled_at)}
                     </div>
                     {b.last_fetch_status && (
-                      <div className="mt-1 max-w-lg truncate text-xs text-destructive" title={b.last_fetch_status}>
+                      <div
+                        className="mt-1 max-w-lg truncate text-xs text-destructive"
+                        title={b.last_fetch_status}
+                      >
                         {b.last_fetch_status}
                       </div>
                     )}
@@ -1340,11 +1359,19 @@ function WatchedHealerPanels({
                       {b.suggestions.map((s) => {
                         const key = `apply:${b.source}:${b.slug}:${s.source}:${s.slug}`;
                         return (
-                          <li key={`${s.source}:${s.slug}`} className="flex flex-wrap items-center justify-between gap-2">
+                          <li
+                            key={`${s.source}:${s.slug}`}
+                            className="flex flex-wrap items-center justify-between gap-2"
+                          >
                             <span>
-                              <span className="font-mono">{s.source}/{s.slug}</span>
+                              <span className="font-mono">
+                                {s.source}/{s.slug}
+                              </span>
                               {typeof s.jobs_preview === "number" && (
-                                <span className="text-muted-foreground"> · {s.jobs_preview} jobs</span>
+                                <span className="text-muted-foreground">
+                                  {" "}
+                                  · {s.jobs_preview} jobs
+                                </span>
                               )}
                               <span className="text-muted-foreground"> · {s.reason}</span>
                             </span>
@@ -1362,7 +1389,9 @@ function WatchedHealerPanels({
                     </ul>
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-muted-foreground">No candidate slugs found. Remove if the company is truly gone.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    No candidate slugs found. Remove if the company is truly gone.
+                  </p>
                 )}
               </div>
             ))}
@@ -1376,7 +1405,8 @@ function WatchedHealerPanels({
             Active fetch errors ({badSlugs.length})
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            These slugs failed on their last fetch. If they keep failing, the healer will quarantine them.
+            These slugs failed on their last fetch. If they keep failing, the healer will quarantine
+            them.
           </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
@@ -1399,7 +1429,12 @@ function WatchedHealerPanels({
                     <td className="py-1 pr-3">{b.company_name}</td>
                     <td className="py-1 pr-3">{b.watcher_count}</td>
                     <td className="py-1 pr-3">{b.consecutive_failures}</td>
-                    <td className="py-1 pr-3 text-destructive max-w-md truncate" title={b.last_fetch_status ?? ""}>{b.last_fetch_status ?? ""}</td>
+                    <td
+                      className="py-1 pr-3 text-destructive max-w-md truncate"
+                      title={b.last_fetch_status ?? ""}
+                    >
+                      {b.last_fetch_status ?? ""}
+                    </td>
                     <td className="py-1 pr-3">
                       <button
                         type="button"
@@ -1421,7 +1456,6 @@ function WatchedHealerPanels({
   );
 }
 
-
 type InviteResult = {
   email: string;
   link: string;
@@ -1429,11 +1463,7 @@ type InviteResult = {
   emailError: string | null;
 };
 
-function InvitePanel({
-  onInvited,
-}: {
-  onInvited: (m: InviteResult) => void;
-}) {
+function InvitePanel({ onInvited }: { onInvited: (m: InviteResult) => void }) {
   const qc = useQueryClient();
   const inviteFn = useServerFn(inviteUserByEmailAdmin);
   const [email, setEmail] = useState("");
@@ -1443,11 +1473,8 @@ function InvitePanel({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const invite = useMutation({
-    mutationFn: (v: {
-      email: string;
-      full_name?: string | null;
-      plan?: (typeof PLANS)[number];
-    }) => inviteFn({ data: v }),
+    mutationFn: (v: { email: string; full_name?: string | null; plan?: (typeof PLANS)[number] }) =>
+      inviteFn({ data: v }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
@@ -1480,8 +1507,8 @@ function InvitePanel({
     <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="text-lg font-semibold">Invite someone</h2>
       <p className="text-xs text-muted-foreground">
-        Creates an approved account and emails a one-click sign-in link. Use
-        this instead of asking them to submit an access request first.
+        Creates an approved account and emails a one-click sign-in link. Use this instead of asking
+        them to submit an access request first.
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-[2fr_1.5fr_1fr_auto]">
         <input
@@ -1525,17 +1552,8 @@ function InvitePanel({
           {invite.isPending ? "Sending…" : "Send invite"}
         </button>
       </div>
-      {notice && (
-        <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
-          {notice}
-        </p>
-      )}
-      {errorMsg && (
-        <p className="mt-3 text-xs text-destructive">{errorMsg}</p>
-      )}
+      {notice && <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
+      {errorMsg && <p className="mt-3 text-xs text-destructive">{errorMsg}</p>}
     </section>
   );
 }
-
-
-
