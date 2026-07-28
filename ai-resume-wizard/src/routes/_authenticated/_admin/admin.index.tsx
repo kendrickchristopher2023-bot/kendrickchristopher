@@ -1153,13 +1153,230 @@ function RefreshHealthPanel() {
         </div>
       )}
 
-      {(q.data?.badSlugs?.length ?? 0) > 0 && (
-        <div className="mt-6 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
-          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
-            Watched companies with fetch errors ({q.data?.badSlugs.length})
+      <WatchedHealerPanels
+        badSlugs={q.data?.badSlugs ?? []}
+        quarantined={q.data?.quarantined ?? []}
+        autoHealed={q.data?.autoHealed ?? []}
+      />
+    </section>
+  );
+}
+
+type BadSlug = {
+  source: string;
+  slug: string;
+  company_name: string;
+  last_fetch_status: string | null;
+  last_fetched_at: string | null;
+  watcher_count: number;
+  consecutive_failures: number;
+};
+type Suggestion = {
+  source: string;
+  slug: string;
+  reason: string;
+  jobs_preview?: number;
+  company_name_returned?: string;
+};
+type Quarantined = BadSlug & {
+  disabled_at: string | null;
+  suggestions: Suggestion[];
+  ids: string[];
+};
+type AutoHealed = {
+  source: string;
+  slug: string;
+  company_name: string;
+  auto_healed_at: string | null;
+  auto_heal_from: string | null;
+  watcher_count: number;
+};
+
+function WatchedHealerPanels({
+  badSlugs,
+  quarantined,
+  autoHealed,
+}: {
+  badSlugs: BadSlug[];
+  quarantined: Quarantined[];
+  autoHealed: AutoHealed[];
+}) {
+  const qc = useQueryClient();
+  const applyFn = useServerFn(applyWatchedSuggestion);
+  const removeFn = useServerFn(removeWatchedCompanyAdmin);
+  const reenableFn = useServerFn(reenableWatchedCompanyAdmin);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["admin", "refresh-runs"] });
+
+  const runApply = async (b: Quarantined, s: Suggestion) => {
+    setBusy(`apply:${b.source}:${b.slug}:${s.source}:${s.slug}`);
+    setErr(null); setNotice(null);
+    try {
+      const res = await applyFn({
+        data: { currentSource: b.source, currentSlug: b.slug, newSource: s.source as "greenhouse" | "lever" | "ashby" | "smartrecruiters", newSlug: s.slug },
+      });
+      setNotice(`Applied ${s.source}/${s.slug} — ${res.jobs_preview} jobs, ${res.watchers} watcher(s).`);
+      refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runRemove = async (b: BadSlug | Quarantined) => {
+    if (!confirm(`Remove ${b.source}/${b.slug} (${b.company_name}) for ${b.watcher_count} watcher(s)?`)) return;
+    setBusy(`remove:${b.source}:${b.slug}`);
+    setErr(null); setNotice(null);
+    try {
+      const res = await removeFn({ data: { source: b.source, slug: b.slug } });
+      setNotice(`Removed — ${res.removed} row(s).`);
+      refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runReenable = async (b: Quarantined) => {
+    setBusy(`re:${b.source}:${b.slug}`);
+    setErr(null); setNotice(null);
+    try {
+      await reenableFn({ data: { source: b.source, slug: b.slug } });
+      setNotice(`Re-enabled ${b.source}/${b.slug}.`);
+      refresh();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <>
+      {(notice || err) && (
+        <div className="mt-4 space-y-1 text-xs">
+          {notice && <p className="text-emerald-700 dark:text-emerald-400">{notice}</p>}
+          {err && <p className="text-destructive">{err}</p>}
+        </div>
+      )}
+
+      {autoHealed.length > 0 && (
+        <div className="mt-6 rounded-md border border-emerald-500/40 bg-emerald-500/5 p-3">
+          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            Auto-fixed by the healer ({autoHealed.length}, last 30 days)
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            These slugs failed on their last fetch — usually 404 (company moved off the ATS or changed slug). Fix or remove them in "Manage companies".
+            The system detected the same slug worked on a different supported platform and remapped it automatically.
+          </p>
+          <ul className="mt-2 space-y-1 text-xs">
+            {autoHealed.map((h) => (
+              <li key={`${h.source}:${h.slug}`}>
+                <span className="font-medium">{h.company_name}</span>{" "}
+                <span className="font-mono text-muted-foreground">{h.slug}</span>:{" "}
+                moved <span className="font-mono">{h.auto_heal_from ?? "?"}</span> →{" "}
+                <span className="font-mono text-emerald-700 dark:text-emerald-400">{h.source}</span>
+                {" · "}
+                <span className="text-muted-foreground">{formatEasternDateTime(h.auto_healed_at)}</span>
+                {h.watcher_count > 1 && <span className="text-muted-foreground"> · {h.watcher_count} watchers</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {quarantined.length > 0 && (
+        <div className="mt-6 rounded-md border border-destructive/40 bg-destructive/5 p-3">
+          <p className="text-xs font-semibold text-destructive">
+            Needs your attention ({quarantined.length} quarantined)
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            These persistently failed and are now paused — the refresh skips them so they stop erroring. Review candidate slugs (unverified guesses) below, apply one, remove, or re-enable if the upstream is back.
+          </p>
+          <div className="mt-3 space-y-3">
+            {quarantined.map((b) => (
+              <div key={`${b.source}:${b.slug}`} className="rounded border border-border bg-background p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">{b.company_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-mono">{b.source}/{b.slug}</span> · {b.watcher_count} watcher(s) · {b.consecutive_failures} consecutive fails · quarantined {formatEasternDateTime(b.disabled_at)}
+                    </div>
+                    {b.last_fetch_status && (
+                      <div className="mt-1 max-w-lg truncate text-xs text-destructive" title={b.last_fetch_status}>
+                        {b.last_fetch_status}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => runReenable(b)}
+                      disabled={busy?.startsWith("re:") ?? false}
+                      className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent disabled:opacity-50"
+                    >
+                      Re-enable
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runRemove(b)}
+                      disabled={busy?.startsWith("remove:") ?? false}
+                      className="rounded-md border border-destructive/40 bg-background px-2 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                {b.suggestions.length > 0 ? (
+                  <div className="mt-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Unverified suggestions (each verified again on click before saving)
+                    </p>
+                    <ul className="mt-1 space-y-1 text-xs">
+                      {b.suggestions.map((s) => {
+                        const key = `apply:${b.source}:${b.slug}:${s.source}:${s.slug}`;
+                        return (
+                          <li key={`${s.source}:${s.slug}`} className="flex flex-wrap items-center justify-between gap-2">
+                            <span>
+                              <span className="font-mono">{s.source}/{s.slug}</span>
+                              {typeof s.jobs_preview === "number" && (
+                                <span className="text-muted-foreground"> · {s.jobs_preview} jobs</span>
+                              )}
+                              <span className="text-muted-foreground"> · {s.reason}</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => runApply(b, s)}
+                              disabled={busy === key}
+                              className="rounded-md border border-input bg-background px-2 py-1 text-[11px] hover:bg-accent disabled:opacity-50"
+                            >
+                              {busy === key ? "Verifying…" : "Apply"}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">No candidate slugs found. Remove if the company is truly gone.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {badSlugs.length > 0 && (
+        <div className="mt-6 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+            Active fetch errors ({badSlugs.length})
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            These slugs failed on their last fetch. If they keep failing, the healer will quarantine them.
           </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
@@ -1169,17 +1386,30 @@ function RefreshHealthPanel() {
                   <th className="py-1 pr-3 font-medium">Slug</th>
                   <th className="py-1 pr-3 font-medium">Company</th>
                   <th className="py-1 pr-3 font-medium">Watchers</th>
+                  <th className="py-1 pr-3 font-medium">Fails</th>
                   <th className="py-1 pr-3 font-medium">Last error</th>
+                  <th className="py-1 pr-3 font-medium"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {q.data?.badSlugs.map((b) => (
+                {badSlugs.map((b) => (
                   <tr key={`${b.source}:${b.slug}`}>
                     <td className="py-1 pr-3 font-mono">{b.source}</td>
                     <td className="py-1 pr-3 font-mono">{b.slug}</td>
                     <td className="py-1 pr-3">{b.company_name}</td>
                     <td className="py-1 pr-3">{b.watcher_count}</td>
+                    <td className="py-1 pr-3">{b.consecutive_failures}</td>
                     <td className="py-1 pr-3 text-destructive max-w-md truncate" title={b.last_fetch_status ?? ""}>{b.last_fetch_status ?? ""}</td>
+                    <td className="py-1 pr-3">
+                      <button
+                        type="button"
+                        onClick={() => runRemove(b)}
+                        disabled={busy?.startsWith("remove:") ?? false}
+                        className="rounded-md border border-destructive/40 bg-background px-2 py-0.5 text-[11px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1187,6 +1417,9 @@ function RefreshHealthPanel() {
           </div>
         </div>
       )}
+    </>
+  );
+}
     </section>
   );
 }
