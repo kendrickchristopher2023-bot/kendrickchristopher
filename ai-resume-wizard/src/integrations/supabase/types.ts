@@ -599,37 +599,55 @@ export type Database = {
       }
       watched_companies: {
         Row: {
+          active: boolean
           added_by: string
+          auto_heal_from: string | null
+          auto_healed_at: string | null
           company_name: string
+          consecutive_failures: number
           created_at: string
+          disabled_at: string | null
           id: string
           last_fetch_count: number | null
           last_fetch_status: string | null
           last_fetched_at: string | null
           slug: string
           source: string
+          suggestions: Json
         }
         Insert: {
+          active?: boolean
           added_by: string
+          auto_heal_from?: string | null
+          auto_healed_at?: string | null
           company_name: string
+          consecutive_failures?: number
           created_at?: string
+          disabled_at?: string | null
           id?: string
           last_fetch_count?: number | null
           last_fetch_status?: string | null
           last_fetched_at?: string | null
           slug: string
           source: string
+          suggestions?: Json
         }
         Update: {
+          active?: boolean
           added_by?: string
+          auto_heal_from?: string | null
+          auto_healed_at?: string | null
           company_name?: string
+          consecutive_failures?: number
           created_at?: string
+          disabled_at?: string | null
           id?: string
           last_fetch_count?: number | null
           last_fetch_status?: string | null
           last_fetched_at?: string | null
           slug?: string
           source?: string
+          suggestions?: Json
         }
         Relationships: []
       }
