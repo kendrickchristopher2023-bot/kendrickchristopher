@@ -92,6 +92,7 @@ function AdminDashboard() {
   const auditFn = useServerFn(listAdminAuditLog);
   const planFn = useServerFn(updateUserPlanAdmin);
   const accessFn = useServerFn(setUserAccessAdmin);
+  const deleteFn = useServerFn(deleteUserAdmin);
   const reviewFn = useServerFn(reviewAccessRequest);
   const resendFn = useServerFn(resendAccessLink);
 
