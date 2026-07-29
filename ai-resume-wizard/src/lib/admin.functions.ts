@@ -467,6 +467,15 @@ export const setUserAccessAdmin = createServerFn({ method: "POST" })
       { ban_duration: data.revoked ? "876000h" : "none" } as never,
     );
     if (error) throw error;
+    // On revoke, also invalidate any active sessions so existing access tokens
+    // stop working immediately instead of surviving until their ~1h expiry.
+    if (data.revoked) {
+      try {
+        await supabaseAdmin.auth.admin.signOut(data.userId, "global");
+      } catch (err) {
+        console.error("[admin] signOut on revoke failed", err);
+      }
+    }
     await writeAudit(
       context.userId,
       data.revoked ? "user.access_revoked" : "user.access_restored",
