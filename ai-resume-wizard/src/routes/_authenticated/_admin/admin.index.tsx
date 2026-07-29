@@ -9,6 +9,7 @@ import {
   listUsersAdmin,
   updateUserPlanAdmin,
   setUserAccessAdmin,
+  deleteUserAdmin,
   listAdminAuditLog,
   getAdminAnalytics,
   inviteUserByEmailAdmin,
