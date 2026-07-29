@@ -485,6 +485,29 @@ export const setUserAccessAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteUserAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; email: string }) =>
+    z.object({ userId: z.string().uuid(), email: z.string().email() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId) {
+      throw new Error("You can't delete your own account.");
+    }
+    const { supabaseAdmin } = await import(
+      "@/integrations/supabase/client.server"
+    );
+    // Audit BEFORE delete so the target_user_id/email is retained even after
+    // the auth user (and cascading profile rows) are gone.
+    await writeAudit(context.userId, "user.deleted", data.userId, {
+      email: data.email,
+    });
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const listAdminAuditLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

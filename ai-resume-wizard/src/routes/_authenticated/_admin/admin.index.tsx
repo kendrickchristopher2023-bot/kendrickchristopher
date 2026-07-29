@@ -9,6 +9,7 @@ import {
   listUsersAdmin,
   updateUserPlanAdmin,
   setUserAccessAdmin,
+  deleteUserAdmin,
   listAdminAuditLog,
   getAdminAnalytics,
   inviteUserByEmailAdmin,
@@ -91,6 +92,7 @@ function AdminDashboard() {
   const auditFn = useServerFn(listAdminAuditLog);
   const planFn = useServerFn(updateUserPlanAdmin);
   const accessFn = useServerFn(setUserAccessAdmin);
+  const deleteFn = useServerFn(deleteUserAdmin);
   const reviewFn = useServerFn(reviewAccessRequest);
   const resendFn = useServerFn(resendAccessLink);
 
@@ -137,6 +139,16 @@ function AdminDashboard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "users"] });
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+    },
+  });
+  const deleteUser = useMutation({
+    mutationFn: (v: { userId: string; email: string }) => deleteFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+    },
+    onError: (err: unknown) => {
+      alert(err instanceof Error ? err.message : "Failed to delete user.");
     },
   });
   const review = useMutation({
@@ -435,34 +447,53 @@ function AdminDashboard() {
                     <td className="px-3 py-2 text-xs">{u.has_primary_resume ? "✓" : "—"}</td>
                     <td className="px-3 py-2 text-xs">{u.usage_today}</td>
                     <td className="px-3 py-2">
-                      {u.banned ? (
-                        <button
-                          onClick={() => toggleAccess.mutate({ userId: u.id, revoked: false })}
-                          disabled={toggleAccess.isPending}
-                          className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
-                        >
-                          Restore
-                        </button>
-                      ) : (
+                      <div className="flex flex-wrap items-center gap-1">
+                        {u.banned ? (
+                          <button
+                            onClick={() => toggleAccess.mutate({ userId: u.id, revoked: false })}
+                            disabled={toggleAccess.isPending}
+                            className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                          >
+                            Restore
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  `Revoke sign-in for ${u.email}? Their data is preserved and access can be restored.`,
+                                )
+                              ) {
+                                toggleAccess.mutate({
+                                  userId: u.id,
+                                  revoked: true,
+                                });
+                              }
+                            }}
+                            disabled={toggleAccess.isPending}
+                            className="rounded-md border border-input px-2 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          >
+                            Revoke
+                          </button>
+                        )}
                         <button
                           onClick={() => {
-                            if (
-                              confirm(
-                                `Revoke sign-in for ${u.email}? Their data is preserved and access can be restored.`,
-                              )
-                            ) {
-                              toggleAccess.mutate({
-                                userId: u.id,
-                                revoked: true,
-                              });
-                            }
+                            const first = confirm(
+                              `PERMANENTLY delete ${u.email}? This removes their auth account, resumes, applications, tailored output, and all related data. This cannot be undone.`,
+                            );
+                            if (!first) return;
+                            const typed = prompt(
+                              `Type DELETE to confirm removing ${u.email}.`,
+                            );
+                            if (typed !== "DELETE") return;
+                            deleteUser.mutate({ userId: u.id, email: u.email });
                           }}
-                          disabled={toggleAccess.isPending}
-                          className="rounded-md border border-input px-2 py-1 text-xs font-medium hover:bg-accent disabled:opacity-50"
+                          disabled={deleteUser.isPending}
+                          className="rounded-md border border-destructive px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
                         >
-                          Revoke
+                          Delete
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
