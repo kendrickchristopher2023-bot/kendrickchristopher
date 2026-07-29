@@ -80,6 +80,7 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
 
         let emailSent = false;
         let emailError: string | null = null;
+        let emailMessageId: string | null = null;
         if (magicLink) {
           try {
             const { sendTemplateEmail } = await import(
@@ -97,6 +98,7 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
               },
             );
             emailSent = result.sent;
+            emailMessageId = result.messageId ?? null;
             if (!result.sent) emailError = result.reason;
           } catch (err) {
             emailError = err instanceof Error ? err.message : String(err);
@@ -109,8 +111,9 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
           email: req.email,
           email_sent: emailSent,
           email_error: emailError,
+          email_message_id: emailMessageId,
         });
-        return { ok: true, magicLink, emailSent, emailError };
+        return { ok: true, magicLink, emailSent, emailError, emailMessageId };
       }
     }
     await writeAudit(context.userId, `access_request.${status}`, null, {
@@ -148,6 +151,7 @@ export const resendAccessLink = createServerFn({ method: "POST" })
 
     let emailSent = false;
     let emailError: string | null = null;
+    let emailMessageId: string | null = null;
     if (magicLink) {
       try {
         const { sendTemplateEmail } = await import(
@@ -162,6 +166,7 @@ export const resendAccessLink = createServerFn({ method: "POST" })
           idempotencyKey: `access-resend-${data.id}-${Date.now()}`,
         });
         emailSent = result.sent;
+        emailMessageId = result.messageId ?? null;
         if (!result.sent) emailError = result.reason;
       } catch (err) {
         emailError = err instanceof Error ? err.message : String(err);
@@ -175,6 +180,7 @@ export const resendAccessLink = createServerFn({ method: "POST" })
       prior_status: req.status,
       email_sent: emailSent,
       email_error: emailError,
+      email_message_id: emailMessageId,
     });
     return {
       ok: true,
@@ -182,6 +188,7 @@ export const resendAccessLink = createServerFn({ method: "POST" })
       magicLink,
       emailSent,
       emailError,
+      emailMessageId,
     };
   });
 
@@ -304,6 +311,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
 
     let emailSent = false;
     let emailError: string | null = null;
+    let emailMessageId: string | null = null;
     if (magicLink) {
       try {
         const { sendTemplateEmail } = await import(
@@ -317,6 +325,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
           idempotencyKey: `admin-invite-${reqRow?.id ?? data.email}-${Date.now()}`,
         });
         emailSent = result.sent;
+        emailMessageId = result.messageId ?? null;
         if (!result.sent) emailError = result.reason;
       } catch (err) {
         emailError = err instanceof Error ? err.message : String(err);
@@ -332,6 +341,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
       access_request_id: reqRow?.id ?? null,
       email_sent: emailSent,
       email_error: emailError,
+      email_message_id: emailMessageId,
     });
 
     return {
@@ -340,6 +350,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
       magicLink,
       emailSent,
       emailError,
+      emailMessageId,
       mode,
       existingUser: !!existingUserId,
     };
