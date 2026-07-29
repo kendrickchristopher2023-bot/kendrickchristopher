@@ -141,6 +141,16 @@ function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
     },
   });
+  const deleteUser = useMutation({
+    mutationFn: (v: { userId: string; email: string }) => deleteFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "users"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+    },
+    onError: (err: unknown) => {
+      alert(err instanceof Error ? err.message : "Failed to delete user.");
+    },
+  });
   const review = useMutation({
     mutationFn: async (v: { id: string; approve: boolean; email: string }) => {
       const res = await reviewFn({ data: { id: v.id, approve: v.approve } });
