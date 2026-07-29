@@ -80,6 +80,7 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
 
         let emailSent = false;
         let emailError: string | null = null;
+        let emailMessageId: string | null = null;
         if (magicLink) {
           try {
             const { sendTemplateEmail } = await import(
@@ -97,6 +98,7 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
               },
             );
             emailSent = result.sent;
+            emailMessageId = result.messageId ?? null;
             if (!result.sent) emailError = result.reason;
           } catch (err) {
             emailError = err instanceof Error ? err.message : String(err);
@@ -109,8 +111,9 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
           email: req.email,
           email_sent: emailSent,
           email_error: emailError,
+          email_message_id: emailMessageId,
         });
-        return { ok: true, magicLink, emailSent, emailError };
+        return { ok: true, magicLink, emailSent, emailError, emailMessageId };
       }
     }
     await writeAudit(context.userId, `access_request.${status}`, null, {
