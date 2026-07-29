@@ -15,8 +15,13 @@ const SENDER_DOMAIN = "notify.thekenroecollective.com"
 const FROM_DOMAIN = "thekenroecollective.com"
 
 export type SendTemplateEmailResult =
-  | { sent: true }
-  | { sent: false; reason: 'recipient_suppressed' }
+  | { sent: true; messageId: string | null; status: string | null }
+  | {
+      sent: false
+      reason: 'recipient_suppressed' | 'provider_rejected' | string
+      messageId?: string | null
+      status?: string | null
+    }
 
 export interface SendTemplateEmailOptions {
   templateData?: Record<string, any>
@@ -27,10 +32,9 @@ export interface SendTemplateEmailOptions {
 
 /**
  * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
+ * API. Only returns { sent: true } when the provider confirms acceptance
+ * (success=true with a message_id). Suppression and any other provider
+ * refusal return { sent: false, reason }. Non-response failures throw.
  */
 export async function sendTemplateEmail(
   templateName: string,
@@ -49,8 +53,6 @@ export async function sendTemplateEmail(
     )
   }
 
-  // Template-level `to` takes precedence — notification templates always
-  // send to their fixed address.
   const recipient = template.to || to
   if (!recipient) {
     throw new Error('Recipient is required (the template defines no fixed recipient)')
@@ -66,7 +68,7 @@ export async function sendTemplateEmail(
       : template.subject
 
   try {
-    await sendLovableEmail(
+    const resp = await sendLovableEmail(
       {
         to: recipient,
         from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
@@ -81,12 +83,24 @@ export async function sendTemplateEmail(
       },
       { apiKey, sendUrl: process.env.LOVABLE_SEND_URL }
     )
+    if (!resp?.success) {
+      return {
+        sent: false,
+        reason: resp?.status || 'provider_rejected',
+        messageId: resp?.message_id ?? null,
+        status: resp?.status ?? null,
+      }
+    }
+    return {
+      sent: true,
+      messageId: resp.message_id ?? null,
+      status: resp.status ?? null,
+    }
   } catch (error) {
     if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
       return { sent: false, reason: 'recipient_suppressed' }
     }
     throw error
   }
-
-  return { sent: true }
 }
+
