@@ -389,6 +389,9 @@ export type Database = {
           onboarded_at: string | null
           plan: Database["public"]["Enums"]["plan_tier"]
           screener_answers: Json
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
           unsubscribe_token: string
           updated_at: string
         }
@@ -405,6 +408,9 @@ export type Database = {
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
           screener_answers?: Json
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           unsubscribe_token?: string
           updated_at?: string
         }
@@ -421,6 +427,9 @@ export type Database = {
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
           screener_answers?: Json
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
           unsubscribe_token?: string
           updated_at?: string
         }
