@@ -5,7 +5,13 @@ import { useState } from "react";
 import { getMyUsage } from "@/lib/resume.functions";
 import { getRewriteEntitlement } from "@/lib/rewrite.functions";
 import { getMyNotificationPrefs, setMyNotificationPrefs } from "@/lib/notifications.functions";
-import { PLAN_CAPS, ACTION_LABEL, type UsageAction } from "@/lib/usage";
+import {
+  getMyBillingStatus,
+  createCheckoutSession,
+  createBillingPortalSession,
+} from "@/lib/billing.functions";
+import { PLAN_CAPS, ACTION_LABEL, type UsageAction, type Plan } from "@/lib/usage";
+
 import {
   listMyApiTokens,
   createMyApiToken,
@@ -15,10 +21,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
-    meta: [
-      { title: "Settings — AI Job Kit" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Settings — AI Job Kit" }, { name: "robots", content: "noindex,nofollow" }],
     links: [
       {
         rel: "stylesheet",
@@ -29,7 +32,15 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-const ACTIONS: UsageAction[] = ["tailor", "cover_letter", "interview_prep", "linkedin", "referral_dm", "parse_resume", "chat"];
+const ACTIONS: UsageAction[] = [
+  "tailor",
+  "cover_letter",
+  "interview_prep",
+  "linkedin",
+  "referral_dm",
+  "parse_resume",
+  "chat",
+];
 
 function SettingsPage() {
   const usageFn = useServerFn(getMyUsage);
@@ -39,37 +50,27 @@ function SettingsPage() {
   const counts = q.data?.counts ?? {};
 
   return (
-    <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <main
+      className="min-h-screen bg-background px-6 py-12"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       <div className="mx-auto max-w-3xl">
         <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">
           ← Application kit
         </Link>
         <header className="mt-8 border-b border-border pb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Settings</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Settings
+          </p>
+          <h1
+            className="mt-3 text-4xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
             Your plan &amp; usage
           </h1>
         </header>
 
-        <section className="mt-8 rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Current plan</p>
-              <p className="mt-1 text-2xl font-bold capitalize">{plan}</p>
-            </div>
-            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              plan === "free" ? "border-border text-muted-foreground" : "border-primary text-primary"
-            }`}>
-              {plan === "free" ? "Free tier" : "Paid tier"}
-            </span>
-          </div>
-          {plan === "free" && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Upgrades unlock higher daily AI limits. Billing isn't wired up yet — reach out if
-              you want a paid tier enabled.
-            </p>
-          )}
-        </section>
+        <BillingSection plan={plan} />
 
         <section className="mt-6 rounded-lg border border-border bg-card p-6">
           <h2 className="text-lg font-semibold">Today's AI usage</h2>
@@ -111,13 +112,122 @@ function SettingsPage() {
         <RewriteEntitlementSection />
 
         <p className="mt-6 text-xs text-muted-foreground">
-          Limits are enforced server-side. When a daily limit is hit, the app returns a
-          "daily limit reached" message until midnight UTC.
+          Limits are enforced server-side. When a daily limit is hit, the app returns a "daily limit
+          reached" message until midnight UTC.
         </p>
 
         <BrowserExtensionSection />
       </div>
     </main>
+  );
+}
+
+const PRO_HIGHLIGHTS: { action: UsageAction; label: string }[] = [
+  { action: "tailor", label: "Resume tailoring" },
+  { action: "cover_letter", label: "Cover letters" },
+  { action: "interview_prep", label: "Interview prep" },
+  { action: "chat", label: "Chat assistant" },
+];
+
+function BillingSection({ plan }: { plan: Plan }) {
+  const statusFn = useServerFn(getMyBillingStatus);
+  const checkoutFn = useServerFn(createCheckoutSession);
+  const portalFn = useServerFn(createBillingPortalSession);
+  const [err, setErr] = useState<string | null>(null);
+
+  const status = useQuery({ queryKey: ["billing-status"], queryFn: () => statusFn() });
+
+  const checkout = useMutation({
+    mutationFn: () => checkoutFn(),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Could not start checkout."),
+  });
+
+  const portal = useMutation({
+    mutationFn: () => portalFn(),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Could not open billing."),
+  });
+
+  const subStatus = status.data?.subscriptionStatus ?? null;
+
+  return (
+    <section id="billing" className="mt-8 rounded-lg border border-border bg-card p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Current plan</p>
+          <p className="mt-1 text-2xl font-bold capitalize">{plan}</p>
+        </div>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-medium ${
+            plan === "free" ? "border-border text-muted-foreground" : "border-primary text-primary"
+          }`}
+        >
+          {plan === "free" ? "Free tier" : plan === "founder" ? "Complimentary" : "Pro"}
+        </span>
+      </div>
+
+      {plan === "free" && (
+        <div className="mt-5 rounded-md border border-primary/40 bg-primary/5 p-5">
+          <p className="text-lg font-semibold">Upgrade to Pro — $19/month</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Same tools, far more room to use them. Cancel any time.
+          </p>
+          <ul className="mt-4 space-y-1 text-sm">
+            {PRO_HIGHLIGHTS.map((h) => (
+              <li key={h.action} className="flex justify-between gap-4">
+                <span>{h.label}</span>
+                <span className="text-muted-foreground">
+                  {PLAN_CAPS.free[h.action]} → {PLAN_CAPS.pro[h.action]} per day
+                </span>
+              </li>
+            ))}
+            <li className="flex justify-between gap-4">
+              <span>Full resume rewrite tool</span>
+              <span className="text-muted-foreground">Included</span>
+            </li>
+          </ul>
+          <button
+            onClick={() => checkout.mutate()}
+            disabled={checkout.isPending}
+            className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {checkout.isPending ? "Opening checkout…" : "Upgrade to Pro"}
+          </button>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Payment is handled by Stripe. Your plan updates once the payment is confirmed.
+          </p>
+        </div>
+      )}
+
+      {plan === "pro" && (
+        <div className="mt-5">
+          <p className="text-sm text-muted-foreground">
+            You're on Pro — $19/month
+            {subStatus ? ` · subscription ${subStatus}` : ""}.
+          </p>
+          <button
+            onClick={() => portal.mutate()}
+            disabled={portal.isPending}
+            className="mt-4 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          >
+            {portal.isPending ? "Opening…" : "Manage billing"}
+          </button>
+        </div>
+      )}
+
+      {plan === "founder" && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Complimentary founder account — all Pro limits, nothing to pay.
+        </p>
+      )}
+
+      {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+    </section>
   );
 }
 
@@ -159,9 +269,7 @@ function NotificationsSection() {
           />
         </button>
       </div>
-      {m.isError && (
-        <p className="mt-2 text-sm text-destructive">Couldn't update preferences.</p>
-      )}
+      {m.isError && <p className="mt-2 text-sm text-destructive">Couldn't update preferences.</p>}
     </section>
   );
 }
@@ -211,9 +319,7 @@ function RewriteEntitlementSection() {
         </p>
       )}
       {status?.reason === "free_plan" && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          Available on the Pro plan.
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">Available on the Pro plan.</p>
       )}
       {status?.reason === "founder_unlimited" && (
         <p className="mt-3 text-sm text-muted-foreground">
@@ -264,8 +370,8 @@ function BrowserExtensionSection() {
       <h2 className="text-lg font-semibold">Browser extension</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Generate a personal access token so the companion extension can autofill job-application
-        forms with your saved profile. The extension only reads your data — it never submits
-        forms or bypasses CAPTCHAs.
+        forms with your saved profile. The extension only reads your data — it never submits forms
+        or bypasses CAPTCHAs.
       </p>
 
       {freshToken ? (
