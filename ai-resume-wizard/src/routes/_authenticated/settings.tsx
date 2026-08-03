@@ -51,25 +51,8 @@ function SettingsPage() {
           </h1>
         </header>
 
-        <section className="mt-8 rounded-lg border border-border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Current plan</p>
-              <p className="mt-1 text-2xl font-bold capitalize">{plan}</p>
-            </div>
-            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              plan === "free" ? "border-border text-muted-foreground" : "border-primary text-primary"
-            }`}>
-              {plan === "free" ? "Free tier" : "Paid tier"}
-            </span>
-          </div>
-          {plan === "free" && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Upgrades unlock higher daily AI limits. Billing isn't wired up yet — reach out if
-              you want a paid tier enabled.
-            </p>
-          )}
-        </section>
+        <BillingSection plan={plan} />
+
 
         <section className="mt-6 rounded-lg border border-border bg-card p-6">
           <h2 className="text-lg font-semibold">Today's AI usage</h2>
