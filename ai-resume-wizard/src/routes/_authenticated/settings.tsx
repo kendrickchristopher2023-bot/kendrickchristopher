@@ -21,10 +21,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
-    meta: [
-      { title: "Settings — AI Job Kit" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Settings — AI Job Kit" }, { name: "robots", content: "noindex,nofollow" }],
     links: [
       {
         rel: "stylesheet",
@@ -35,7 +32,15 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-const ACTIONS: UsageAction[] = ["tailor", "cover_letter", "interview_prep", "linkedin", "referral_dm", "parse_resume", "chat"];
+const ACTIONS: UsageAction[] = [
+  "tailor",
+  "cover_letter",
+  "interview_prep",
+  "linkedin",
+  "referral_dm",
+  "parse_resume",
+  "chat",
+];
 
 function SettingsPage() {
   const usageFn = useServerFn(getMyUsage);
@@ -45,20 +50,27 @@ function SettingsPage() {
   const counts = q.data?.counts ?? {};
 
   return (
-    <main className="min-h-screen bg-background px-6 py-12" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <main
+      className="min-h-screen bg-background px-6 py-12"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       <div className="mx-auto max-w-3xl">
         <Link to="/apply" className="text-sm text-muted-foreground hover:text-foreground">
           ← Application kit
         </Link>
         <header className="mt-8 border-b border-border pb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Settings</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Settings
+          </p>
+          <h1
+            className="mt-3 text-4xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
             Your plan &amp; usage
           </h1>
         </header>
 
         <BillingSection plan={plan} />
-
 
         <section className="mt-6 rounded-lg border border-border bg-card p-6">
           <h2 className="text-lg font-semibold">Today's AI usage</h2>
@@ -100,8 +112,8 @@ function SettingsPage() {
         <RewriteEntitlementSection />
 
         <p className="mt-6 text-xs text-muted-foreground">
-          Limits are enforced server-side. When a daily limit is hit, the app returns a
-          "daily limit reached" message until midnight UTC.
+          Limits are enforced server-side. When a daily limit is hit, the app returns a "daily limit
+          reached" message until midnight UTC.
         </p>
 
         <BrowserExtensionSection />
@@ -219,7 +231,6 @@ function BillingSection({ plan }: { plan: Plan }) {
   );
 }
 
-
 function NotificationsSection() {
   const qc = useQueryClient();
   const getFn = useServerFn(getMyNotificationPrefs);
@@ -258,9 +269,7 @@ function NotificationsSection() {
           />
         </button>
       </div>
-      {m.isError && (
-        <p className="mt-2 text-sm text-destructive">Couldn't update preferences.</p>
-      )}
+      {m.isError && <p className="mt-2 text-sm text-destructive">Couldn't update preferences.</p>}
     </section>
   );
 }
@@ -310,9 +319,7 @@ function RewriteEntitlementSection() {
         </p>
       )}
       {status?.reason === "free_plan" && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          Available on the Pro plan.
-        </p>
+        <p className="mt-3 text-sm text-muted-foreground">Available on the Pro plan.</p>
       )}
       {status?.reason === "founder_unlimited" && (
         <p className="mt-3 text-sm text-muted-foreground">
@@ -363,8 +370,8 @@ function BrowserExtensionSection() {
       <h2 className="text-lg font-semibold">Browser extension</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Generate a personal access token so the companion extension can autofill job-application
-        forms with your saved profile. The extension only reads your data — it never submits
-        forms or bypasses CAPTCHAs.
+        forms with your saved profile. The extension only reads your data — it never submits forms
+        or bypasses CAPTCHAs.
       </p>
 
       {freshToken ? (

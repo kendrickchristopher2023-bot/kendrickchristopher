@@ -66,9 +66,7 @@ export class UsageLimitError extends Error {
   constructor(action: UsageAction, used: number, cap: number, plan: Plan = "free") {
     super(
       `Daily limit reached for ${ACTION_LABEL[action]} (${used}/${cap}). Resets at midnight UTC.` +
-        (plan === "free"
-          ? " Pro raises daily limits — upgrade at /settings."
-          : ""),
+        (plan === "free" ? " Pro raises daily limits — upgrade at /settings." : ""),
     );
     this.name = "UsageLimitError";
     this.action = action;
@@ -77,16 +75,8 @@ export class UsageLimitError extends Error {
   }
 }
 
-
-async function getPlanFor(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-): Promise<Plan> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("plan")
-    .eq("id", userId)
-    .maybeSingle();
+async function getPlanFor(supabase: SupabaseClient<Database>, userId: string): Promise<Plan> {
+  const { data } = await supabase.from("profiles").select("plan").eq("id", userId).maybeSingle();
   const raw = (data?.plan as string | null) ?? "free";
   if (raw === "pro" || raw === "founder") return raw;
   return "free";
@@ -117,4 +107,3 @@ export async function enforceUsage(
   if (!allowed) throw new UsageLimitError(action, used, serverCap, plan);
   return { used, cap: serverCap, plan };
 }
-

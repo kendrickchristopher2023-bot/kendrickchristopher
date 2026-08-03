@@ -15,19 +15,13 @@ export const PRO_CURRENCY = "usd";
 function secretKey(): string {
   const key = process.env["STRIPE_SECRET_KEY"];
   if (!key) {
-    throw new Error(
-      "STRIPE_SECRET_KEY is not configured. Add it in Project Settings → Secrets.",
-    );
+    throw new Error("STRIPE_SECRET_KEY is not configured. Add it in Project Settings → Secrets.");
   }
   return key;
 }
 
 /** Stripe wants PHP-style bracket form encoding for nested params. */
-function encodeParams(
-  params: Record<string, unknown>,
-  prefix = "",
-  out: string[] = [],
-): string[] {
+function encodeParams(params: Record<string, unknown>, prefix = "", out: string[] = []): string[] {
   for (const [rawKey, value] of Object.entries(params)) {
     if (value === undefined || value === null) continue;
     const key = prefix ? `${prefix}[${rawKey}]` : rawKey;
@@ -58,8 +52,7 @@ export async function stripeRequest<T = Record<string, unknown>>(
 ): Promise<T> {
   const method = init.method ?? "GET";
   const body = init.params ? encodeParams(init.params).join("&") : undefined;
-  const url =
-    method === "GET" && body ? `${STRIPE_API}${path}?${body}` : `${STRIPE_API}${path}`;
+  const url = method === "GET" && body ? `${STRIPE_API}${path}?${body}` : `${STRIPE_API}${path}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${secretKey()}`,
@@ -192,9 +185,7 @@ export async function verifyStripeSignature(
     key,
     new TextEncoder().encode(`${timestamp}.${rawBody}`),
   );
-  const expected = [...new Uint8Array(mac)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const expected = [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, "0")).join("");
 
   if (!signatures.some((sig) => timingSafeEqualHex(sig, expected))) {
     return { ok: false, reason: "signature mismatch" };

@@ -50,10 +50,8 @@ export const Route = createFileRoute("/api/public/hooks/stripe")({
             customerId = (obj["customer"] as string | null) ?? null;
             userIdHint =
               (obj["client_reference_id"] as string | null) ??
-              ((obj["metadata"] as Record<string, string> | undefined)?.[
-                "supabase_user_id"
-              ] ??
-                null);
+              (obj["metadata"] as Record<string, string> | undefined)?.["supabase_user_id"] ??
+              null;
             const subId = obj["subscription"] as string | null;
             if (subId) {
               sub = await stripeRequest<SubLike>(`/subscriptions/${subId}`);
@@ -94,9 +92,7 @@ export const Route = createFileRoute("/api/public/hooks/stripe")({
             .maybeSingle();
 
           const status =
-            event.type === "customer.subscription.deleted"
-              ? "canceled"
-              : (sub.status ?? "unknown");
+            event.type === "customer.subscription.deleted" ? "canceled" : (sub.status ?? "unknown");
           const currentPlan = (profile?.plan as string | null) ?? "free";
 
           const update: Record<string, string | null> = {
