@@ -5,7 +5,13 @@ import { useState } from "react";
 import { getMyUsage } from "@/lib/resume.functions";
 import { getRewriteEntitlement } from "@/lib/rewrite.functions";
 import { getMyNotificationPrefs, setMyNotificationPrefs } from "@/lib/notifications.functions";
-import { PLAN_CAPS, ACTION_LABEL, type UsageAction } from "@/lib/usage";
+import {
+  getMyBillingStatus,
+  createCheckoutSession,
+  createBillingPortalSession,
+} from "@/lib/billing.functions";
+import { PLAN_CAPS, ACTION_LABEL, type UsageAction, type Plan } from "@/lib/usage";
+
 import {
   listMyApiTokens,
   createMyApiToken,
