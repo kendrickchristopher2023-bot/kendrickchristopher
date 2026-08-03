@@ -63,9 +63,12 @@ export class UsageLimitError extends Error {
   used: number;
   cap: number;
   action: UsageAction;
-  constructor(action: UsageAction, used: number, cap: number) {
+  constructor(action: UsageAction, used: number, cap: number, plan: Plan = "free") {
     super(
-      `Daily limit reached for ${ACTION_LABEL[action]} (${used}/${cap}). Resets at midnight UTC.`,
+      `Daily limit reached for ${ACTION_LABEL[action]} (${used}/${cap}). Resets at midnight UTC.` +
+        (plan === "free"
+          ? " Pro raises daily limits — upgrade at /settings."
+          : ""),
     );
     this.name = "UsageLimitError";
     this.action = action;
@@ -73,6 +76,7 @@ export class UsageLimitError extends Error {
     this.cap = cap;
   }
 }
+
 
 async function getPlanFor(
   supabase: SupabaseClient<Database>,

@@ -110,6 +110,116 @@ function SettingsPage() {
   );
 }
 
+const PRO_HIGHLIGHTS: { action: UsageAction; label: string }[] = [
+  { action: "tailor", label: "Resume tailoring" },
+  { action: "cover_letter", label: "Cover letters" },
+  { action: "interview_prep", label: "Interview prep" },
+  { action: "chat", label: "Chat assistant" },
+];
+
+function BillingSection({ plan }: { plan: Plan }) {
+  const statusFn = useServerFn(getMyBillingStatus);
+  const checkoutFn = useServerFn(createCheckoutSession);
+  const portalFn = useServerFn(createBillingPortalSession);
+  const [err, setErr] = useState<string | null>(null);
+
+  const status = useQuery({ queryKey: ["billing-status"], queryFn: () => statusFn() });
+
+  const checkout = useMutation({
+    mutationFn: () => checkoutFn(),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Could not start checkout."),
+  });
+
+  const portal = useMutation({
+    mutationFn: () => portalFn(),
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+    onError: (e) => setErr(e instanceof Error ? e.message : "Could not open billing."),
+  });
+
+  const subStatus = status.data?.subscriptionStatus ?? null;
+
+  return (
+    <section id="billing" className="mt-8 rounded-lg border border-border bg-card p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Current plan</p>
+          <p className="mt-1 text-2xl font-bold capitalize">{plan}</p>
+        </div>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-medium ${
+            plan === "free" ? "border-border text-muted-foreground" : "border-primary text-primary"
+          }`}
+        >
+          {plan === "free" ? "Free tier" : plan === "founder" ? "Complimentary" : "Pro"}
+        </span>
+      </div>
+
+      {plan === "free" && (
+        <div className="mt-5 rounded-md border border-primary/40 bg-primary/5 p-5">
+          <p className="text-lg font-semibold">Upgrade to Pro — $19/month</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Same tools, far more room to use them. Cancel any time.
+          </p>
+          <ul className="mt-4 space-y-1 text-sm">
+            {PRO_HIGHLIGHTS.map((h) => (
+              <li key={h.action} className="flex justify-between gap-4">
+                <span>{h.label}</span>
+                <span className="text-muted-foreground">
+                  {PLAN_CAPS.free[h.action]} → {PLAN_CAPS.pro[h.action]} per day
+                </span>
+              </li>
+            ))}
+            <li className="flex justify-between gap-4">
+              <span>Full resume rewrite tool</span>
+              <span className="text-muted-foreground">Included</span>
+            </li>
+          </ul>
+          <button
+            onClick={() => checkout.mutate()}
+            disabled={checkout.isPending}
+            className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {checkout.isPending ? "Opening checkout…" : "Upgrade to Pro"}
+          </button>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Payment is handled by Stripe. Your plan updates once the payment is confirmed.
+          </p>
+        </div>
+      )}
+
+      {plan === "pro" && (
+        <div className="mt-5">
+          <p className="text-sm text-muted-foreground">
+            You're on Pro — $19/month
+            {subStatus ? ` · subscription ${subStatus}` : ""}.
+          </p>
+          <button
+            onClick={() => portal.mutate()}
+            disabled={portal.isPending}
+            className="mt-4 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          >
+            {portal.isPending ? "Opening…" : "Manage billing"}
+          </button>
+        </div>
+      )}
+
+      {plan === "founder" && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Complimentary founder account — all Pro limits, nothing to pay.
+        </p>
+      )}
+
+      {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+    </section>
+  );
+}
+
+
 function NotificationsSection() {
   const qc = useQueryClient();
   const getFn = useServerFn(getMyNotificationPrefs);
