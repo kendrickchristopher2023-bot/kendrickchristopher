@@ -114,7 +114,7 @@ export async function enforceUsage(
   const used = (row?.used as number) ?? 0;
   const serverCap = (row?.cap as number) ?? cap;
   const allowed = (row?.allowed as boolean) ?? false;
-  if (!allowed) throw new UsageLimitError(action, used, serverCap);
+  if (!allowed) throw new UsageLimitError(action, used, serverCap, plan);
   return { used, cap: serverCap, plan };
 }
 
