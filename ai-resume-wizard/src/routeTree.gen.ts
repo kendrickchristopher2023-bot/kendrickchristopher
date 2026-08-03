@@ -52,6 +52,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksUnsubscribeRouteImport } from './routes/api/public/hooks/unsubscribe'
+import { Route as ApiPublicHooksStripeRouteImport } from './routes/api/public/hooks/stripe'
 import { Route as ApiPublicHooksRefreshJobsRouteImport } from './routes/api/public/hooks/refresh-jobs'
 import { Route as ApiPublicHooksRankJobsRouteImport } from './routes/api/public/hooks/rank-jobs'
 import { Route as ApiPublicHooksCleanupRouteImport } from './routes/api/public/hooks/cleanup'
@@ -285,6 +286,11 @@ const ApiPublicHooksUnsubscribeRoute =
     path: '/api/public/hooks/unsubscribe',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksStripeRoute = ApiPublicHooksStripeRouteImport.update({
+  id: '/api/public/hooks/stripe',
+  path: '/api/public/hooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRefreshJobsRoute =
   ApiPublicHooksRefreshJobsRouteImport.update({
     id: '/api/public/hooks/refresh-jobs',
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -394,6 +401,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -444,6 +452,7 @@ export interface FileRoutesById {
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
   '/api/public/hooks/rank-jobs': typeof ApiPublicHooksRankJobsRoute
   '/api/public/hooks/refresh-jobs': typeof ApiPublicHooksRefreshJobsRoute
+  '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -493,6 +502,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
@@ -588,6 +599,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/cleanup'
     | '/api/public/hooks/rank-jobs'
     | '/api/public/hooks/refresh-jobs'
+    | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
     | '/lovable/email/auth/preview'
@@ -621,6 +633,7 @@ export interface RootRouteChildren {
   ApiPublicHooksCleanupRoute: typeof ApiPublicHooksCleanupRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
+  ApiPublicHooksStripeRoute: typeof ApiPublicHooksStripeRoute
   ApiPublicHooksUnsubscribeRoute: typeof ApiPublicHooksUnsubscribeRoute
   ApiPublicHooksWeeklyDigestRoute: typeof ApiPublicHooksWeeklyDigestRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -931,6 +944,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/stripe': {
+      id: '/api/public/hooks/stripe'
+      path: '/api/public/hooks/stripe'
+      fullPath: '/api/public/hooks/stripe'
+      preLoaderRoute: typeof ApiPublicHooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-jobs': {
       id: '/api/public/hooks/refresh-jobs'
       path: '/api/public/hooks/refresh-jobs'
@@ -1054,6 +1074,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksCleanupRoute: ApiPublicHooksCleanupRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
+  ApiPublicHooksStripeRoute: ApiPublicHooksStripeRoute,
   ApiPublicHooksUnsubscribeRoute: ApiPublicHooksUnsubscribeRoute,
   ApiPublicHooksWeeklyDigestRoute: ApiPublicHooksWeeklyDigestRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
