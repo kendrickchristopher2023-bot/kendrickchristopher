@@ -116,7 +116,10 @@ function SettingsPage() {
           reached" message until midnight UTC.
         </p>
 
+        <SecuritySection />
+
         <BrowserExtensionSection />
+
       </div>
     </main>
   );
