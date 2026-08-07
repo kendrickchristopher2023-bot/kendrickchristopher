@@ -6,15 +6,13 @@ import { lovable } from "@/integrations/lovable";
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
+  reason: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: "Sign in — Application Kit" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Sign in — Application Kit" }, { name: "robots", content: "noindex,nofollow" }],
     links: [
       {
         rel: "stylesheet",
@@ -123,12 +121,21 @@ function AuthPage() {
         >
           Welcome back to Application Kit
         </h1>
+        {search.reason === "timeout" && (
+          <p className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            You were signed out for security after a period of inactivity. Sign in to pick up where
+            you left off.
+          </p>
+        )}
         <p className="mt-2 text-sm text-muted-foreground">
           Sign in to your invite-only workspace. New here?{" "}
           <Link to="/request-access" className="text-primary hover:underline">
             Request access
           </Link>
           .
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          On a shared computer? Remember to sign out when you're done.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -188,16 +195,14 @@ function AuthPage() {
             Email me a sign-in link
           </button>
           <p className="text-xs text-muted-foreground">
-            Forgot your password? Enter your email above and use the sign-in link
-            option — we'll email you a one-click link if your account exists.
+            Forgot your password? Enter your email above and use the sign-in link option — we'll
+            email you a one-click link if your account exists.
           </p>
 
           {msg && (
             <p
               className={
-                msg.kind === "error"
-                  ? "text-sm text-destructive"
-                  : "text-sm text-muted-foreground"
+                msg.kind === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"
               }
             >
               {msg.text}
