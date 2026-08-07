@@ -69,7 +69,7 @@ function Portfolio() {
               <Link to="/apply" className="font-medium text-primary hover:underline">
                 Open kit →
               </Link>
-              <button onClick={signOut} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => signOut()} className="text-muted-foreground hover:text-foreground">
                 Sign out
               </button>
             </div>
