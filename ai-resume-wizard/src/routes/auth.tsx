@@ -6,7 +6,9 @@ import { lovable } from "@/integrations/lovable";
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
+  reason: z.string().optional(),
 });
+
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,

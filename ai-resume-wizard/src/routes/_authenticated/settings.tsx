@@ -10,6 +10,7 @@ import {
   createCheckoutSession,
   createBillingPortalSession,
 } from "@/lib/billing.functions";
+import { signOut } from "@/lib/session";
 import { PLAN_CAPS, ACTION_LABEL, type UsageAction, type Plan } from "@/lib/usage";
 
 import {
@@ -459,6 +460,52 @@ function BrowserExtensionSection() {
       <p className="mt-4 text-xs text-muted-foreground">
         Endpoint: <code>GET /api/extension/profile</code> — send{" "}
         <code>Authorization: Bearer &lt;token&gt;</code>.
+      </p>
+    </section>
+  );
+}
+
+function SecuritySection() {
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card p-6">
+      <h2 className="text-lg font-semibold">Security</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        You're signed out automatically after 8 hours of inactivity. On a shared or public
+        computer, sign out when you're finished.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => {
+            setBusy(true);
+            void signOut();
+          }}
+          disabled={busy}
+          className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+        >
+          Sign out
+        </button>
+        <button
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Sign out of all devices? Every browser and device signed in as you will need to sign in again.",
+              )
+            )
+              return;
+            setBusy(true);
+            void signOut({ scope: "global" });
+          }}
+          disabled={busy}
+          className="rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+        >
+          {busy ? "Signing out…" : "Sign out of all devices"}
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        "All devices" revokes every active session for your account — use it if you think you left
+        yourself signed in somewhere.
       </p>
     </section>
   );
