@@ -5,7 +5,6 @@ import { AppNav } from "@/components/AppNav";
 import { AppStatusBanner } from "@/components/AppStatusBanner";
 import { IdleTimeout } from "@/components/IdleTimeout";
 
-
 // Integration-managed protected layout. ssr:false because Supabase stores the
 // session in localStorage, which the server can't read.
 export const Route = createFileRoute("/_authenticated")({

@@ -9,14 +9,10 @@ const searchSchema = z.object({
   reason: z.string().optional(),
 });
 
-
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: "Sign in — Application Kit" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Sign in — Application Kit" }, { name: "robots", content: "noindex,nofollow" }],
     links: [
       {
         rel: "stylesheet",
@@ -142,7 +138,6 @@ function AuthPage() {
           On a shared computer? Remember to sign out when you're done.
         </p>
 
-
         <div className="mt-8 space-y-3">
           <button
             type="button"
@@ -200,16 +195,14 @@ function AuthPage() {
             Email me a sign-in link
           </button>
           <p className="text-xs text-muted-foreground">
-            Forgot your password? Enter your email above and use the sign-in link
-            option — we'll email you a one-click link if your account exists.
+            Forgot your password? Enter your email above and use the sign-in link option — we'll
+            email you a one-click link if your account exists.
           </p>
 
           {msg && (
             <p
               className={
-                msg.kind === "error"
-                  ? "text-sm text-destructive"
-                  : "text-sm text-muted-foreground"
+                msg.kind === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"
               }
             >
               {msg.text}

@@ -52,12 +52,7 @@ export function IdleTimeout() {
       writeLastActivity(t);
     };
 
-    const events: (keyof WindowEventMap)[] = [
-      "pointerdown",
-      "keydown",
-      "scroll",
-      "focus",
-    ];
+    const events: (keyof WindowEventMap)[] = ["pointerdown", "keydown", "scroll", "focus"];
     events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
 
     const check = () => {

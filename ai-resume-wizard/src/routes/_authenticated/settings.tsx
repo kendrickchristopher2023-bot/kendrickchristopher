@@ -120,7 +120,6 @@ function SettingsPage() {
         <SecuritySection />
 
         <BrowserExtensionSection />
-
       </div>
     </main>
   );
@@ -472,8 +471,8 @@ function SecuritySection() {
     <section className="mt-6 rounded-lg border border-border bg-card p-6">
       <h2 className="text-lg font-semibold">Security</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        You're signed out automatically after 8 hours of inactivity. On a shared or public
-        computer, sign out when you're finished.
+        You're signed out automatically after 8 hours of inactivity. On a shared or public computer,
+        sign out when you're finished.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
