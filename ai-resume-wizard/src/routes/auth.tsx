@@ -125,6 +125,12 @@ function AuthPage() {
         >
           Welcome back to Application Kit
         </h1>
+        {search.reason === "timeout" && (
+          <p className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            You were signed out for security after a period of inactivity. Sign in to pick up where
+            you left off.
+          </p>
+        )}
         <p className="mt-2 text-sm text-muted-foreground">
           Sign in to your invite-only workspace. New here?{" "}
           <Link to="/request-access" className="text-primary hover:underline">
@@ -132,6 +138,10 @@ function AuthPage() {
           </Link>
           .
         </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          On a shared computer? Remember to sign out when you're done.
+        </p>
+
 
         <div className="mt-8 space-y-3">
           <button
