@@ -34,6 +34,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
 import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
+import { Route as ApiOwnerMetricsRouteImport } from './routes/api/owner/metrics'
 import { Route as ApiExtensionProfileRouteImport } from './routes/api.extension.profile'
 import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
 import { Route as AuthenticatedApplyRewriteRouteImport } from './routes/_authenticated/apply.rewrite'
@@ -50,6 +51,7 @@ import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_auth
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicOwnerMetricsRouteImport } from './routes/api/public/owner/metrics'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksUnsubscribeRouteImport } from './routes/api/public/hooks/unsubscribe'
 import { Route as ApiPublicHooksStripeRouteImport } from './routes/api/public/hooks/stripe'
@@ -183,6 +185,11 @@ const AuthenticatedApplyIndexRoute = AuthenticatedApplyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedApplyRoute,
 } as any)
+const ApiOwnerMetricsRoute = ApiOwnerMetricsRouteImport.update({
+  id: '/api/owner/metrics',
+  path: '/api/owner/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiExtensionProfileRoute = ApiExtensionProfileRouteImport.update({
   id: '/api/extension/profile',
   path: '/api/extension/profile',
@@ -274,6 +281,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOwnerMetricsRoute = ApiPublicOwnerMetricsRouteImport.update({
+  id: '/api/public/owner/metrics',
+  path: '/api/public/owner/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWeeklyDigestRoute =
   ApiPublicHooksWeeklyDigestRouteImport.update({
     id: '/api/public/hooks/weekly-digest',
@@ -349,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -357,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -396,6 +410,7 @@ export interface FileRoutesByTo {
   '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -404,6 +419,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -447,6 +463,7 @@ export interface FileRoutesById {
   '/_authenticated/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -455,6 +472,7 @@ export interface FileRoutesById {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -497,6 +515,7 @@ export interface FileRouteTypes {
     | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/apply/'
     | '/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -505,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -544,6 +564,7 @@ export interface FileRouteTypes {
     | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/apply'
     | '/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -552,6 +573,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -594,6 +616,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/rewrite'
     | '/_authenticated/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -602,6 +625,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -630,12 +654,14 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
+  ApiOwnerMetricsRoute: typeof ApiOwnerMetricsRoute
   ApiPublicHooksCleanupRoute: typeof ApiPublicHooksCleanupRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
   ApiPublicHooksStripeRoute: typeof ApiPublicHooksStripeRoute
   ApiPublicHooksUnsubscribeRoute: typeof ApiPublicHooksUnsubscribeRoute
   ApiPublicHooksWeeklyDigestRoute: typeof ApiPublicHooksWeeklyDigestRoute
+  ApiPublicOwnerMetricsRoute: typeof ApiPublicOwnerMetricsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -818,6 +844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplyIndexRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
     }
+    '/api/owner/metrics': {
+      id: '/api/owner/metrics'
+      path: '/api/owner/metrics'
+      fullPath: '/api/owner/metrics'
+      preLoaderRoute: typeof ApiOwnerMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/extension/profile': {
       id: '/api/extension/profile'
       path: '/api/extension/profile'
@@ -928,6 +961,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/auth/preview'
       fullPath: '/lovable/email/auth/preview'
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/owner/metrics': {
+      id: '/api/public/owner/metrics'
+      path: '/api/public/owner/metrics'
+      fullPath: '/api/public/owner/metrics'
+      preLoaderRoute: typeof ApiPublicOwnerMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/weekly-digest': {
@@ -1071,12 +1111,14 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
+  ApiOwnerMetricsRoute: ApiOwnerMetricsRoute,
   ApiPublicHooksCleanupRoute: ApiPublicHooksCleanupRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
   ApiPublicHooksStripeRoute: ApiPublicHooksStripeRoute,
   ApiPublicHooksUnsubscribeRoute: ApiPublicHooksUnsubscribeRoute,
   ApiPublicHooksWeeklyDigestRoute: ApiPublicHooksWeeklyDigestRoute,
+  ApiPublicOwnerMetricsRoute: ApiPublicOwnerMetricsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
