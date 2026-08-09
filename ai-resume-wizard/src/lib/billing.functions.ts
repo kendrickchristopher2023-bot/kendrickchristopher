@@ -60,7 +60,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         params: {
           email: profile?.email ?? undefined,
           name: profile?.full_name ?? undefined,
-          metadata: { supabase_user_id: context.userId, app: "application-kit" },
+          metadata: { supabase_user_id: context.userId, app: "application-kit", venture: "resume" },
         },
         idempotencyKey: `ak-customer-${context.userId}`,
       });
@@ -86,9 +86,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         success_url: `${origin}/settings?upgraded=1`,
         cancel_url: `${origin}/settings`,
         subscription_data: {
-          metadata: { supabase_user_id: context.userId, app: "application-kit" },
+          metadata: { supabase_user_id: context.userId, app: "application-kit", venture: "resume" },
         },
-        metadata: { supabase_user_id: context.userId, app: "application-kit" },
+        metadata: { supabase_user_id: context.userId, app: "application-kit", venture: "resume" },
       },
     });
 

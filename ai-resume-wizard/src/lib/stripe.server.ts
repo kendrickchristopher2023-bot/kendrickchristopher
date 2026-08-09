@@ -111,7 +111,7 @@ export async function getOrCreateProPriceId(): Promise<string> {
         name: PRO_PRODUCT_NAME,
         description:
           "Higher daily AI limits for tailoring, cover letters, interview prep and chat, plus the full resume rewrite tool.",
-        metadata: { app: "application-kit" },
+        metadata: { app: "application-kit", venture: "resume" },
       },
       idempotencyKey: "application-kit-pro-product-v1",
     });
@@ -126,7 +126,7 @@ export async function getOrCreateProPriceId(): Promise<string> {
       currency: PRO_CURRENCY,
       recurring: { interval: "month" },
       lookup_key: PRO_PRICE_LOOKUP_KEY,
-      metadata: { app: "application-kit" },
+      metadata: { app: "application-kit", venture: "resume" },
     },
     idempotencyKey: "application-kit-pro-price-v1",
   });
