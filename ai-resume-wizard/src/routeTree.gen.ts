@@ -34,6 +34,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
 import { Route as AuthenticatedApplyIndexRouteImport } from './routes/_authenticated/apply.index'
+import { Route as ApiOwnerMetricsRouteImport } from './routes/api/owner/metrics'
 import { Route as ApiExtensionProfileRouteImport } from './routes/api.extension.profile'
 import { Route as AuthenticatedApplyTailorRouteImport } from './routes/_authenticated/apply.tailor'
 import { Route as AuthenticatedApplyRewriteRouteImport } from './routes/_authenticated/apply.rewrite'
@@ -182,6 +183,11 @@ const AuthenticatedApplyIndexRoute = AuthenticatedApplyIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedApplyRoute,
+} as any)
+const ApiOwnerMetricsRoute = ApiOwnerMetricsRouteImport.update({
+  id: '/api/owner/metrics',
+  path: '/api/owner/metrics',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiExtensionProfileRoute = ApiExtensionProfileRouteImport.update({
   id: '/api/extension/profile',
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/apply/': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/apply': typeof AuthenticatedApplyIndexRoute
   '/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -447,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/apply/rewrite': typeof AuthenticatedApplyRewriteRoute
   '/_authenticated/apply/tailor': typeof AuthenticatedApplyTailorRoute
   '/api/extension/profile': typeof ApiExtensionProfileRoute
+  '/api/owner/metrics': typeof ApiOwnerMetricsRoute
   '/_authenticated/apply/': typeof AuthenticatedApplyIndexRoute
   '/_authenticated/_admin/admin/invites': typeof AuthenticatedAdminAdminInvitesRoute
   '/api/public/hooks/cleanup': typeof ApiPublicHooksCleanupRoute
@@ -497,6 +506,7 @@ export interface FileRouteTypes {
     | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/apply/'
     | '/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -544,6 +554,7 @@ export interface FileRouteTypes {
     | '/apply/rewrite'
     | '/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/apply'
     | '/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -594,6 +605,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apply/rewrite'
     | '/_authenticated/apply/tailor'
     | '/api/extension/profile'
+    | '/api/owner/metrics'
     | '/_authenticated/apply/'
     | '/_authenticated/_admin/admin/invites'
     | '/api/public/hooks/cleanup'
@@ -630,6 +642,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiExtensionProfileRoute: typeof ApiExtensionProfileRoute
+  ApiOwnerMetricsRoute: typeof ApiOwnerMetricsRoute
   ApiPublicHooksCleanupRoute: typeof ApiPublicHooksCleanupRoute
   ApiPublicHooksRankJobsRoute: typeof ApiPublicHooksRankJobsRoute
   ApiPublicHooksRefreshJobsRoute: typeof ApiPublicHooksRefreshJobsRoute
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apply/'
       preLoaderRoute: typeof AuthenticatedApplyIndexRouteImport
       parentRoute: typeof AuthenticatedApplyRoute
+    }
+    '/api/owner/metrics': {
+      id: '/api/owner/metrics'
+      path: '/api/owner/metrics'
+      fullPath: '/api/owner/metrics'
+      preLoaderRoute: typeof ApiOwnerMetricsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/extension/profile': {
       id: '/api/extension/profile'
@@ -1071,6 +1091,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiExtensionProfileRoute: ApiExtensionProfileRoute,
+  ApiOwnerMetricsRoute: ApiOwnerMetricsRoute,
   ApiPublicHooksCleanupRoute: ApiPublicHooksCleanupRoute,
   ApiPublicHooksRankJobsRoute: ApiPublicHooksRankJobsRoute,
   ApiPublicHooksRefreshJobsRoute: ApiPublicHooksRefreshJobsRoute,
