@@ -48,9 +48,9 @@ export function authorizeOwnerRequest(request: Request): boolean {
   return safeEqual(header.slice(prefix.length).trim(), expected);
 }
 
-export function resolveWindow(url: URL):
-  | { ok: true; since: string; until: string }
-  | { ok: false; error: string } {
+export function resolveWindow(
+  url: URL,
+): { ok: true; since: string; until: string } | { ok: false; error: string } {
   const now = new Date();
   const rawUntil = url.searchParams.get("until");
   const rawSince = url.searchParams.get("since");
@@ -69,12 +69,7 @@ export function resolveWindow(url: URL):
   return { ok: true, since: since.toISOString(), until: until.toISOString() };
 }
 
-type Tbl =
-  | "profiles"
-  | "resumes"
-  | "tailor_sessions"
-  | "applications"
-  | "personal_matches";
+type Tbl = "profiles" | "resumes" | "tailor_sessions" | "applications" | "personal_matches";
 
 async function countInWindow(
   table: Tbl,
