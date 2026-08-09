@@ -51,6 +51,7 @@ import { Route as AuthenticatedAdminAdminIndexRouteImport } from './routes/_auth
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicOwnerMetricsRouteImport } from './routes/api/public/owner/metrics'
 import { Route as ApiPublicHooksWeeklyDigestRouteImport } from './routes/api/public/hooks/weekly-digest'
 import { Route as ApiPublicHooksUnsubscribeRouteImport } from './routes/api/public/hooks/unsubscribe'
 import { Route as ApiPublicHooksStripeRouteImport } from './routes/api/public/hooks/stripe'
@@ -280,6 +281,11 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOwnerMetricsRoute = ApiPublicOwnerMetricsRouteImport.update({
+  id: '/api/public/owner/metrics',
+  path: '/api/public/owner/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWeeklyDigestRoute =
   ApiPublicHooksWeeklyDigestRouteImport.update({
     id: '/api/public/hooks/weekly-digest',
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/api/public/hooks/stripe': typeof ApiPublicHooksStripeRoute
   '/api/public/hooks/unsubscribe': typeof ApiPublicHooksUnsubscribeRoute
   '/api/public/hooks/weekly-digest': typeof ApiPublicHooksWeeklyDigestRoute
+  '/api/public/owner/metrics': typeof ApiPublicOwnerMetricsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -515,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -563,6 +573,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -614,6 +625,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/stripe'
     | '/api/public/hooks/unsubscribe'
     | '/api/public/hooks/weekly-digest'
+    | '/api/public/owner/metrics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -649,6 +661,7 @@ export interface RootRouteChildren {
   ApiPublicHooksStripeRoute: typeof ApiPublicHooksStripeRoute
   ApiPublicHooksUnsubscribeRoute: typeof ApiPublicHooksUnsubscribeRoute
   ApiPublicHooksWeeklyDigestRoute: typeof ApiPublicHooksWeeklyDigestRoute
+  ApiPublicOwnerMetricsRoute: typeof ApiPublicOwnerMetricsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -950,6 +963,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/owner/metrics': {
+      id: '/api/public/owner/metrics'
+      path: '/api/public/owner/metrics'
+      fullPath: '/api/public/owner/metrics'
+      preLoaderRoute: typeof ApiPublicOwnerMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/weekly-digest': {
       id: '/api/public/hooks/weekly-digest'
       path: '/api/public/hooks/weekly-digest'
@@ -1098,6 +1118,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksStripeRoute: ApiPublicHooksStripeRoute,
   ApiPublicHooksUnsubscribeRoute: ApiPublicHooksUnsubscribeRoute,
   ApiPublicHooksWeeklyDigestRoute: ApiPublicHooksWeeklyDigestRoute,
+  ApiPublicOwnerMetricsRoute: ApiPublicOwnerMetricsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
