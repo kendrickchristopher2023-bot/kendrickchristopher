@@ -42,12 +42,14 @@ ${job_description}
 Return a JSON object:
 {
   "summary": "2-3 sentence tailored professional summary",
-  "bullets": [{ "company": "...", "bullets": ["...", "..."] }],
+  "bullets": [{ "company": "...", "title": "...", "bullets": ["...", "..."] }],
   "matchScore": 0-100 integer,
   "matchedKeywords": ["..."],
   "missingKeywords": ["..."],
   "coverLetter": "3-paragraph cover letter"
-}`;
+}
+
+Return one "bullets" entry per experience entry in the master resume, in the same order, echoing that role's company AND title verbatim. If the same company appears more than once (for example a promotion), produce a SEPARATE entry per role with its own distinct bullets. Never merge roles that share a company.`;
 
     const text = await callGateway(prompt, SYSTEM);
     const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
