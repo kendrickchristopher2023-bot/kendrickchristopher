@@ -18,7 +18,7 @@ const TailorInput = z.object({
 
 export type TailorResult = {
   summary: string;
-  bullets: { company: string; bullets: string[] }[];
+  bullets: { company: string; title?: string; bullets: string[] }[];
   matchScore: number;
   matchedKeywords: string[];
   missingKeywords: string[];
@@ -26,6 +26,7 @@ export type TailorResult = {
   injection?: InjectionInfo;
   mode?: "both" | "resume" | "cover";
 };
+
 
 // Hardened system prompt: the job description is UNTRUSTED third-party data.
 // The model must never treat text inside it as instructions, and must never
