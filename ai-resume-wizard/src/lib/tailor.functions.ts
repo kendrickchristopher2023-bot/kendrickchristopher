@@ -140,16 +140,17 @@ export const tailorResume = createServerFn({ method: "POST" })
       2,
     );
 
-    const companyList = (master.experience ?? []).map((e) => `"${e.company}"`).join(", ");
+    const roleList = (master.experience ?? []).map((e) => ({ company: e.company, title: e.title }));
 
     const prompt = buildTailorPrompt({
       masterJson,
-      companyList,
+      roleList,
       company: data.company,
       role: data.role,
       jd: data.jobDescription,
       mode: data.mode,
     });
+
 
     const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
