@@ -175,7 +175,7 @@ export const tailorResume = createServerFn({ method: "POST" })
 
     const parsed: TailorResult = {
       summary: raw.summary ?? "",
-      bullets: raw.bullets ?? [],
+      bullets: withRoleTitles(raw.bullets ?? [], roleList),
       matchScore: typeof raw.matchScore === "number" ? raw.matchScore : 0,
       matchedKeywords: raw.matchedKeywords ?? [],
       missingKeywords: raw.missingKeywords ?? [],
