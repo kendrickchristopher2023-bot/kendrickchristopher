@@ -92,12 +92,12 @@ function ApplyGoPage() {
   // Editable overlays; reset when a new AI result arrives.
   const [editSummary, setEditSummary] = useState("");
   const [editCover, setEditCover] = useState("");
-  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+  const [editBullets, setEditBullets] = useState<{ company: string; title?: string; bullets: string[] }[]>([]);
   useEffect(() => {
     if (!result) return;
     setEditSummary(result.summary ?? "");
     setEditCover(result.coverLetter ?? "");
-    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, title: b.title, bullets: [...b.bullets] })));
   }, [result]);
 
   // Downloads
@@ -680,8 +680,8 @@ function GoResultsEditor({
   setEditSummary: (v: string) => void;
   editCover: string;
   setEditCover: (v: string) => void;
-  editBullets: { company: string; bullets: string[] }[];
-  setEditBullets: (v: { company: string; bullets: string[] }[]) => void;
+  editBullets: { company: string; title?: string; bullets: string[] }[];
+  setEditBullets: (v: { company: string; title?: string; bullets: string[] }[]) => void;
 }) {
   const wantResume = mode !== "cover";
   const wantCover = mode !== "resume";
@@ -753,14 +753,15 @@ function GoResultsEditor({
             const origText = result.bullets[i] ? result.bullets[i].bullets.join("\n") : "";
             return (
               <EditableBlock
-                key={b.company + i}
-                label={`${b.company} — tailored bullets (one per line)`}
+                key={`${b.company}|${b.title ?? ""}|${i}`}
+                label={`${[b.title, b.company].filter(Boolean).join(" — ")} — tailored bullets (one per line)`}
                 original={origText}
                 value={b.bullets.join("\n")}
                 onChange={(v) => {
                   const next = [...editBullets];
                   next[i] = {
                     company: b.company,
+                    title: b.title,
                     bullets: v
                       .split("\n")
                       .map((s) => s.replace(/^[•\-\s]+/, "").trim())
