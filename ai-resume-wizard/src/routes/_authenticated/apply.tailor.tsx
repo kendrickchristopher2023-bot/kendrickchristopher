@@ -78,13 +78,13 @@ function TailorPage() {
   // tailor run lands (see the effect below).
   const [editSummary, setEditSummary] = useState("");
   const [editCover, setEditCover] = useState("");
-  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+  const [editBullets, setEditBullets] = useState<{ company: string; title?: string; bullets: string[] }[]>([]);
 
   useEffect(() => {
     if (!result) return;
     setEditSummary(result.summary ?? "");
     setEditCover(result.coverLetter ?? "");
-    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, title: b.title, bullets: [...b.bullets] })));
   }, [result]);
 
   // Init empty on SSR; hydrate from localStorage post-mount to avoid mismatch.
@@ -252,7 +252,7 @@ function TailorPage() {
     return [
       editSummary,
       "",
-      ...editBullets.flatMap((b) => [`# ${b.company}`, ...b.bullets.map((x) => `• ${x}`), ""]),
+      ...editBullets.flatMap((b) => [`# ${[b.title, b.company].filter(Boolean).join(" — ")}`, ...b.bullets.map((x) => `• ${x}`), ""]),
     ].join("\n");
   }, [result, editSummary, editBullets]);
 
@@ -439,13 +439,13 @@ function TailorPage() {
                   rows={4}
                 />
                 {editBullets.map((b, i) => {
-                  const originalCompany = result.bullets[i];
+                  const originalRole = result.bullets[i];
                   const text = b.bullets.join("\n");
-                  const origText = originalCompany ? originalCompany.bullets.join("\n") : "";
+                  const origText = originalRole ? originalRole.bullets.join("\n") : "";
                   return (
                     <EditableBlock
-                      key={b.company + i}
-                      label={`${b.company} — tailored bullets (one per line)`}
+                      key={`${b.company}|${b.title ?? ""}|${i}`}
+                      label={`${[b.title, b.company].filter(Boolean).join(" — ")} — tailored bullets (one per line)`}
                       original={origText}
                       value={text}
                       onChange={(v) => {
