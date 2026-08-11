@@ -60,7 +60,6 @@ function TailorPage() {
     staleTime: 60_000,
   });
 
-
   const [jd, setJd] = useState("");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -78,13 +77,21 @@ function TailorPage() {
   // tailor run lands (see the effect below).
   const [editSummary, setEditSummary] = useState("");
   const [editCover, setEditCover] = useState("");
-  const [editBullets, setEditBullets] = useState<{ company: string; title?: string; bullets: string[] }[]>([]);
+  const [editBullets, setEditBullets] = useState<
+    { company: string; title?: string; bullets: string[] }[]
+  >([]);
 
   useEffect(() => {
     if (!result) return;
     setEditSummary(result.summary ?? "");
     setEditCover(result.coverLetter ?? "");
-    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, title: b.title, bullets: [...b.bullets] })));
+    setEditBullets(
+      (result.bullets ?? []).map((b) => ({
+        company: b.company,
+        title: b.title,
+        bullets: [...b.bullets],
+      })),
+    );
   }, [result]);
 
   // Init empty on SSR; hydrate from localStorage post-mount to avoid mismatch.
@@ -111,9 +118,6 @@ function TailorPage() {
     if (p.jobDescription) setJd((j) => j || p.jobDescription || "");
     setPrefilled(true);
   }, [prefillQ.data, prefilled]);
-
-
-
 
   const saveHistory = (entry: HistoryEntry) => {
     const next = [entry, ...loadHistory()].slice(0, 10);
@@ -252,7 +256,11 @@ function TailorPage() {
     return [
       editSummary,
       "",
-      ...editBullets.flatMap((b) => [`# ${[b.title, b.company].filter(Boolean).join(" — ")}`, ...b.bullets.map((x) => `• ${x}`), ""]),
+      ...editBullets.flatMap((b) => [
+        `# ${[b.title, b.company].filter(Boolean).join(" — ")}`,
+        ...b.bullets.map((x) => `• ${x}`),
+        "",
+      ]),
     ].join("\n");
   }, [result, editSummary, editBullets]);
 
@@ -293,8 +301,8 @@ function TailorPage() {
             Paste a job description. Get a tailored resume.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Reweights and rewrites your existing bullets to match the role's language.
-            No fabrication — same experience, sharper framing. Edit before you download.
+            Reweights and rewrites your existing bullets to match the role's language. No
+            fabrication — same experience, sharper framing. Edit before you download.
           </p>
         </header>
 
@@ -454,7 +462,10 @@ function TailorPage() {
                           company: b.company,
                           title: b.title,
 
-                          bullets: v.split("\n").map((s) => s.replace(/^[•\-\s]+/, "").trim()).filter(Boolean),
+                          bullets: v
+                            .split("\n")
+                            .map((s) => s.replace(/^[•\-\s]+/, "").trim())
+                            .filter(Boolean),
                         };
                         setEditBullets(next);
                       }}
@@ -532,7 +543,6 @@ function TailorPage() {
     </main>
   );
 }
-
 
 function TabBtn({
   active,

@@ -1,6 +1,13 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { callGateway, checkUsageOrReturnError, errorResult, jsonResult, requireAuth, supabaseAsUser } from "../_helpers";
+import {
+  callGateway,
+  checkUsageOrReturnError,
+  errorResult,
+  jsonResult,
+  requireAuth,
+  supabaseAsUser,
+} from "../_helpers";
 
 const SYSTEM = `You are an elite resume tailor for AI/tech roles. Never fabricate experience, employers, dates, or metrics — only reweight and reword what's already in the user's resume. Prefer active verbs, quantified outcomes. Return ONLY valid JSON, no markdown.`;
 
@@ -52,7 +59,11 @@ Return a JSON object:
 Return one "bullets" entry per experience entry in the master resume, in the same order, echoing that role's company AND title verbatim. If the same company appears more than once (for example a promotion), produce a SEPARATE entry per role with its own distinct bullets. Never merge roles that share a company.`;
 
     const text = await callGateway(prompt, SYSTEM);
-    const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
+    const cleaned = text
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/, "");
     try {
       return jsonResult(JSON.parse(cleaned));
     } catch {
