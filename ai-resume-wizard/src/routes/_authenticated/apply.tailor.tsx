@@ -452,6 +452,8 @@ function TailorPage() {
                         const next = [...editBullets];
                         next[i] = {
                           company: b.company,
+                          title: b.title,
+
                           bullets: v.split("\n").map((s) => s.replace(/^[•\-\s]+/, "").trim()).filter(Boolean),
                         };
                         setEditBullets(next);
