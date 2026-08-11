@@ -247,7 +247,7 @@ export const batchTailorResume = createServerFn({ method: "POST" })
         company: e.company, title: e.title, bullets: e.bullets,
       })),
     });
-    const companyList = (master.experience ?? []).map((e) => `"${e.company}"`).join(", ");
+    const roleList = (master.experience ?? []).map((e) => ({ company: e.company, title: e.title }));
 
     const results: BatchTailorItemResult[] = [];
     for (const item of data.items) {
@@ -256,7 +256,8 @@ export const batchTailorResume = createServerFn({ method: "POST" })
 
         const prompt = buildTailorPrompt({
           masterJson,
-          companyList,
+          roleList,
+
           company: item.company,
           role: item.role,
           jd: item.jobDescription,
