@@ -37,6 +37,8 @@ const ResumeInput = z.object({
   certifications: z.array(z.string().max(300)).max(30).default([]),
 });
 
+import { matchOverridesToRoles } from "@/lib/tailored-bullets";
+
 const Input = z.object({
   resume: ResumeInput,
   summary: z.string().max(4000).optional(),
@@ -44,6 +46,7 @@ const Input = z.object({
     .array(
       z.object({
         company: z.string().max(300),
+        title: z.string().max(300).optional(),
         bullets: z.array(z.string().max(1000)).max(30),
       }),
     )
@@ -76,19 +79,23 @@ export const Route = createFileRoute("/api/resume-docx")({
         const R = data.resume;
         const override = data.bullets ?? [];
 
-        const {
-          Document,
-          Packer,
-          Paragraph,
-          TextRun,
-          HeadingLevel,
-          AlignmentType,
-          LevelFormat,
-        } = await import("docx");
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, LevelFormat } =
+          await import("docx");
 
-        const P = (text: string, opts: { bold?: boolean; size?: number; italics?: boolean; color?: string } = {}) =>
+        const P = (
+          text: string,
+          opts: { bold?: boolean; size?: number; italics?: boolean; color?: string } = {},
+        ) =>
           new Paragraph({
-            children: [new TextRun({ text, bold: opts.bold, italics: opts.italics, size: opts.size, color: opts.color })],
+            children: [
+              new TextRun({
+                text,
+                bold: opts.bold,
+                italics: opts.italics,
+                size: opts.size,
+                color: opts.color,
+              }),
+            ],
           });
 
         const H = (text: string) =>
@@ -114,7 +121,9 @@ export const Route = createFileRoute("/api/resume-docx")({
             }),
           );
         if (R.title) children.push(P(R.title, { size: 24, color: "1E4CB8" }));
-        const contact = [R.email, R.phone, R.github, R.linkedin, R.location].filter(Boolean).join("  •  ");
+        const contact = [R.email, R.phone, R.github, R.linkedin, R.location]
+          .filter(Boolean)
+          .join("  •  ");
         if (contact) children.push(P(contact, { size: 18, color: "6A6A78" }));
         if (data.company || data.role)
           children.push(
@@ -138,21 +147,24 @@ export const Route = createFileRoute("/api/resume-docx")({
 
         if (R.experience.length) {
           children.push(H("Experience"));
-          for (const role of R.experience) {
+          const matched = matchOverridesToRoles(R.experience, override);
+          for (const [roleIdx, role] of R.experience.entries()) {
             children.push(
               new Paragraph({
                 spacing: { before: 120 },
                 children: [
                   new TextRun({ text: role.title, bold: true, size: 22 }),
-                  new TextRun({ text: role.dates ? `    ${role.dates}` : "", size: 18, color: "6A6A78" }),
+                  new TextRun({
+                    text: role.dates ? `    ${role.dates}` : "",
+                    size: 18,
+                    color: "6A6A78",
+                  }),
                 ],
               }),
             );
             const sub = [role.company, role.location].filter(Boolean).join(" — ");
             if (sub) children.push(P(sub, { size: 20, italics: true, color: "1E4CB8" }));
-            const use =
-              override.find((b) => b.company.toLowerCase() === role.company.toLowerCase())?.bullets ??
-              role.bullets;
+            const use = matched[roleIdx] ?? role.bullets;
             for (const b of use) children.push(bullet(b));
           }
         }
@@ -178,7 +190,8 @@ export const Route = createFileRoute("/api/resume-docx")({
         if (R.education.degree || R.education.school) {
           children.push(H("Education"));
           if (R.education.degree) children.push(P(R.education.degree, { size: 20, bold: true }));
-          if (R.education.school) children.push(P(R.education.school, { size: 19, color: "6A6A78" }));
+          if (R.education.school)
+            children.push(P(R.education.school, { size: 19, color: "6A6A78" }));
         }
 
         if (R.certifications.length) {

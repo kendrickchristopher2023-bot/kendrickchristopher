@@ -23,10 +23,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/apply/go")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: "Apply — one screen" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Apply — one screen" }, { name: "robots", content: "noindex,nofollow" }],
     links: [
       {
         rel: "stylesheet",
@@ -37,12 +34,14 @@ export const Route = createFileRoute("/_authenticated/apply/go")({
   component: ApplyGoPage,
 });
 
-function fmtSalary(s: {
-  min: number | null;
-  max: number | null;
-  currency: string | null;
-  period: string | null;
-} | null) {
+function fmtSalary(
+  s: {
+    min: number | null;
+    max: number | null;
+    currency: string | null;
+    period: string | null;
+  } | null,
+) {
   if (!s) return null;
   if (!s.min && !s.max) return null;
   const cur = s.currency || "USD";
@@ -79,9 +78,7 @@ function ApplyGoPage() {
 
   // Tailor state
   const [jdOverride, setJdOverride] = useState<string>("");
-  const effectiveJd = jdOverride.trim().length >= 30
-    ? jdOverride
-    : (ctx?.jobDescription ?? "");
+  const effectiveJd = jdOverride.trim().length >= 30 ? jdOverride : (ctx?.jobDescription ?? "");
   const [jdExpanded, setJdExpanded] = useState(false);
   const [tailorLoading, setTailorLoading] = useState(false);
   const [tailorErr, setTailorErr] = useState<string | null>(null);
@@ -92,12 +89,20 @@ function ApplyGoPage() {
   // Editable overlays; reset when a new AI result arrives.
   const [editSummary, setEditSummary] = useState("");
   const [editCover, setEditCover] = useState("");
-  const [editBullets, setEditBullets] = useState<{ company: string; bullets: string[] }[]>([]);
+  const [editBullets, setEditBullets] = useState<
+    { company: string; title?: string; bullets: string[] }[]
+  >([]);
   useEffect(() => {
     if (!result) return;
     setEditSummary(result.summary ?? "");
     setEditCover(result.coverLetter ?? "");
-    setEditBullets((result.bullets ?? []).map((b) => ({ company: b.company, bullets: [...b.bullets] })));
+    setEditBullets(
+      (result.bullets ?? []).map((b) => ({
+        company: b.company,
+        title: b.title,
+        bullets: [...b.bullets],
+      })),
+    );
   }, [result]);
 
   // Downloads
@@ -111,7 +116,9 @@ function ApplyGoPage() {
 
   // Mark applied
   const [applyStage, setApplyStage] = useState<"applied">("applied");
-  const [applySource, setApplySource] = useState<"cold" | "referral" | "recruiter" | "event" | "other">("cold");
+  const [applySource, setApplySource] = useState<
+    "cold" | "referral" | "recruiter" | "event" | "other"
+  >("cold");
 
   // Reset per-match state when switching matches
   useEffect(() => {
@@ -374,15 +381,14 @@ function ApplyGoPage() {
                 <div className="mt-3 rounded-lg border border-border bg-card p-4 text-sm leading-relaxed text-foreground">
                   <div
                     className={
-                      jdExpanded
-                        ? "whitespace-pre-wrap"
-                        : "whitespace-pre-wrap line-clamp-4"
+                      jdExpanded ? "whitespace-pre-wrap" : "whitespace-pre-wrap line-clamp-4"
                     }
                   >
                     {ctx.jobDescription}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Source: {ctx.jdSource === "job_listing" ? "live posting" : "your prior tailor session"}
+                    Source:{" "}
+                    {ctx.jdSource === "job_listing" ? "live posting" : "your prior tailor session"}
                   </p>
                 </div>
               ) : (
@@ -432,7 +438,8 @@ function ApplyGoPage() {
                         : "Prepare resume + cover letter"}
               </button>
               <p className="text-xs text-muted-foreground">
-                One AI call, grounded in your saved resume — no fabrication. Edit anything below before you download.
+                One AI call, grounded in your saved resume — no fabrication. Edit anything below
+                before you download.
               </p>
               {tailorErr && (
                 <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -464,7 +471,11 @@ function ApplyGoPage() {
                             disabled={!!dl}
                             className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                           >
-                            {dl === k ? "Building…" : k === "resume-pdf" ? "Resume PDF" : "Resume DOCX"}
+                            {dl === k
+                              ? "Building…"
+                              : k === "resume-pdf"
+                                ? "Resume PDF"
+                                : "Resume DOCX"}
                           </button>
                         ))}
                       </>
@@ -479,7 +490,11 @@ function ApplyGoPage() {
                             disabled={!!dl}
                             className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                           >
-                            {dl === k ? "Building…" : k === "cl-pdf" ? "Cover letter PDF" : "Cover letter DOCX"}
+                            {dl === k
+                              ? "Building…"
+                              : k === "cl-pdf"
+                                ? "Cover letter PDF"
+                                : "Cover letter DOCX"}
                           </button>
                         ))}
                       </>
@@ -513,16 +528,14 @@ function ApplyGoPage() {
               </section>
             )}
 
-
-
             {/* Referral DM */}
             <section className="mt-10 rounded-lg border border-border bg-card p-5">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Referral DM (optional)
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                A warm intro is the one reliable way to reach a human instead of an algorithm.
-                Who do you know — or can you find on LinkedIn — at {company}?
+                A warm intro is the one reliable way to reach a human instead of an algorithm. Who
+                do you know — or can you find on LinkedIn — at {company}?
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <input
@@ -680,8 +693,8 @@ function GoResultsEditor({
   setEditSummary: (v: string) => void;
   editCover: string;
   setEditCover: (v: string) => void;
-  editBullets: { company: string; bullets: string[] }[];
-  setEditBullets: (v: { company: string; bullets: string[] }[]) => void;
+  editBullets: { company: string; title?: string; bullets: string[] }[];
+  setEditBullets: (v: { company: string; title?: string; bullets: string[] }[]) => void;
 }) {
   const wantResume = mode !== "cover";
   const wantCover = mode !== "resume";
@@ -753,14 +766,15 @@ function GoResultsEditor({
             const origText = result.bullets[i] ? result.bullets[i].bullets.join("\n") : "";
             return (
               <EditableBlock
-                key={b.company + i}
-                label={`${b.company} — tailored bullets (one per line)`}
+                key={`${b.company}|${b.title ?? ""}|${i}`}
+                label={`${[b.title, b.company].filter(Boolean).join(" — ")} — tailored bullets (one per line)`}
                 original={origText}
                 value={b.bullets.join("\n")}
                 onChange={(v) => {
                   const next = [...editBullets];
                   next[i] = {
                     company: b.company,
+                    title: b.title,
                     bullets: v
                       .split("\n")
                       .map((s) => s.replace(/^[•\-\s]+/, "").trim())
@@ -787,4 +801,3 @@ function GoResultsEditor({
     </div>
   );
 }
-
