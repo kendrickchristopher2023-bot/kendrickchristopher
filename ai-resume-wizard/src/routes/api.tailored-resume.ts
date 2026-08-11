@@ -39,6 +39,8 @@ const ResumeInput = z.object({
   certifications: z.array(z.string().max(300)).max(30).default([]),
 });
 
+import { matchOverridesToRoles } from "@/lib/tailored-bullets";
+
 const PdfInput = z.object({
   resume: ResumeInput,
   summary: z.string().max(4000).optional(),
@@ -46,6 +48,7 @@ const PdfInput = z.object({
     .array(
       z.object({
         company: z.string().max(300),
+        title: z.string().max(300).optional(),
         bullets: z.array(z.string().max(1000)).max(30),
       }),
     )
@@ -235,11 +238,9 @@ export const Route = createFileRoute("/api/tailored-resume")({
         // Experience
         if (R.experience.length) {
           sectionHeader("Experience");
-          for (const role of R.experience) {
-            const overridden = overrideBullets.find(
-              (b) => b.company.toLowerCase() === role.company.toLowerCase(),
-            );
-            const bullets = overridden?.bullets?.length ? overridden.bullets : role.bullets;
+          const matched = matchOverridesToRoles(R.experience, overrideBullets);
+          for (const [roleIdx, role] of R.experience.entries()) {
+            const bullets = matched[roleIdx] ?? role.bullets;
             needSpace(30);
             page.drawText(sanitize(role.title), { x: MARGIN, y: y - 11, size: 11, font: bold, color: TEXT_COLOR });
             const dateW = helv.widthOfTextAtSize(sanitize(role.dates), 9);

@@ -37,6 +37,8 @@ const ResumeInput = z.object({
   certifications: z.array(z.string().max(300)).max(30).default([]),
 });
 
+import { matchOverridesToRoles } from "@/lib/tailored-bullets";
+
 const Input = z.object({
   resume: ResumeInput,
   summary: z.string().max(4000).optional(),
@@ -44,6 +46,7 @@ const Input = z.object({
     .array(
       z.object({
         company: z.string().max(300),
+        title: z.string().max(300).optional(),
         bullets: z.array(z.string().max(1000)).max(30),
       }),
     )
@@ -138,7 +141,8 @@ export const Route = createFileRoute("/api/resume-docx")({
 
         if (R.experience.length) {
           children.push(H("Experience"));
-          for (const role of R.experience) {
+          const matched = matchOverridesToRoles(R.experience, override);
+          for (const [roleIdx, role] of R.experience.entries()) {
             children.push(
               new Paragraph({
                 spacing: { before: 120 },
@@ -150,9 +154,7 @@ export const Route = createFileRoute("/api/resume-docx")({
             );
             const sub = [role.company, role.location].filter(Boolean).join(" — ");
             if (sub) children.push(P(sub, { size: 20, italics: true, color: "1E4CB8" }));
-            const use =
-              override.find((b) => b.company.toLowerCase() === role.company.toLowerCase())?.bullets ??
-              role.bullets;
+            const use = matched[roleIdx] ?? role.bullets;
             for (const b of use) children.push(bullet(b));
           }
         }
