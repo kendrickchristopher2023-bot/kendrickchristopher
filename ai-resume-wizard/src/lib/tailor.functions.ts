@@ -292,6 +292,9 @@ export const batchTailorResume = createServerFn({ method: "POST" })
           if (!m) throw new Error("AI returned invalid JSON");
           parsed = JSON.parse(m[0]);
         }
+        parsed.bullets = withRoleTitles(parsed.bullets ?? [], roleList);
+
+
 
         const { data: inserted } = await context.supabase
           .from("tailor_sessions")
