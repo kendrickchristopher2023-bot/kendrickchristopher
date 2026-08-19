@@ -1,5 +1,6 @@
 export const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/in/christopherbkendrick/",
+  github: "https://github.com/ckendrick24/ckendrick24",
 };
 
 export const EMAIL = "kendrickchristopher@hotmail.com";
