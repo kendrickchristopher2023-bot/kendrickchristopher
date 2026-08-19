@@ -55,6 +55,15 @@ export function Resume() {
                 {RESUME_CONTACT.email} <span className="text-border">|</span>{" "}
                 {RESUME_CONTACT.phone} <span className="text-border">|</span>{" "}
                 {RESUME_CONTACT.linkedin} <span className="text-border">|</span>{" "}
+                <a
+                  href="https://christopherbkendrick.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gradient font-medium hover:opacity-80"
+                >
+                  {RESUME_CONTACT.website}
+                </a>{" "}
+                <span className="text-border">|</span>{" "}
                 {RESUME_CONTACT.location}
               </p>
             </header>
