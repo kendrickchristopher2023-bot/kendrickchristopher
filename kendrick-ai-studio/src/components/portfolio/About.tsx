@@ -14,6 +14,8 @@ export function About() {
               <img
                 src="/headshot.jpg"
                 alt="Christopher Kendrick"
+                width={640}
+                height={942}
                 loading="lazy"
                 className="relative aspect-[4/5] w-full rounded-2xl border border-border object-cover object-top"
               />
