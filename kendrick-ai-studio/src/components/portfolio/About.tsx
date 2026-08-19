@@ -15,7 +15,7 @@ export function About() {
                 src="/headshot.jpg"
                 alt="Christopher Kendrick"
                 loading="lazy"
-                className="relative aspect-[4/5] w-full rounded-2xl border border-border object-cover object-top shadow-card"
+                className="relative aspect-[4/5] w-full rounded-2xl border border-border object-cover object-top"
               />
             </div>
             <h2 className="text-3xl font-bold sm:text-4xl">
