@@ -173,14 +173,67 @@ function RewritePage() {
                   ? "Founder plan — unlimited rewrites. Nothing is saved until you review the result and click Save."
                   : `This uses your one included rewrite for the ${ent.data.plan} plan. Nothing is saved until you review the result and click Save.`}
               </p>
+              <div className="mt-6">
+                <label
+                  htmlFor="rewrite-notes"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Anything you want added or changed? (optional)
+                </label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Paste raw notes, rough bullet points, a project list, or plain instructions
+                  (&ldquo;emphasize enablement&rdquo;). No formatting needed — it gets rewritten
+                  into resume-ready wording. Nothing is invented: only what you write here is used.
+                </p>
+                <textarea
+                  id="rewrite-notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value.slice(0, 8000))}
+                  rows={10}
+                  placeholder={
+                    "e.g.\nAI Projects Portfolio\n- Mews Call Companion (live) — pulls Gong transcripts, drafts pre go-live follow-up emails\n- Daily Onboarding Health Check — weekday Salesforce risk digest to Slack\n- Handover Hub — in progress, paused"
+                  }
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed"
+                />
+                <p className="mt-1 text-right text-xs text-muted-foreground">
+                  {notes.length}/8000
+                </p>
+              </div>
+
+              <fieldset className="mt-4">
+                <legend className="text-sm font-medium text-foreground">Where should it go?</legend>
+                <div className="mt-2 space-y-2 text-sm">
+                  {(
+                    [
+                      ["auto", "Let AI decide"],
+                      ["projects", "Add as a new Projects / Portfolio section"],
+                      ["experience", "Fold into my current roles' bullets"],
+                      ["instructions_only", "Instructions only — don't add new content"],
+                    ] as const
+                  ).map(([v, label]) => (
+                    <label key={v} className="flex items-start gap-2">
+                      <input
+                        type="radio"
+                        name="placement"
+                        checked={placement === v}
+                        onChange={() => setPlacement(v)}
+                        className="mt-1"
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
               <button
                 type="button"
                 onClick={onGenerate}
                 disabled={generating}
-                className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
                 {generating ? "Rewriting… (30–60s)" : "Rewrite my resume"}
               </button>
+
             </div>
             {err && (
               <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
