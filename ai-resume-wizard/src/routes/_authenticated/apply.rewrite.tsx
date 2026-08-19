@@ -66,7 +66,6 @@ function RewritePage() {
     }
   };
 
-
   const onSave = async () => {
     if (!draft) return;
     setSaving(true);
@@ -124,22 +123,20 @@ function RewritePage() {
             A comprehensive rewrite of your whole resume.
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Stronger verbs, tighter phrasing, better-quantified impact — grounded strictly in
-            what's already true. Unlike the per-job Tailor, this rewrites the whole document
-            once, then you review and save.
+            Stronger verbs, tighter phrasing, better-quantified impact — grounded strictly in what's
+            already true. Unlike the per-job Tailor, this rewrites the whole document once, then you
+            review and save.
           </p>
         </header>
 
-        {ent.isLoading && (
-          <p className="mt-8 text-sm text-muted-foreground">Loading…</p>
-        )}
+        {ent.isLoading && <p className="mt-8 text-sm text-muted-foreground">Loading…</p>}
 
         {ent.data && ent.data.reason === "free_plan" && (
           <section className="mt-8 rounded-lg border border-border bg-card p-6">
             <h2 className="text-lg font-semibold">This is a Pro feature</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Resume rewrite is included with the Pro plan. Your current plan is <b>Free</b>,
-              so this tool isn't available.
+              Resume rewrite is included with the Pro plan. Your current plan is <b>Free</b>, so
+              this tool isn't available.
             </p>
           </section>
         )}
@@ -174,10 +171,7 @@ function RewritePage() {
                   : `This uses your one included rewrite for the ${ent.data.plan} plan. Nothing is saved until you review the result and click Save.`}
               </p>
               <div className="mt-6">
-                <label
-                  htmlFor="rewrite-notes"
-                  className="text-sm font-medium text-foreground"
-                >
+                <label htmlFor="rewrite-notes" className="text-sm font-medium text-foreground">
                   Anything you want added or changed? (optional)
                 </label>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -195,9 +189,7 @@ function RewritePage() {
                   }
                   className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed"
                 />
-                <p className="mt-1 text-right text-xs text-muted-foreground">
-                  {notes.length}/8000
-                </p>
+                <p className="mt-1 text-right text-xs text-muted-foreground">{notes.length}/8000</p>
               </div>
 
               <fieldset className="mt-4">
@@ -233,7 +225,6 @@ function RewritePage() {
               >
                 {generating ? "Rewriting… (30–60s)" : "Rewrite my resume"}
               </button>
-
             </div>
             {err && (
               <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -282,7 +273,10 @@ function RewritePage() {
                 </p>
                 <div className="mt-3 space-y-4">
                   {(draft.projects ?? []).map((p, i) => (
-                    <div key={i} className="space-y-2 border-t border-border pt-3 first:border-0 first:pt-0">
+                    <div
+                      key={i}
+                      className="space-y-2 border-t border-border pt-3 first:border-0 first:pt-0"
+                    >
                       <EditField
                         label={`Project ${i + 1} title`}
                         value={p.title}
@@ -322,8 +316,6 @@ function RewritePage() {
                 </div>
               </div>
             )}
-
-
 
             <div className="rounded-lg border border-border bg-card p-6">
               <h2 className="text-lg font-semibold">Save</h2>

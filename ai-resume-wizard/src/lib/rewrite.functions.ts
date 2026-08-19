@@ -74,7 +74,6 @@ export const generateResumeRewrite = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
 
-
     const ent = await loadEntitlement(context.supabase, context.userId);
     if (!ent.allowed) {
       if (ent.reason === "free_plan") {
@@ -125,7 +124,6 @@ Rules recap:
 - Keep the same number of bullets per experience entry${notes ? " unless the user additions below require adding one or two" : ""}.
 - Return ONLY the JSON object.${additions}`;
 
-
     const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
       system: SYSTEM,
@@ -155,7 +153,6 @@ Rules recap:
         .update({ free_resume_rewrite_used: true })
         .eq("id", context.userId);
     }
-
 
     return { resume: parsed, sourceId: row.id };
   });
