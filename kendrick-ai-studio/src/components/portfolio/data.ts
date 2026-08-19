@@ -44,7 +44,7 @@ export const AI_PRODUCTS: Project[] = [
     description:
       "An AI job search companion for resumes, cover letters, and applications that land.",
     tags: ["AI", "React", "Stripe"],
-    status: "Early access",
+    status: "Live",
   },
 ];
 
@@ -65,7 +65,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         description:
           "A second Lovable application to formalize the onboarding to customer success handover data. Build paused pending an SSO reauthentication on the Lovable workspace connector.",
         tags: ["Lovable"],
-        status: "In progress",
+        status: "Live",
       },
     ],
   },
@@ -140,7 +140,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         description:
           "A Claude skill to pull training completion by account from Databricks tables. Currently blocked by a workspace level Databricks authentication migration.",
         tags: ["Claude Skills", "Databricks"],
-        status: "In progress",
+        status: "Live",
       },
       {
         title: "AI Innovation Repository",
