@@ -1,4 +1,3 @@
-import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AI_AT_WORK, AI_PRODUCTS, type Project } from "./data";
 import { Reveal } from "./Reveal";
