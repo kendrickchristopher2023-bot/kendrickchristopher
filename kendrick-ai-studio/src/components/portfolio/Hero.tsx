@@ -6,9 +6,9 @@ export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="aurora absolute -top-40 left-1/2 size-[38rem] -translate-x-1/2 rounded-full bg-primary/25 blur-[120px]" />
-        <div className="aurora absolute -right-24 top-24 size-[26rem] rounded-full bg-accent/20 blur-[110px] [animation-delay:-6s]" />
-        <div className="aurora absolute -left-24 top-56 size-[24rem] rounded-full bg-primary-glow/15 blur-[110px] [animation-delay:-10s]" />
+        <div className="aurora absolute -top-40 left-1/2 size-[42rem] -translate-x-1/2 rounded-full bg-primary/45 blur-[130px]" />
+        <div className="aurora absolute -right-20 top-16 size-[30rem] rounded-full bg-accent/30 blur-[120px] [animation-delay:-6s]" />
+        <div className="aurora absolute -left-24 top-64 size-[26rem] rounded-full bg-primary-glow/25 blur-[120px] [animation-delay:-10s]" />
       </div>
 
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
