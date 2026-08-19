@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { submitContact } from "@/lib/contact.functions";
 import { EMAIL } from "./data";
 import { Reveal } from "./Reveal";
 
@@ -23,6 +24,8 @@ type Errors = Partial<Record<"name" | "email" | "message" | "form", string>>;
 
 export function Contact() {
   const [values, setValues] = useState({ name: "", email: "", message: "" });
+  const [honeypot, setHoneypot] = useState("");
+  const send = useServerFn(submitContact);
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
 
@@ -45,9 +48,19 @@ export function Contact() {
     }
 
     setStatus("sending");
-    const { error } = await supabase.from("contact_submissions").insert(parsed.data);
-
-    if (error) {
+    try {
+      const result = await send({ data: { ...parsed.data, website: honeypot } });
+      if (!result.ok) {
+        setStatus("idle");
+        setErrors({
+          form:
+            result.reason === "rate_limited"
+              ? "Too many messages sent just now. Please wait a minute and try again."
+              : "Something went wrong sending your message. Please try again.",
+        });
+        return;
+      }
+    } catch {
       setStatus("idle");
       setErrors({ form: "Something went wrong sending your message. Please try again." });
       return;
@@ -99,6 +112,19 @@ export function Contact() {
                 </div>
               ) : (
                 <form onSubmit={onSubmit} noValidate className="space-y-5">
+                  <div className="sr-only" aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      name="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
                     <Input
