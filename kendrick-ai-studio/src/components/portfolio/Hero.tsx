@@ -50,10 +50,10 @@ export function Hero() {
 
         <Reveal delay={320} className="mt-16 grid grid-cols-2 gap-4 sm:max-w-2xl sm:grid-cols-4">
           {[
-            { value: "3", label: "Live products" },
-            { value: "18+", label: "Projects automated" },
-            { value: "Daily", label: "Agents in production" },
-            { value: "Hours", label: "Manual work replaced" },
+            { value: "15+", label: "AI builds shipped" },
+            { value: "4", label: "Live products" },
+            { value: "7+", label: "Automations in production" },
+            { value: "12+", label: "Years in tech" },
           ].map((stat) => (
             <div key={stat.label} className="surface-card rounded-xl px-4 py-4">
               <div className="font-display text-2xl font-bold text-gradient">{stat.value}</div>

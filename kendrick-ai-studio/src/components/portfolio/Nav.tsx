@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Linkedin, Menu, X } from "lucide-react";
+import { Github, Linkedin, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, SOCIAL_LINKS } from "./data";
 
@@ -85,6 +85,15 @@ function SocialIcons() {
         className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       >
         <Linkedin className="size-4" />
+      </a>
+      <a
+        href={SOCIAL_LINKS.github}
+        aria-label="GitHub profile"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      >
+        <Github className="size-4" />
       </a>
     </div>
   );

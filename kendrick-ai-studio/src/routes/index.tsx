@@ -13,6 +13,10 @@ import { Skills } from "@/components/portfolio/Skills";
 const TITLE = "Christopher Kendrick | AI Builder";
 const DESCRIPTION =
   "Christopher Kendrick builds and ships AI powered products end to end, from customer facing SaaS to scheduled AI agents that run every day.";
+const SOCIAL_DESCRIPTION =
+  "Full stack AI builder shipping live products with Lovable, the Claude API, and Claude Code.";
+const SITE_URL = "https://christopher-kendrick.lovable.app";
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -21,12 +25,19 @@ export const Route = createFileRoute("/")({
       { title: TITLE },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
-      { property: "og:description", content: DESCRIPTION },
+      { property: "og:description", content: SOCIAL_DESCRIPTION },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Christopher Kendrick, I build AI products that ship." },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: SOCIAL_DESCRIPTION },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: SITE_URL }],
     scripts: [
       {
         type: "application/ld+json",

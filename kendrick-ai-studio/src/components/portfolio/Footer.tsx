@@ -1,5 +1,5 @@
-import { Linkedin } from "lucide-react";
-import { SOCIAL_LINKS } from "./data";
+import { Github, Linkedin, Mail } from "lucide-react";
+import { EMAIL, SOCIAL_LINKS } from "./data";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -19,6 +19,23 @@ export function Footer() {
             className="inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
           >
             <Linkedin className="size-4" />
+          </a>
+          <a
+            href={SOCIAL_LINKS.github}
+            aria-label="GitHub profile"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            <Github className="size-4" />
+          </a>
+          <a
+            href={`mailto:${EMAIL}`}
+            aria-label={`Email ${EMAIL}`}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+          >
+            <Mail className="size-4" />
+            <span className="hidden sm:inline">{EMAIL}</span>
           </a>
         </div>
         <p className="text-sm text-muted-foreground">© {year} Christopher Kendrick</p>
