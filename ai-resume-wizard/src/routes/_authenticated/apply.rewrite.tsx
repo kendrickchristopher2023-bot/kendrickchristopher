@@ -46,13 +46,17 @@ function RewritePage() {
   const [draft, setDraft] = useState<MasterResume | null>(null);
   const [saveMode, setSaveMode] = useState<"overwrite" | "new">("new");
   const [newName, setNewName] = useState("Rewritten resume");
+  const [notes, setNotes] = useState("");
+  const [placement, setPlacement] = useState<
+    "auto" | "projects" | "experience" | "instructions_only"
+  >("auto");
 
   const onGenerate = async () => {
     setErr(null);
     setDraft(null);
     setGenerating(true);
     try {
-      const r = await runFn();
+      const r = await runFn({ data: { notes: notes.trim() || undefined, placement } });
       setDraft(r.resume);
       qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
     } catch (e) {
@@ -61,6 +65,7 @@ function RewritePage() {
       setGenerating(false);
     }
   };
+
 
   const onSave = async () => {
     if (!draft) return;
