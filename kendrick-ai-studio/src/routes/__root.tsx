@@ -93,11 +93,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://christopherbkendrick.app" },
-      { property: "og:image", content: "https://christopher-kendrick.lovable.app/og-image.jpg" },
+      { property: "og:image", content: "https://christopherbkendrick.app/og-image.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Christopher Kendrick, AI Builder" },
-      { name: "twitter:image", content: "https://christopher-kendrick.lovable.app/og-image.jpg" },
+      { name: "twitter:image", content: "https://christopherbkendrick.app/og-image.jpg" },
       { name: "twitter:title", content: "Christopher Kendrick | AI Builder" },
       {
         name: "twitter:description",

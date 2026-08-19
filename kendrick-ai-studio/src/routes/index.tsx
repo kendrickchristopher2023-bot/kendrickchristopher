@@ -17,7 +17,7 @@ const DESCRIPTION =
 const SOCIAL_DESCRIPTION =
   "Full stack AI builder shipping live products with Lovable, the Claude API, and Claude Code.";
 const SITE_URL = "https://christopherbkendrick.app";
-const OG_IMAGE = "https://christopher-kendrick.lovable.app/og-image.jpg";
+const OG_IMAGE = "https://christopherbkendrick.app/og-image.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
