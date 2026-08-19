@@ -1,6 +1,32 @@
 import { cn } from "@/lib/utils";
-import { AI_AT_WORK, AI_PRODUCTS, type Project } from "./data";
+import { AI_AT_WORK_GROUPS, AI_PRODUCTS, type Project, type ProjectStatus } from "./data";
 import { Reveal } from "./Reveal";
+
+const STATUS_STYLES: Record<ProjectStatus, string> = {
+  Live: "border-status-live/40 bg-status-live/10 text-status-live",
+  "In progress": "border-status-progress/40 bg-status-progress/10 text-status-progress",
+  Delivered: "border-status-delivered/40 bg-status-delivered/10 text-status-delivered",
+};
+
+const STATUS_DOTS: Record<ProjectStatus, string> = {
+  Live: "bg-status-live",
+  "In progress": "bg-status-progress",
+  Delivered: "bg-status-delivered",
+};
+
+function StatusBadge({ status }: { status: ProjectStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium",
+        STATUS_STYLES[status],
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", STATUS_DOTS[status])} />
+      {status}
+    </span>
+  );
+}
 
 function ProjectCard({ project, delay }: { project: Project; delay: number }) {
   return (
@@ -16,7 +42,8 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
             {project.title}
           </h4>
           <div className="flex shrink-0 items-center gap-2">
-            {project.live ? (
+            {project.status ? <StatusBadge status={project.status} /> : null}
+            {!project.status && project.live ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent">
                 <span className="size-1.5 rounded-full bg-accent" />
                 Live
@@ -83,11 +110,20 @@ export function Projects() {
             </span>
             <span className="hidden h-px flex-1 bg-border sm:block" />
           </Reveal>
-          <ul className="mt-6 grid gap-5 md:grid-cols-2">
-            {AI_AT_WORK.map((project, i) => (
-              <ProjectCard key={project.title} project={project} delay={i * 80} />
-            ))}
-          </ul>
+          {AI_AT_WORK_GROUPS.map((group) => (
+            <div key={group.title} className="mt-8">
+              <Reveal>
+                <h4 className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                  {group.title}
+                </h4>
+              </Reveal>
+              <ul className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {group.projects.map((project, i) => (
+                  <ProjectCard key={project.title} project={project} delay={i * 60} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
