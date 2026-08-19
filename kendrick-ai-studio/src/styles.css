@@ -96,6 +96,9 @@
   --sidebar-accent-foreground: oklch(0.97 0.005 275);
   --sidebar-border: oklch(0.99 0 0 / 10%);
   --sidebar-ring: oklch(0.66 0.2 277);
+  --status-live: oklch(0.78 0.16 160);
+  --status-progress: oklch(0.82 0.15 82);
+  --status-delivered: oklch(0.74 0.15 275);
 
   --gradient-brand: linear-gradient(120deg, var(--primary) 0%, oklch(0.7 0.18 300) 45%, var(--primary-glow) 100%);
   --gradient-surface: linear-gradient(160deg, oklch(0.99 0 0 / 7%) 0%, oklch(0.99 0 0 / 1.5%) 100%);
@@ -107,6 +110,9 @@
 
 @theme inline {
   --color-primary-glow: var(--primary-glow);
+  --color-status-live: var(--status-live);
+  --color-status-progress: var(--status-progress);
+  --color-status-delivered: var(--status-delivered);
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
 }
