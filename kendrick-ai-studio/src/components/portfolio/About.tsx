@@ -12,13 +12,23 @@ export function About() {
           </Reveal>
           <Reveal delay={100} className="space-y-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
             <p>
-              Christopher designs and ships AI powered applications and automations end to end. He
-              works across the full stack, from customer facing products with authentication,
-              databases, and payments, to scheduled AI agents that pull from Salesforce,
-              Databricks, and Slack to replace hours of manual work.
+              I am a Customer Onboarding Manager at Mews and an AI builder. For more than a decade I
+              have led technical onboarding, training, and software implementation across the
+              hospitality technology space, helping teams adopt complex Property Management Systems
+              and turning messy, manual workflows into processes people can actually follow.
             </p>
             <p>
-              He builds fast with modern AI tooling and cares about real, measurable impact.
+              Over the past year I have put that same focus into building. I design and ship AI
+              powered applications and automations end to end, from a Claude powered tool that
+              drafts client follow up emails to scheduled agents that pull live data from Salesforce
+              and Databricks and deliver risk digests and dashboards to leadership every morning.
+              Outside of work I ship customer facing products too, including live platforms with
+              authentication, databases, and payments.
+            </p>
+            <p>
+              I move quickly with modern AI tooling like Claude Code, the Claude API, and Lovable, I
+              document what I build so others can use it, and I measure success by real outcomes:
+              faster onboarding, cleaner data, and hours of manual work removed.
             </p>
           </Reveal>
         </div>
