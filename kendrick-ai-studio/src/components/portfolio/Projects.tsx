@@ -1,14 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AI_AT_WORK, AI_PRODUCTS, type Project } from "./data";
 import { Reveal } from "./Reveal";
 
 function ProjectCard({ project, delay }: { project: Project; delay: number }) {
-  const Wrapper = project.href ? "a" : "div";
   return (
     <Reveal as="li" delay={delay} className="h-full">
-      <Wrapper
-        {...(project.href ? { href: project.href, target: "_blank", rel: "noreferrer" } : {})}
+      <div
         className={cn(
           "group surface-card flex h-full flex-col rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50",
           project.flagship && "ring-1 ring-primary/40",
@@ -24,9 +21,6 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
                 <span className="size-1.5 rounded-full bg-accent" />
                 Live
               </span>
-            ) : null}
-            {project.href ? (
-              <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
             ) : null}
           </div>
         </div>
@@ -51,7 +45,7 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
             </li>
           ))}
         </ul>
-      </Wrapper>
+      </div>
     </Reveal>
   );
 }

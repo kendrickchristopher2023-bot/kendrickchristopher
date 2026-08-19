@@ -1,7 +1,5 @@
 export const SOCIAL_LINKS = {
-  // Placeholders: replace with real profile URLs.
-  linkedin: "#",
-  github: "#",
+  linkedin: "https://www.linkedin.com/in/christopherbkendrick/",
 };
 
 export const EMAIL = "kendrickchristopher@hotmail.com";
@@ -46,7 +44,6 @@ export const AI_AT_WORK: Project[] = [
       "A live Lovable application that pulls Gong call transcripts and uses the Claude API to draft personalized pre go-live client follow up emails, cutting manual drafting across a portfolio of 18+ onboarding projects. Cataloged as an approved asset in the internal AI Innovation Repository.",
     tags: ["Lovable", "Claude API", "Gong"],
     live: true,
-    href: "https://mews-call-companion.lovable.app",
     flagship: true,
   },
   {
@@ -92,5 +89,7 @@ export const NAV_LINKS = [
   { id: "about", label: "About" },
   { id: "projects", label: "Projects" },
   { id: "skills", label: "Skills" },
+  { id: "resume", label: "Resume" },
+  { id: "cover-letter", label: "Cover Letter" },
   { id: "contact", label: "Contact" },
 ];
