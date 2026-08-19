@@ -275,6 +275,56 @@ function RewritePage() {
               </div>
             ))}
 
+            {(draft.projects ?? []).length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Projects
+                </p>
+                <div className="mt-3 space-y-4">
+                  {(draft.projects ?? []).map((p, i) => (
+                    <div key={i} className="space-y-2 border-t border-border pt-3 first:border-0 first:pt-0">
+                      <EditField
+                        label={`Project ${i + 1} title`}
+                        value={p.title}
+                        onChange={(v) => patchField(["projects", i, "title"], v)}
+                      />
+                      <EditField
+                        label="Stack / tools"
+                        value={p.stack}
+                        onChange={(v) => patchField(["projects", i, "stack"], v)}
+                      />
+                      <EditField
+                        label="Outcome"
+                        value={p.outcome}
+                        onChange={(v) => patchField(["projects", i, "outcome"], v)}
+                        multiline
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(draft.competencies ?? []).length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Core competencies
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {(draft.competencies ?? []).map((c, i) => (
+                    <EditField
+                      key={i}
+                      label={`Item ${i + 1}`}
+                      value={c}
+                      onChange={(v) => patchField(["competencies", i], v)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+
+
             <div className="rounded-lg border border-border bg-card p-6">
               <h2 className="text-lg font-semibold">Save</h2>
               <div className="mt-4 space-y-3 text-sm">
