@@ -126,14 +126,14 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         description:
           "Consolidated the prompts and tools from an eight station internal AI training program into one shareable HTML dashboard with search, one click copy, and a team contribution log. Built as the capstone for an internal AI training program.",
         tags: ["HTML", "Prompt Engineering"],
-        status: "Delivered",
+        status: "Live",
       },
       {
         title: "Flexkeeping Configuration Guide",
         description:
           "Converted a gated learning path into an eighteen page plain English Word and PDF guide covering the full setup workflow, a worked example, a common issues table, and a glossary, written for coworkers and clients with no hospitality or software background.",
         tags: ["Technical Writing", "Documentation"],
-        status: "Delivered",
+        status: "Live",
       },
       {
         title: "Training Completion Check Skill",
@@ -147,7 +147,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         description:
           "Documented and catalogued team built AI assets, including the Call Companion and onboarding dashboards, into a shared Confluence repository for cross team visibility and reuse.",
         tags: ["Documentation", "Knowledge Sharing"],
-        status: "Delivered",
+        status: "Live",
       },
     ],
   },
