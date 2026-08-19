@@ -4,6 +4,7 @@ export const RESUME_CONTACT = {
   email: "kendrickchristopher@hotmail.com",
   phone: "(404) 358-0626",
   linkedin: "linkedin.com/in/christopherbkendrick",
+  website: "christopherbkendrick.app",
   location: "Concord, NC",
 };
 
