@@ -1,4 +1,4 @@
-import { Github, Linkedin } from "lucide-react";
+import { Linkedin } from "lucide-react";
 import { SOCIAL_LINKS } from "./data";
 
 export function Footer() {
@@ -15,19 +15,10 @@ export function Footer() {
             href={SOCIAL_LINKS.linkedin}
             aria-label="LinkedIn profile"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
           >
             <Linkedin className="size-4" />
-          </a>
-          <a
-            href={SOCIAL_LINKS.github}
-            aria-label="GitHub profile"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-          >
-            <Github className="size-4" />
           </a>
         </div>
         <p className="text-sm text-muted-foreground">© {year} Christopher Kendrick</p>
