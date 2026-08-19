@@ -6,12 +6,14 @@ const STATUS_STYLES: Record<ProjectStatus, string> = {
   Live: "border-status-live/40 bg-status-live/10 text-status-live",
   "In progress": "border-status-progress/40 bg-status-progress/10 text-status-progress",
   Delivered: "border-status-delivered/40 bg-status-delivered/10 text-status-delivered",
+  "Early access": "border-status-progress/40 bg-status-progress/10 text-status-progress",
 };
 
 const STATUS_DOTS: Record<ProjectStatus, string> = {
   Live: "bg-status-live",
   "In progress": "bg-status-progress",
   Delivered: "bg-status-delivered",
+  "Early access": "bg-status-progress",
 };
 
 function StatusBadge({ status }: { status: ProjectStatus }) {
@@ -91,9 +93,14 @@ export function Projects() {
         </Reveal>
 
         <div className="mt-14">
-          <Reveal className="flex items-center gap-3">
-            <h3 className="font-display text-xl font-semibold">AI Products</h3>
-            <span className="h-px flex-1 bg-border" />
+          <Reveal>
+            <div className="flex items-center gap-3">
+              <h3 className="font-display text-xl font-semibold">The Kenroe Collective</h3>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              A suite of products I design, build, and ship end to end.
+            </p>
           </Reveal>
           <ul className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {AI_PRODUCTS.map((project, i) => (

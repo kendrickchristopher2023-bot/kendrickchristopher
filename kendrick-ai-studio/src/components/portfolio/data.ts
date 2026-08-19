@@ -4,7 +4,7 @@ export const SOCIAL_LINKS = {
 
 export const EMAIL = "kendrickchristopher@hotmail.com";
 
-export type ProjectStatus = "Live" | "In progress" | "Delivered";
+export type ProjectStatus = "Live" | "In progress" | "Delivered" | "Early access";
 
 export type Project = {
   title: string;
@@ -18,25 +18,32 @@ export type Project = {
 
 export const AI_PRODUCTS: Project[] = [
   {
-    title: "Kenroe Collective",
+    title: "Events and Gatherings",
     description:
-      "A full stack platform with vendor and RFQ workflows, authentication, and a Supabase and PostgreSQL backend.",
-    tags: ["React", "Supabase", "Stripe", "Lovable"],
-    live: true,
+      "Plan the whole event in one place: invitations, RSVPs, vendor coordination, and the full run of the evening, orchestrated with editorial care.",
+    tags: ["React", "Supabase", "Lovable"],
+    status: "Live",
   },
   {
-    title: "Kenroe eCards",
+    title: "Group eCards",
     description:
-      "A group eCard product, Thankbox style, live with paying customers. Contributors pool messages into a shared card.",
-    tags: ["React", "Supabase", "Payments"],
-    live: true,
+      "One card, one link, unlimited contributors. Everyone signs a shared group card that is revealed on the day. Live with paying customers.",
+    tags: ["React", "Supabase", "Payments", "Stripe"],
+    status: "Live",
+  },
+  {
+    title: "The Workroom",
+    description:
+      "A production workspace with Kanban boards, tasks, and quiet accountability for work of every kind.",
+    tags: ["React", "Supabase", "Lovable"],
+    status: "Live",
   },
   {
     title: "AI Resume Wizard",
     description:
-      "An AI powered resume builder that helps users generate and refine resumes, with a paid export flow.",
+      "An AI job search companion for resumes, cover letters, and applications that land.",
     tags: ["AI", "React", "Stripe"],
-    live: true,
+    status: "Early access",
   },
 ];
 
