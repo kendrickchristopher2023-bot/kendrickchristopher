@@ -45,7 +45,13 @@ function ensureSpace(ctx: PdfCtx, needed: number) {
 function writeText(
   ctx: PdfCtx,
   text: string,
-  opts: { size?: number; style?: "normal" | "bold" | "italic"; indent?: number; gap?: number } = {},
+  opts: {
+    size?: number;
+    style?: "normal" | "bold" | "italic";
+    indent?: number;
+    gap?: number;
+    bullet?: boolean;
+  } = {},
 ) {
   const size = opts.size ?? 10;
   const indent = opts.indent ?? 0;
@@ -53,8 +59,11 @@ function writeText(
   ctx.doc.setFontSize(size);
   const lines = ctx.doc.splitTextToSize(text, ctx.width - indent) as string[];
   const lineHeight = size * 1.4;
-  lines.forEach((line) => {
+  lines.forEach((line, index) => {
     ensureSpace(ctx, lineHeight);
+    if (index === 0 && opts.bullet) {
+      ctx.doc.text("\u2022", ctx.margin + 2, ctx.y);
+    }
     ctx.doc.text(line, ctx.margin + indent, ctx.y);
     ctx.y += lineHeight;
   });
@@ -107,19 +116,13 @@ export async function downloadResumePdf() {
     writeText(ctx, `${job.role}, ${job.company}`, { size: 11, style: "bold" });
     writeText(ctx, job.dates, { size: 9, style: "italic", gap: 3 });
     job.bullets.forEach((bullet) => {
-      const before = ctx.y;
-      writeText(ctx, bullet, { indent: 14 });
-      ctx.doc.setFont("helvetica", "normal");
-      ctx.doc.setFontSize(10);
-      ctx.doc.text("\u2022", ctx.margin + 2, before);
+      writeText(ctx, bullet, { indent: 14, bullet: true });
     });
   });
 
   sectionHeading(ctx, "Additional Experience");
   RESUME_ADDITIONAL.forEach((item) => {
-    const before = ctx.y;
-    writeText(ctx, item, { indent: 14 });
-    ctx.doc.text("\u2022", ctx.margin + 2, before);
+    writeText(ctx, item, { indent: 14, bullet: true });
   });
 
   sectionHeading(ctx, "Technical Proficiencies");
