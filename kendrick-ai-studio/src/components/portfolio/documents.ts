@@ -172,8 +172,8 @@ export async function downloadResumeDocx() {
       children: [
         new TextRun({
           text,
-          bold: opts.bold,
-          italics: opts.italics,
+          bold: opts.bold ?? false,
+          italics: opts.italics ?? false,
           size: opts.size ?? 20,
           font: "Arial",
         }),
@@ -267,7 +267,7 @@ export async function downloadCoverLetterDocx() {
     new Paragraph({
       spacing: { after: opts.after ?? 200, line: 300 },
       children: [
-        new TextRun({ text, bold: opts.bold, size: opts.size ?? 22, font: "Arial" }),
+        new TextRun({ text, bold: opts.bold ?? false, size: opts.size ?? 22, font: "Arial" }),
       ],
     });
 
