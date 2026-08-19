@@ -31,7 +31,15 @@ export function CoverLetter() {
                 {RESUME_CONTACT.location} <span className="text-border">|</span>{" "}
                 {RESUME_CONTACT.email} <span className="text-border">|</span>{" "}
                 {RESUME_CONTACT.phone} <span className="text-border">|</span>{" "}
-                {RESUME_CONTACT.linkedin}
+                {RESUME_CONTACT.linkedin} <span className="text-border">|</span>{" "}
+                <a
+                  href="https://christopherbkendrick.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gradient font-medium hover:opacity-80"
+                >
+                  {RESUME_CONTACT.website}
+                </a>
               </p>
             </header>
 
