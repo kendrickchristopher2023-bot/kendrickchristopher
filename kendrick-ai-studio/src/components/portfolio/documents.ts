@@ -10,8 +10,8 @@ import {
   RESUME_TECH,
 } from "./resume-data";
 
-const CONTACT_LINE = `${RESUME_CONTACT.email} | ${RESUME_CONTACT.phone} | ${RESUME_CONTACT.linkedin} | ${RESUME_CONTACT.location}`;
-const LETTER_CONTACT_LINE = `${RESUME_CONTACT.location} | ${RESUME_CONTACT.email} | ${RESUME_CONTACT.phone} | ${RESUME_CONTACT.linkedin}`;
+const CONTACT_LINE = `${RESUME_CONTACT.email} | ${RESUME_CONTACT.phone} | ${RESUME_CONTACT.linkedin} | ${RESUME_CONTACT.website} | ${RESUME_CONTACT.location}`;
+const LETTER_CONTACT_LINE = `${RESUME_CONTACT.location} | ${RESUME_CONTACT.email} | ${RESUME_CONTACT.phone} | ${RESUME_CONTACT.linkedin} | ${RESUME_CONTACT.website}`;
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
