@@ -5,7 +5,19 @@ export function About() {
     <section id="about" className="scroll-mt-24 border-t border-border py-24 sm:py-28">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-          <Reveal>
+          <Reveal className="flex flex-col items-center gap-8 lg:items-start">
+            <div className="relative w-[240px] sm:w-[280px] lg:w-[320px]">
+              <div
+                aria-hidden
+                className="absolute -inset-3 rounded-3xl bg-gradient-brand opacity-30 blur-2xl"
+              />
+              <img
+                src="/headshot.jpg"
+                alt="Christopher Kendrick"
+                loading="lazy"
+                className="relative aspect-[4/5] w-full rounded-2xl border border-border object-cover object-top"
+              />
+            </div>
             <h2 className="text-3xl font-bold sm:text-4xl">
               About<span className="text-gradient">.</span>
             </h2>
