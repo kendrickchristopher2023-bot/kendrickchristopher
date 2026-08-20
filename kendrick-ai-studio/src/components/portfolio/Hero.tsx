@@ -53,7 +53,7 @@ export function Hero() {
             { value: "15+", label: "AI builds shipped" },
             { value: "11", label: "Live in production" },
             { value: "7+", label: "Automations & agents" },
-            { value: "15+", label: "Years in tech" },
+            { value: "12+", label: "Years in tech" },
           ].map((stat) => (
             <div key={stat.label} className="surface-card rounded-xl px-4 py-4">
               <div className="font-display text-2xl font-bold text-gradient">{stat.value}</div>
