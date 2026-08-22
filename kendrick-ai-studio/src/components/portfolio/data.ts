@@ -44,7 +44,7 @@ export const AI_PRODUCTS: Project[] = [
     description:
       "An AI job search companion for resumes, cover letters, and applications that land.",
     tags: ["AI", "React", "Stripe"],
-    status: "Live",
+    status: "Early access",
   },
 ];
 
