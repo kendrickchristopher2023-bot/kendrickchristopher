@@ -71,29 +71,50 @@ export function resolveWindow(
 
 type Tbl = "profiles" | "resumes" | "tailor_sessions" | "applications" | "personal_matches";
 
+/**
+ * Demo/filming accounts (profiles.is_demo) are excluded from every metric so
+ * marketing-capture data never lands in owner reporting.
+ */
+async function demoUserIds(): Promise<string[]> {
+  const { data } = await supabaseAdmin.from("profiles").select("id").eq("is_demo", true);
+  return (data ?? []).map((r) => r.id);
+}
+
+function pgList(ids: string[]): string {
+  return `(${ids.join(",")})`;
+}
+
 async function countInWindow(
   table: Tbl,
   column: string,
   since: string,
   until: string,
+  demoIds: string[],
 ): Promise<number> {
-  const { count } = await supabaseAdmin
+  let q = supabaseAdmin
     .from(table)
     .select("*", { count: "exact", head: true })
     .gte(column, since)
     .lt(column, until);
+  if (demoIds.length) {
+    q = q.not(table === "profiles" ? "id" : "user_id", "in", pgList(demoIds));
+  }
+  const { count } = await q;
   return count ?? 0;
 }
 
-async function countPlan(plan: "free" | "pro" | "founder"): Promise<number> {
-  const { count } = await supabaseAdmin
+async function countPlan(plan: "free" | "pro" | "founder", demoIds: string[]): Promise<number> {
+  let q = supabaseAdmin
     .from("profiles")
     .select("*", { count: "exact", head: true })
     .eq("plan", plan);
+  if (demoIds.length) q = q.not("id", "in", pgList(demoIds));
+  const { count } = await q;
   return count ?? 0;
 }
 
 export async function buildOwnerMetrics(since: string, until: string): Promise<OwnerMetrics> {
+  const demoIds = await demoUserIds();
   const [
     totalUsers,
     newUsers,
@@ -109,26 +130,29 @@ export async function buildOwnerMetrics(since: string, until: string): Promise<O
     supabaseAdmin
       .from("profiles")
       .select("*", { count: "exact", head: true })
+      .eq("is_demo", false)
       .then((r) => r.count ?? 0),
-    countInWindow("profiles", "created_at", since, until),
-    countInWindow("profiles", "last_active_at", since, until),
-    countPlan("free"),
-    countPlan("pro"),
-    countPlan("founder"),
-    countInWindow("resumes", "created_at", since, until),
-    countInWindow("tailor_sessions", "created_at", since, until),
-    countInWindow("applications", "applied_at", since, until),
-    countInWindow("personal_matches", "created_at", since, until),
+    countInWindow("profiles", "created_at", since, until, demoIds),
+    countInWindow("profiles", "last_active_at", since, until, demoIds),
+    countPlan("free", demoIds),
+    countPlan("pro", demoIds),
+    countPlan("founder", demoIds),
+    countInWindow("resumes", "created_at", since, until, demoIds),
+    countInWindow("tailor_sessions", "created_at", since, until, demoIds),
+    countInWindow("applications", "applied_at", since, until, demoIds),
+    countInWindow("personal_matches", "created_at", since, until, demoIds),
   ]);
 
   // usage_daily is keyed by a `day` date column; sum the integer counters only.
-  const { data: usageRows } = await supabaseAdmin
+  let usageQuery = supabaseAdmin
     .from("usage_daily")
     .select(
       "tailor_count, cover_letter_count, interview_prep_count, linkedin_count, referral_dm_count, parse_resume_count, chat_count",
     )
     .gte("day", since.slice(0, 10))
     .lte("day", until.slice(0, 10));
+  if (demoIds.length) usageQuery = usageQuery.not("user_id", "in", pgList(demoIds));
+  const { data: usageRows } = await usageQuery;
 
   const ai_usage = {
     tailor: 0,

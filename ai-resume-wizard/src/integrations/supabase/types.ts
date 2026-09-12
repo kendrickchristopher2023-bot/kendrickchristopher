@@ -385,6 +385,7 @@ export type Database = {
           free_resume_rewrite_used: boolean
           full_name: string | null
           id: string
+          is_demo: boolean
           last_active_at: string | null
           onboarded_at: string | null
           plan: Database["public"]["Enums"]["plan_tier"]
@@ -404,6 +405,7 @@ export type Database = {
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id: string
+          is_demo?: boolean
           last_active_at?: string | null
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
@@ -423,6 +425,7 @@ export type Database = {
           free_resume_rewrite_used?: boolean
           full_name?: string | null
           id?: string
+          is_demo?: boolean
           last_active_at?: string | null
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
