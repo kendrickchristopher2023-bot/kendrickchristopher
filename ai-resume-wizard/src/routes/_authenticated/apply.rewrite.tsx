@@ -58,6 +58,7 @@ function RewritePage() {
     try {
       const r = await runFn({ data: { notes: notes.trim() || undefined, placement } });
       setDraft(r.resume);
+      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -79,7 +80,6 @@ function RewritePage() {
       });
       qc.invalidateQueries({ queryKey: ["my-resume"] });
       qc.invalidateQueries({ queryKey: ["my-resumes"] });
-      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
       navigate({ to: saveMode === "new" ? "/resumes" : "/resume" });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed.");
