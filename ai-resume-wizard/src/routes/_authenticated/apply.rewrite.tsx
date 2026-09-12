@@ -58,7 +58,6 @@ function RewritePage() {
     try {
       const r = await runFn({ data: { notes: notes.trim() || undefined, placement } });
       setDraft(r.resume);
-      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
