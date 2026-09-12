@@ -58,6 +58,7 @@ function RewritePage() {
     try {
       const r = await runFn({ data: { notes: notes.trim() || undefined, placement } });
       setDraft(r.resume);
+      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -79,7 +80,6 @@ function RewritePage() {
       });
       qc.invalidateQueries({ queryKey: ["my-resume"] });
       qc.invalidateQueries({ queryKey: ["my-resumes"] });
-      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
       navigate({ to: saveMode === "new" ? "/resumes" : "/resume" });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed.");
@@ -168,7 +168,7 @@ function RewritePage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 {ent.data.reason === "founder_unlimited"
                   ? "Founder plan — unlimited rewrites. Nothing is saved until you review the result and click Save."
-                  : `You get one included rewrite on the ${ent.data.plan} plan, and it's only used up when you save a result. Nothing is saved until you review it and click Save — discard as many drafts as you like.`}
+                  : `This uses your one included rewrite for the ${ent.data.plan} plan. Nothing is saved until you review the result and click Save.`}
               </p>
               <div className="mt-6">
                 <label htmlFor="rewrite-notes" className="text-sm font-medium text-foreground">
