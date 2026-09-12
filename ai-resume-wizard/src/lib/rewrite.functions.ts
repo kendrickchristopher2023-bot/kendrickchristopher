@@ -144,16 +144,8 @@ Rules recap:
       parsed = JSON.parse(m[0]);
     }
 
-    // Founders get unlimited rewrites — don't consume the one-time flag.
-    if (ent.plan !== "founder") {
-      // Server-side only: `free_resume_rewrite_used` UPDATE is revoked from the authenticated role.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin
-        .from("profiles")
-        .update({ free_resume_rewrite_used: true })
-        .eq("id", context.userId);
-    }
-
+    // The included rewrite is only consumed when the user SAVES the result
+    // (see saveRewrittenResume). Discarding or refreshing must not burn it.
     return { resume: parsed, sourceId: row.id };
   });
 
