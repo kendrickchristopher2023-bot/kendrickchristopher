@@ -1454,6 +1454,89 @@ type InviteResult = {
   emailError: string | null;
 };
 
+/**
+ * Single surface for every magic link an admin mints (invite / approve /
+ * resend). The link authenticates whoever OPENS it as the invitee, so this
+ * card leads with a prominent warning, labels the copy action as "send to
+ * <email>", and copies to the clipboard without ever navigating the admin's
+ * own tab to the link.
+ */
+function MagicLinkCard({
+  magic,
+  onDismiss,
+}: {
+  magic: InviteResult;
+  onDismiss: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(magic.link);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* clipboard may be unavailable; user can still select the text */
+    }
+  };
+
+  return (
+    <div
+      className={
+        "mt-3 rounded-lg border p-3 " +
+        (magic.emailSent
+          ? "border-emerald-500/40 bg-emerald-500/5"
+          : "border-amber-500/40 bg-amber-500/5")
+      }
+    >
+      <p
+        className={
+          "text-xs font-semibold uppercase tracking-wider " +
+          (magic.emailSent
+            ? "text-emerald-700 dark:text-emerald-300"
+            : "text-amber-700 dark:text-amber-300")
+        }
+      >
+        {magic.emailSent
+          ? `✓ Sign-in email sent to ${magic.email}`
+          : `Magic link for ${magic.email} — email not sent, copy manually`}
+      </p>
+      {!magic.emailSent && magic.emailError && (
+        <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
+          {magic.emailError}
+        </p>
+      )}
+
+      <div className="mt-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2">
+        <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+          ⚠ This link signs in whoever opens it as {magic.email}.
+        </p>
+        <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
+          Send it to them — do <strong>not</strong> open it in your own browser,
+          or you'll be logged in as them. Pasting it into a chat message or email
+          is safe; only clicking/opening it authenticates.
+        </p>
+      </div>
+
+      <p className="mt-2 break-all font-mono text-xs">{magic.link}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          onClick={copy}
+          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
+        >
+          {copied ? "✓ Copied — now paste it to them" : `Copy link to send to ${magic.email}`}
+        </button>
+        <button
+          onClick={onDismiss}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function InvitePanel({ onInvited }: { onInvited: (m: InviteResult) => void }) {
   const qc = useQueryClient();
   const inviteFn = useServerFn(inviteUserByEmailAdmin);
