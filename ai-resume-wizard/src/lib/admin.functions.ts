@@ -370,7 +370,9 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
         supabaseAdmin
           .from("profiles")
           .select("id, email, full_name, plan, created_at, onboarded_at, last_active_at")
+          .eq("is_demo", false)
           .order("created_at", { ascending: false }),
+
         supabaseAdmin
           .from("resumes")
           .select("user_id, is_primary")
