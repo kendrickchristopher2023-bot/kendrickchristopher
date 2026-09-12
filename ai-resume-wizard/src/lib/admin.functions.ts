@@ -575,14 +575,12 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
 
     const [{ data: profs }, { data: usage }, { data: apps }] =
       await Promise.all([
-        (() => {
-          let q = supabaseAdmin
-            .from("profiles")
-            .select("created_at")
-            .eq("is_demo", false)
-            .gte("created_at", sinceIso);
-          return q;
-        })(),
+        supabaseAdmin
+          .from("profiles")
+          .select("created_at")
+          .eq("is_demo", false)
+          .gte("created_at", sinceIso),
+
         (() => {
           let q = supabaseAdmin.from("usage_daily").select("*").gte("day", sinceDay);
           if (demoIds.length) q = q.not("user_id", "in", notDemo);
