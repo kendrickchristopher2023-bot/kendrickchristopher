@@ -168,7 +168,7 @@ function RewritePage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 {ent.data.reason === "founder_unlimited"
                   ? "Founder plan — unlimited rewrites. Nothing is saved until you review the result and click Save."
-                  : `This uses your one included rewrite for the ${ent.data.plan} plan. Nothing is saved until you review the result and click Save.`}
+                  : `You get one included rewrite on the ${ent.data.plan} plan, and it's only used up when you save a result. Nothing is saved until you review it and click Save — discard as many drafts as you like.`}
               </p>
               <div className="mt-6">
                 <label htmlFor="rewrite-notes" className="text-sm font-medium text-foreground">
