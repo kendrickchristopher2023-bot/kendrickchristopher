@@ -79,6 +79,7 @@ function RewritePage() {
       });
       qc.invalidateQueries({ queryKey: ["my-resume"] });
       qc.invalidateQueries({ queryKey: ["my-resumes"] });
+      qc.invalidateQueries({ queryKey: ["rewrite-entitlement"] });
       navigate({ to: saveMode === "new" ? "/resumes" : "/resume" });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed.");
