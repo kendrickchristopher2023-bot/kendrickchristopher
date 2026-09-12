@@ -565,15 +565,36 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
     const sinceIso = since.toISOString();
     const sinceDay = sinceIso.slice(0, 10);
 
+    // Demo/filming accounts (profiles.is_demo) are excluded from analytics.
+    const { data: demoRows } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("is_demo", true);
+    const demoIds = (demoRows ?? []).map((r) => r.id);
+    const notDemo = `(${demoIds.join(",")})`;
+
     const [{ data: profs }, { data: usage }, { data: apps }] =
       await Promise.all([
-        supabaseAdmin
-          .from("profiles")
-          .select("created_at")
-          .gte("created_at", sinceIso),
-        supabaseAdmin.from("usage_daily").select("*").gte("day", sinceDay),
-        supabaseAdmin.from("applications").select("stage"),
+        (() => {
+          let q = supabaseAdmin
+            .from("profiles")
+            .select("created_at")
+            .eq("is_demo", false)
+            .gte("created_at", sinceIso);
+          return q;
+        })(),
+        (() => {
+          let q = supabaseAdmin.from("usage_daily").select("*").gte("day", sinceDay);
+          if (demoIds.length) q = q.not("user_id", "in", notDemo);
+          return q;
+        })(),
+        (() => {
+          let q = supabaseAdmin.from("applications").select("stage");
+          if (demoIds.length) q = q.not("user_id", "in", notDemo);
+          return q;
+        })(),
       ]);
+
 
     const signupsByDay = new Map<string, number>();
     for (const p of profs ?? []) {
