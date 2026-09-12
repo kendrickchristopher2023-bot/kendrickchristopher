@@ -161,6 +161,18 @@ export const saveRewrittenResume = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Founders get unlimited rewrites — don't consume the one-time flag.
+    const consumeRewrite = async () => {
+      const ent = await loadEntitlement(context.supabase, context.userId);
+      if (ent.plan === "founder") return;
+      // Server-side only: `free_resume_rewrite_used` UPDATE is revoked from the authenticated role.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("profiles")
+        .update({ free_resume_rewrite_used: true })
+        .eq("id", context.userId);
+    };
+
     if (data.mode === "overwrite") {
       const { data: existing } = await context.supabase
         .from("resumes")
