@@ -482,9 +482,7 @@ function AdminDashboard() {
                               `PERMANENTLY delete ${u.email}? This removes their auth account, resumes, applications, tailored output, and all related data. This cannot be undone.`,
                             );
                             if (!first) return;
-                            const typed = prompt(
-                              `Type DELETE to confirm removing ${u.email}.`,
-                            );
+                            const typed = prompt(`Type DELETE to confirm removing ${u.email}.`);
                             if (typed !== "DELETE") return;
                             deleteUser.mutate({ userId: u.id, email: u.email });
                           }}
@@ -518,9 +516,7 @@ function AdminDashboard() {
         {/* Access requests */}
         <section>
           <h2 className="text-xl font-semibold">Access requests</h2>
-          {magic && (
-            <MagicLinkCard magic={magic} onDismiss={() => setMagic(null)} />
-          )}
+          {magic && <MagicLinkCard magic={magic} onDismiss={() => setMagic(null)} />}
           <div className="mt-3 overflow-hidden rounded-lg border border-border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left">
@@ -1461,13 +1457,7 @@ type InviteResult = {
  * <email>", and copies to the clipboard without ever navigating the admin's
  * own tab to the link.
  */
-function MagicLinkCard({
-  magic,
-  onDismiss,
-}: {
-  magic: InviteResult;
-  onDismiss: () => void;
-}) {
+function MagicLinkCard({ magic, onDismiss }: { magic: InviteResult; onDismiss: () => void }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -1502,9 +1492,7 @@ function MagicLinkCard({
           : `Magic link for ${magic.email} — email not sent, copy manually`}
       </p>
       {!magic.emailSent && magic.emailError && (
-        <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
-          {magic.emailError}
-        </p>
+        <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">{magic.emailError}</p>
       )}
 
       <div className="mt-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2">
@@ -1512,9 +1500,9 @@ function MagicLinkCard({
           ⚠ This link signs in whoever opens it as {magic.email}.
         </p>
         <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">
-          Send it to them — do <strong>not</strong> open it in your own browser,
-          or you'll be logged in as them. Pasting it into a chat message or email
-          is safe; only clicking/opening it authenticates.
+          Send it to them — do <strong>not</strong> open it in your own browser, or you'll be logged
+          in as them. Pasting it into a chat message or email is safe; only clicking/opening it
+          authenticates.
         </p>
       </div>
 
@@ -1526,10 +1514,7 @@ function MagicLinkCard({
         >
           {copied ? "✓ Copied — now paste it to them" : `Copy link to send to ${magic.email}`}
         </button>
-        <button
-          onClick={onDismiss}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
+        <button onClick={onDismiss} className="text-xs text-muted-foreground hover:text-foreground">
           Dismiss
         </button>
       </div>
