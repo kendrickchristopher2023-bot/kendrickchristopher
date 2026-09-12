@@ -187,6 +187,7 @@ export const saveRewrittenResume = createServerFn({ method: "POST" })
         .eq("id", existing.id)
         .eq("user_id", context.userId);
       if (error) throw error;
+      await consumeRewrite();
       return { ok: true, id: existing.id };
     }
     const { data: inserted, error } = await context.supabase
