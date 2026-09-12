@@ -154,7 +154,6 @@ export async function buildOwnerMetrics(since: string, until: string): Promise<O
   if (demoIds.length) usageQuery = usageQuery.not("user_id", "in", pgList(demoIds));
   const { data: usageRows } = await usageQuery;
 
-
   const ai_usage = {
     tailor: 0,
     cover_letter: 0,
