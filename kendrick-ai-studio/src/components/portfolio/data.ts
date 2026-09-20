@@ -68,6 +68,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "An AI powered file conversion tool that transforms messy reservation exports, Excel, CSV, text and scanned PDFs, screenshots, even phone photos of printed reports, into clean, Mews ready import files. Spreadsheets parse in the browser while images and scans run through an AI vision model for row extraction, then the user maps columns, reviews low confidence values, and downloads the finished file. Removes manual re-keying from property data migration and cuts the onboarding timeline by 2 to 5 days per client. Adopted across the onboarding department in every country.",
         tags: ["Lovable", "AI Vision", "Gemini"],
         status: "Live",
+        flow: ["Messy export or photo", "AI vision extraction", "Map and review columns", "Clean Mews import file"],
       },
       {
         title: "HMS Knowledge Hub",
