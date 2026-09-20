@@ -140,6 +140,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "An automated briefing workflow that prepares one-on-one meeting notes ahead of each meeting by pulling portfolio and Databricks metrics, recent Slack activity, Gong call history, and Confluence notes into a single summary, removing manual prep before every one-on-one.",
         tags: ["Cowork", "Databricks", "Slack", "Gong", "Confluence"],
         status: "Live",
+        flow: ["Databricks, Slack, Gong, Confluence", "Automated synthesis", "One-page briefing"],
       },
       {
         title: "Manager Review Dashboard",
