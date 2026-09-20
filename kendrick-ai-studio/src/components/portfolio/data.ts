@@ -204,6 +204,12 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
 export const SKILL_INFO: Record<string, string> = {
   "LLM": "Large Language Model. The AI behind tools like Claude, ChatGPT, and Gemini, trained on large amounts of text to understand and generate language.",
   "RAG": "Retrieval-Augmented Generation. The AI retrieves relevant information from a specific knowledge source before answering, so responses stay grounded in real, current data instead of only what the model memorized.",
+  "PMS": "Property Management System. The core software hotels use to manage reservations, guests, billing, and operations. Mews is a PMS.",
+  "ARR": "Annual Recurring Revenue. The yearly value of recurring subscription revenue.",
+  "LAC": "Latin America and the Caribbean, a business region.",
+  "CXD": "Customer Experience Department, the internal team at Mews.",
+  "KPI": "Key Performance Indicator. A measurable value that shows how well a goal is being met.",
+  "QA": "Quality Assurance. Testing a product to catch bugs and confirm it works before release.",
 };
 
 export const SKILL_GROUPS = [

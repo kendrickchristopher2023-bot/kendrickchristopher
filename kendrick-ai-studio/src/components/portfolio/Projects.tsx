@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AbbrText } from "./AbbrText";
 import { AI_AT_WORK_GROUPS, AI_PRODUCTS, type Project, type ProjectStatus } from "./data";
 import { Reveal } from "./Reveal";
 
@@ -42,7 +43,7 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
       >
         <div className="flex items-start justify-between gap-3">
           <h4 className="text-lg font-semibold transition-colors group-hover:text-gradient">
-            {project.title}
+            <AbbrText text={project.title} />
           </h4>
           <div className="flex shrink-0 items-center gap-2">
             {project.status ? <StatusBadge status={project.status} /> : null}
@@ -62,7 +63,7 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
         ) : null}
 
         <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
-          {project.description}
+          <AbbrText text={project.description} />
         </p>
 
         {project.flow ? (

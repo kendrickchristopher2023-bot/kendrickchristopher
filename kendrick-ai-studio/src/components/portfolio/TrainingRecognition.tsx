@@ -1,3 +1,4 @@
+import { AbbrText } from "./AbbrText";
 import { Reveal } from "./Reveal";
 
 const TILES = [
@@ -23,7 +24,7 @@ export function TrainingRecognition() {
                   {tile.value}
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                  {tile.label}
+                  <AbbrText text={tile.label} />
                 </p>
               </div>
             </Reveal>
@@ -31,11 +32,7 @@ export function TrainingRecognition() {
         </div>
         <Reveal delay={240}>
           <p className="mt-8 max-w-4xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            I completed the program's Boss Level by running a full QA pass on one of my own shipped
-            tools, testing navigation, forms, and mobile layout with Claude and filing a structured
-            bug report. That test-and-verify discipline, plus a provisional Often Exceed
-            Expectations performance rating, is what I bring to product, implementation, and quality
-            work.
+            <AbbrText text="I completed the program's Boss Level by running a full QA pass on one of my own shipped tools, testing navigation, forms, and mobile layout with Claude and filing a structured bug report. That test-and-verify discipline, plus a provisional Often Exceed Expectations performance rating, is what I bring to product, implementation, and quality work." />
           </p>
         </Reveal>
       </div>
