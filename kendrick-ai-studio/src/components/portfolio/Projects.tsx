@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AI_AT_WORK_GROUPS, AI_PRODUCTS, type Project, type ProjectStatus } from "./data";
 import { Reveal } from "./Reveal";
