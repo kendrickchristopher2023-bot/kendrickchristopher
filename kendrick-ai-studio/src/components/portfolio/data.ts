@@ -103,6 +103,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A scheduled Claude Code routine that runs every weekday, pulls the full active Salesforce portfolio, checks Outlook for genuine recent activity while filtering out automated senders, scores every project against a five rule risk model, and delivers one risk digest to Slack. Replaced a manual daily portfolio review done by hand every morning.",
         tags: ["Claude Code", "Salesforce", "Outlook", "Slack"],
         status: "Live",
+        flow: ["Salesforce and Outlook", "Five-rule risk scoring", "Daily Slack digest"],
       },
       {
         title: "Weekly Onboarding Report Skill",
