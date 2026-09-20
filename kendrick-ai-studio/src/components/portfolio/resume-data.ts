@@ -9,7 +9,7 @@ export const RESUME_CONTACT = {
 };
 
 export const RESUME_SUMMARY =
-  "Onboarding and implementation leader who streamlines technical training and client adoption. Proven track record designing and automating complex processes. Building AI-powered workflows to eliminate manual work and accelerate client success. Experienced in automating complex processes and solving implementation problems with AI. Skilled in bringing unique expertise in training, implementation, and onboarding. Focused on transforming complex technical concepts into accessible learning experiences for diverse organizational teams. Committed to continuously improving training methodologies and client engagement processes. Proactive learning specialist, proficient in designing structured onboarding experiences that enhance system adoption and user understanding.";
+  "Onboarding and implementation leader who streamlines technical training and client adoption, with a proven track record of designing and automating complex processes and building AI-powered workflows that eliminate manual work and accelerate client success. Skilled in training, implementation, and onboarding, I turn complex technical concepts into accessible learning experiences for diverse teams. Committed to continuously improving training methodologies and client engagement, I design structured onboarding experiences that enhance system adoption and user understanding.";
 
 export const RESUME_SKILLS = [
   "AI Workflow Automation",
