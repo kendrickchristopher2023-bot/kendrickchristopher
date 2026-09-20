@@ -50,12 +50,7 @@ export function About() {
               it is why I am focused on product, implementation, and quality roles where understanding
               the user and the workflow matters as much as the build.
             </p>
-            <div className="inline-flex rounded-full border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2">
-              <p className="text-sm text-foreground">
-                Assessed at AI Fluency Level 4, Delegation and Description, on a recent internal
-                review, with a provisional Often Exceed Expectations performance rating.
-              </p>
-            </div>
+
           </Reveal>
         </div>
       </div>
