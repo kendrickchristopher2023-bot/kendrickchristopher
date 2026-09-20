@@ -15,6 +15,7 @@ export type Project = {
   href?: string;
   flagship?: boolean;
   status?: ProjectStatus;
+  flow?: string[];
 };
 
 export const AI_PRODUCTS: Project[] = [
