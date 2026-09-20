@@ -28,8 +28,9 @@ export function Hero() {
 
         <Reveal delay={160}>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Full stack AI builder shipping live products with Lovable, the Claude API, and Claude
-            Code. From customer facing SaaS to internal automation that runs every day.
+            I pair a decade in customer onboarding, training, and software implementation with
+            modern AI tooling, Lovable, the Claude API, and Claude Code, to design, build, test, and
+            ship tools that teams rely on every day.
           </p>
         </Reveal>
 
