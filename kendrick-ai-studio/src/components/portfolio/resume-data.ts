@@ -1,6 +1,6 @@
 export const RESUME_CONTACT = {
   name: "Christopher Kendrick",
-  title: "Training and Onboarding Manager",
+  title: "Customer Onboarding and Implementation Manager",
   email: "kendrickchristopher@hotmail.com",
   phone: "(404) 358-0626",
   linkedin: "linkedin.com/in/christopherbkendrick",
@@ -9,17 +9,16 @@ export const RESUME_CONTACT = {
 };
 
 export const RESUME_SUMMARY =
-  "Results-driven Training and Onboarding Manager with specialized expertise in Property Management Systems (PMS) and large-scale software implementations. Proven track record in architecting structured onboarding frameworks that accelerate system adoption and simplify complex technical workflows. Expert in leveraging AI-driven automation to optimize client lifecycles, improve data integrity, and enhance the end-user learning experience.";
+  "Onboarding and implementation leader who turns complex technical rollouts into smooth client adoption, and who builds AI-powered workflows to eliminate manual work and accelerate client success. I pair more than a decade of training, implementation, and onboarding experience with modern AI tooling to design, test, and ship tools that teams actually use, and I measure the work by real outcomes: faster onboarding, cleaner data, and fewer manual steps.";
 
 export const RESUME_SKILLS = [
   "AI Workflow Automation",
   "Technical Client Onboarding",
+  "Training Program Development",
+  "PMS Implementation and Integrations",
+  "Project Management",
+  "User Adoption and User Experience Optimization",
   "Strategic Training Development",
-  "PMS Implementation and Integration",
-  "Portfolio Risk Management",
-  "Cross-Functional Team Leadership",
-  "User Adoption Optimization",
-  "Data-Driven Performance Analysis",
   "Technical Documentation and Technical Writing",
 ];
 
@@ -36,27 +35,27 @@ export const RESUME_EXPERIENCE: ResumeRole[] = [
     company: "Mews PMS (Remote)",
     dates: "2024 to Present",
     bullets: [
-      "Orchestrate complex onboarding cycles for 10 to 20 concurrent accounts, directing training on Mews PMS navigation, guest billing, and financial reporting.",
-      "Drove a 20% reduction in onboarding duration, achieving a 60% go-live rate in under 30 days through the implementation of a structured delivery framework.",
-      "Configure mission-critical integrations with global partners including SiteMinder, Booking.com, Expedia, and QuickBooks Online.",
-      "Architected a three-tier context hierarchy for Claude Code (root, org, and project levels) to automate operational rule loading and standardize tool ecosystems.",
-      "Deployed an AI-powered Daily Hygiene Dashboard and On-Hold Queue Dashboard to track ARR, aging projects, and portfolio KPIs for leadership visibility.",
-      "Authoritative contributor to the NA Onboarding AI Innovation Repository, documenting internal AI tools for cross-functional team adoption.",
-      "Authored an 18-page plain-English Flexkeeping Configuration Guide, translating complex learning paths into accessible documentation for non-technical users.",
-      "Oversee a team of consultants to ensure rigorous property implementation standards and continuous process optimization.",
-      "Created and deployed additional AI tools and reports used daily by the Customer Success department.",
+      "Manage onboarding for 10 to 20 customer accounts at once, guiding clients on Mews software, guest billing, and system navigation, with transitions completed within 2 to 4 weeks.",
+      "Reduced onboarding time by 20% by designing a structured onboarding program that streamlined workflows and improved the client experience.",
+      "Lead technical implementation across data migration, system configuration, and integrations with partners including SiteMinder, Booking.com, Expedia, and QuickBooks Online.",
+      "Designed, tested, and rolled out an AI-powered file conversion tool (Lovable and an AI vision model) that automatically transforms reservation imports into Mews-compatible formats, eliminating manual re-keying and reducing client implementation time by 2 to 5 days; adopted across the onboarding department in every country.",
+      "Built a daily automated reporting agent in Claude that aggregates project status, timelines, and Salesforce links into a single Slack digest, cutting status-meeting overhead and giving the team real-time portfolio visibility.",
+      "Created an AI coverage and handover system (Claude and Lovable) that reassigns a manager's onboarding projects during planned absences and sends the covering manager a Slack briefing plus real-time management reports, keeping account context and coverage intact.",
+      "Architect additional AI tools and reports used daily by the Customer Success department, reducing implementation friction and improving team efficiency.",
+      "Deliver monthly system training to new clients and new hires via MS Teams, and maintain onboarding documentation, user manuals, and best practice guides for client self-service.",
+      "Manage a team of consultants to ensure timely, high-standard property implementation, and serve as the team Wellness Ambassador.",
     ],
   },
   {
-    role: "Training and Implementation Manager",
+    role: "Director of Training and Implementation",
     company: "PurpleCloud Technologies, Atlanta, GA (Remote)",
     dates: "2018 to 2024",
     bullets: [
-      "Directed end-to-end software implementation and staff training for diverse hospitality portfolios, ensuring sustained post-launch support.",
-      "Achieved a 60% reduction in training time (from 5 days to 2) and accelerated implementation cycles by 50% through process re-engineering.",
-      "Delivered high-impact training programs for executive stakeholders and front-line staff via multi-channel delivery methods.",
-      "Standardized system configurations and managed complex integrations with industry-standard PMS platforms including Opera and Maestro.",
-      "Utilized Appcues Builder and performance analytics tools to identify and resolve user friction points, increasing software adoption rates.",
+      "Directed end-to-end implementation and training for new client projects across diverse hotel portfolios, providing ongoing post-launch support.",
+      "Slashed training time by 60% (from five days to two) and cut implementation time in half (from two months to one) by re-engineering onboarding processes.",
+      "Led training for executives, managers, and front-line staff through webinars, on-site sessions, and recorded materials.",
+      "Standardized system configurations and integrations with PMS platforms including Opera and Maestro to meet customer requirements.",
+      "Improved client engagement and software adoption using Appcues Builder, Constant Contact, ScreenPal, and SurveyMonkey, and documented bugs and user concerns in Zendesk, HubSpot, and Pivotal Tracker for timely resolution.",
     ],
   },
   {
@@ -64,17 +63,17 @@ export const RESUME_EXPERIENCE: ResumeRole[] = [
     company: "Amadeus, Atlanta, GA",
     dates: "2013 to 2018",
     bullets: [
-      "Optimized technical support operations for Hotel SalesPro Enterprise users across the North American market.",
-      "Directed comprehensive hardware and software migrations, including large-scale fleet deployments of Dell XPS systems.",
-      "Managed regional IT infrastructure, overseeing servers, network security, and internal communication systems.",
-      "Provided expert-level troubleshooting for IDPMS and Brilliant PMPro software environments.",
-      "Awarded 2017 Top Performer distinction for the second-highest case resolution volume across the enterprise.",
+      "Optimized product support for Hotel SalesPro Enterprise users across North America through performance analysis and continuous improvement.",
+      "Managed hardware and software migrations, including the transition from legacy systems to Dell XPS laptops, streamlining purchasing and upgrade planning.",
+      "Steered IT operations for the Atlanta office, maintaining hardware, software, servers, networks, and communication systems.",
+      "Resolved technical issues in IDPMS and Brilliant PMPro, minimizing disruptions and improving reliability.",
+      "Recognized as a 2017 Top Performer for resolving the second-highest number of cases company-wide.",
     ],
   },
 ];
 
 export const RESUME_ADDITIONAL = [
-  "Help Desk Support Analyst and Hardware Integration Specialist, Medquest Associates, Alpharetta, GA",
+  "Help Desk Support Analyst and Hardware Integration Specialist, Medquest Associates (Contractual), Alpharetta, GA",
   "Systems Administrator, Peoplenet, Inc., Atlanta, GA",
   "Sales Support Representative and Point-of-Sales Specialist, PeopleNet, Inc., Atlanta, GA",
 ];
@@ -82,23 +81,27 @@ export const RESUME_ADDITIONAL = [
 export const RESUME_TECH = [
   {
     label: "AI and Automation",
-    value: "Claude Code, Lovable AI, Claude API, ChatGPT, Gemini, Glean AI, Clari Copilot",
+    value: "Claude Code, Claude API, Lovable AI, Gemini, ChatGPT, Glean AI, Clari Copilot",
   },
   {
-    label: "LMS and CRM",
-    value: "Salesforce, Databricks, Talent LMS, HubSpot, Zendesk, Gainsight",
+    label: "Data and Reporting",
+    value: "Salesforce, Databricks, Power BI, Gainsight",
+  },
+  {
+    label: "CRM and Support",
+    value: "HubSpot, Zendesk, Talent LMS, Tallyfy",
   },
   {
     label: "Project Management",
     value: "Monday.com, Jira, Trello, Asana, Pivotal Tracker",
   },
   {
-    label: "Communications",
-    value: "Slack, MS Teams, Gong, Constant Contact, WebEx, Dialpad",
+    label: "Communication and Enablement",
+    value: "Slack, MS Teams, Gong, Confluence, Loom, Canva, ScreenPal, WebEx, Dialpad, Constant Contact",
   },
   {
     label: "PMS and Technical",
-    value: "Mews, Opera, Maestro, IDPMS, Brilliant, GitHub, Active Directory, Citrix, Cisco Meraki",
+    value: "Mews, Opera, Maestro, IDPMS, Brilliant, Hotel SalesPro, GitHub, Active Directory, Citrix, Cisco Meraki, SharePoint",
   },
 ];
 
@@ -106,12 +109,13 @@ export const RESUME_EDUCATION =
   "Bachelor of Science in Business Management (GPA 3.6), University of Phoenix, Atlanta, GA";
 
 export const RESUME_CERTIFICATIONS = [
+  "AI Training Program, Mews, completed in full, top 3 percent of 270 participants (2026)",
   "Mews PMS Onboarding Manager Certification",
   "Value-First Onboarding (Appcues)",
   "Salesforce Training (Amadeus)",
-  "Commercial Driver's License (Class A)",
+  "Commercial Driver's License (Class A), X-Tanker and HazMat endorsements",
   "Public Key Infrastructure (PKI) Certification",
-  "Help Desk 2000/Support Certification",
+  "Help Desk 2000 Support Certification",
   "CompTIA A+ Certification",
 ];
 
