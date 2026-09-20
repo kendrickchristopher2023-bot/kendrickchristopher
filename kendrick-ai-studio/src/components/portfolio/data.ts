@@ -201,6 +201,11 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
   },
 ];
 
+export const SKILL_INFO: Record<string, string> = {
+  "LLM": "Large Language Model. The AI behind tools like Claude, ChatGPT, and Gemini, trained on large amounts of text to understand and generate language.",
+  "RAG": "Retrieval-Augmented Generation. The AI retrieves relevant information from a specific knowledge source before answering, so responses stay grounded in real, current data instead of only what the model memorized.",
+};
+
 export const SKILL_GROUPS = [
   {
     title: "AI & LLM",
