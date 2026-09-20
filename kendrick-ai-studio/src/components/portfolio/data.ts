@@ -204,7 +204,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
 export const SKILL_GROUPS = [
   {
     title: "AI & LLM",
-    items: ["Claude API", "Claude Code", "Prompt Engineering", "AI Agents", "Claude Skills", "RAG"],
+    items: ["Claude API", "Claude Code", "ChatGPT", "Gemini", "Prompt Engineering", "AI Agents", "Claude Skills", "RAG"],
   },
   {
     title: "Build & Frontend",
