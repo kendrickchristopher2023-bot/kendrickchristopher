@@ -111,6 +111,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A reusable Claude skill that pulls Configuration, Go Live Support, and On Hold data from Salesforce, cross checks it against Databricks, applies pacing logic against the under 30 days go-live target, and outputs a formatted weekly status report in Markdown and Word plus leadership talking points, with no manual data pulling.",
         tags: ["Claude Skills", "Salesforce", "Databricks"],
         status: "Live",
+        flow: ["Salesforce and Databricks", "Pacing logic vs target", "Markdown and Word report"],
       },
       {
         title: "Salesforce and Databricks Reporting Agent",
