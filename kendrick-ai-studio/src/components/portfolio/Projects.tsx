@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AI_AT_WORK_GROUPS, AI_PRODUCTS, type Project, type ProjectStatus } from "./data";
 import { Reveal } from "./Reveal";
@@ -63,6 +64,26 @@ function ProjectCard({ project, delay }: { project: Project; delay: number }) {
         <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
           {project.description}
         </p>
+
+        {project.flow ? (
+          <div className="mt-4">
+            <p className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              How it works
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {project.flow.map((step, index) => (
+                <span key={step} className="flex items-center gap-1.5">
+                  <span className="rounded-md border border-border/80 bg-secondary/40 px-2 py-1 text-[11px] text-muted-foreground">
+                    {step}
+                  </span>
+                  {index < project.flow!.length - 1 ? (
+                    <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/50" />
+                  ) : null}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <ul className="mt-5 flex flex-wrap gap-2">
           {project.tags.map((tag) => (

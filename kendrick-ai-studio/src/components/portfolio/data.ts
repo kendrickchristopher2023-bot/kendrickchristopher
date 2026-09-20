@@ -15,6 +15,7 @@ export type Project = {
   href?: string;
   flagship?: boolean;
   status?: ProjectStatus;
+  flow?: string[];
 };
 
 export const AI_PRODUCTS: Project[] = [
@@ -59,6 +60,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         tags: ["Lovable", "Claude API", "Gong"],
         status: "Live",
         flagship: true,
+        flow: ["Gong call transcript", "Claude API", "Personalized follow-up email"],
       },
       {
         title: "Mews Reservation Import Converter",
@@ -66,6 +68,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "An AI powered file conversion tool that transforms messy reservation exports, Excel, CSV, text and scanned PDFs, screenshots, even phone photos of printed reports, into clean, Mews ready import files. Spreadsheets parse in the browser while images and scans run through an AI vision model for row extraction, then the user maps columns, reviews low confidence values, and downloads the finished file. Removes manual re-keying from property data migration and cuts the onboarding timeline by 2 to 5 days per client. Adopted across the onboarding department in every country.",
         tags: ["Lovable", "AI Vision", "Gemini"],
         status: "Live",
+        flow: ["Messy export or photo", "AI vision extraction", "Map and review columns", "Clean Mews import file"],
       },
       {
         title: "HMS Knowledge Hub",
@@ -73,6 +76,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A live internal AI support tool whose original knowledge base returned unreliable, sometimes invented answers. Rebuilt it from authoritative company sources into 100 question and answer entries across ten categories, 8 how-to guides, and 32 glossary terms, drawn from Confluence, the Mews Help Center, Slack, the Jira operations queue, and patterns from Gong calls. Every entry carries a source, a last verified date, and a confidence flag, and was pushed straight into the live app to replace the old seed data.",
         tags: ["Lovable", "Confluence", "Jira", "Gong"],
         status: "Live",
+        flow: ["Confluence, Slack, Jira, Gong", "Curated Q&A with confidence flags", "Live in-app answers"],
       },
       {
         title: "Onboarding Team Guide",
@@ -99,6 +103,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A scheduled Claude Code routine that runs every weekday, pulls the full active Salesforce portfolio, checks Outlook for genuine recent activity while filtering out automated senders, scores every project against a five rule risk model, and delivers one risk digest to Slack. Replaced a manual daily portfolio review done by hand every morning.",
         tags: ["Claude Code", "Salesforce", "Outlook", "Slack"],
         status: "Live",
+        flow: ["Salesforce and Outlook", "Five-rule risk scoring", "Daily Slack digest"],
       },
       {
         title: "Weekly Onboarding Report Skill",
@@ -106,6 +111,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A reusable Claude skill that pulls Configuration, Go Live Support, and On Hold data from Salesforce, cross checks it against Databricks, applies pacing logic against the under 30 days go-live target, and outputs a formatted weekly status report in Markdown and Word plus leadership talking points, with no manual data pulling.",
         tags: ["Claude Skills", "Salesforce", "Databricks"],
         status: "Live",
+        flow: ["Salesforce and Databricks", "Pacing logic vs target", "Markdown and Word report"],
       },
       {
         title: "Salesforce and Databricks Reporting Agent",
@@ -134,6 +140,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "An automated briefing workflow that prepares one-on-one meeting notes ahead of each meeting by pulling portfolio and Databricks metrics, recent Slack activity, Gong call history, and Confluence notes into a single summary, removing manual prep before every one-on-one.",
         tags: ["Cowork", "Databricks", "Slack", "Gong", "Confluence"],
         status: "Live",
+        flow: ["Databricks, Slack, Gong, Confluence", "Automated synthesis", "One-page briefing"],
       },
       {
         title: "Manager Review Dashboard",
