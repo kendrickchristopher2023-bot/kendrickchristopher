@@ -55,98 +55,138 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
       {
         title: "Mews Call Companion",
         description:
-          "A live Lovable application that pulls Gong call transcripts and uses the Claude API to draft personalized pre go-live client follow up emails, cutting manual drafting across a portfolio of 18+ onboarding projects. Cataloged as an approved asset in the NA Onboarding AI Innovation Repository.",
+          "A live Lovable application that turns Gong call transcripts into personalized pre go-live client follow up emails with the Claude API, summarizing discussion points, action items, and client specific needs, and cutting manual drafting across an active onboarding portfolio. Cataloged as an approved asset in the NA Onboarding AI Innovation Repository.",
         tags: ["Lovable", "Claude API", "Gong"],
         status: "Live",
         flagship: true,
       },
       {
+        title: "Mews Reservation Import Converter",
+        description:
+          "An AI powered file conversion tool that transforms messy reservation exports, Excel, CSV, text and scanned PDFs, screenshots, even phone photos of printed reports, into clean, Mews ready import files. Spreadsheets parse in the browser while images and scans run through an AI vision model for row extraction, then the user maps columns, reviews low confidence values, and downloads the finished file. Removes manual re-keying from property data migration and cuts the onboarding timeline by 2 to 5 days per client. Adopted across the onboarding department in every country.",
+        tags: ["Lovable", "AI Vision", "Gemini"],
+        status: "Live",
+      },
+      {
+        title: "HMS Knowledge Hub",
+        description:
+          "A live internal AI support tool whose original knowledge base returned unreliable, sometimes invented answers. Rebuilt it from authoritative company sources into 100 question and answer entries across ten categories, 8 how-to guides, and 32 glossary terms, drawn from Confluence, the Mews Help Center, Slack, the Jira operations queue, and patterns from Gong calls. Every entry carries a source, a last verified date, and a confidence flag, and was pushed straight into the live app to replace the old seed data.",
+        tags: ["Lovable", "Confluence", "Jira", "Gong"],
+        status: "Live",
+      },
+      {
+        title: "Onboarding Team Guide",
+        description:
+          "A full stack internal team application with email magic-link sign in and role based access enforced through Supabase row level security at the database level, not just page routing, restricted to a named allowlist of 11 team members plus a manager. Turns raw team meeting notes into a living, inline editable workspace: five tracked problem areas, an anonymous feedback wall with no author field even in the database, per item status and ownership, and threaded notes.",
+        tags: ["Lovable", "Supabase", "Auth"],
+        status: "Live",
+      },
+      {
         title: "Mews Handover Hub",
         description:
-          "A Lovable application that formalizes the handoff of onboarding data to the customer success team, giving both sides one structured source of account context at the point of handover.",
+          "A Lovable application that structures the handoff of onboarding data to the customer success team, giving both sides one shared, organized source of account context at the point of handover.",
         tags: ["Lovable"],
         status: "Live",
       },
     ],
   },
   {
-    title: "Claude Automations and Agents",
+    title: "Automations, Agents & Skills",
     projects: [
       {
         title: "Daily Onboarding Health Check",
         description:
-          "A scheduled Claude Code routine that runs every weekday, queries Salesforce for the full active portfolio, cross references genuine Outlook activity to filter out automated senders, scores every project against five risk rules, and delivers one risk digest to Slack. Replaced the manual daily portfolio review.",
+          "A scheduled Claude Code routine that runs every weekday, pulls the full active Salesforce portfolio, checks Outlook for genuine recent activity while filtering out automated senders, scores every project against a five rule risk model, and delivers one risk digest to Slack. Replaced a manual daily portfolio review done by hand every morning.",
         tags: ["Claude Code", "Salesforce", "Outlook", "Slack"],
         status: "Live",
       },
       {
-        title: "Weekly Onboarding Report System",
+        title: "Weekly Onboarding Report Skill",
         description:
-          "A reusable Claude skill that pulls Go Live Support, Configuration, and On Hold data from Salesforce, cross checks it against Databricks, applies pacing logic against the under 30 days go live target, and outputs a formatted status report in Markdown and Word plus leadership talking points. Runs weekly with no manual data pulling.",
+          "A reusable Claude skill that pulls Configuration, Go Live Support, and On Hold data from Salesforce, cross checks it against Databricks, applies pacing logic against the under 30 days go-live target, and outputs a formatted weekly status report in Markdown and Word plus leadership talking points, with no manual data pulling.",
         tags: ["Claude Skills", "Salesforce", "Databricks"],
+        status: "Live",
+      },
+      {
+        title: "Salesforce and Databricks Reporting Agent",
+        description:
+          "A persistent Claude agent with standing project memory that cross checks Salesforce and Databricks, generates on-hold and active deal reports, drafts client emails, and exports clean HTML for quick reference, without re-establishing context each session. Cataloged internally under Single Source of Truth.",
+        tags: ["Claude Projects", "Salesforce", "Databricks"],
         status: "Live",
       },
       {
         title: "On Hold PMS Queue Dashboard",
         description:
-          "A scheduled task and HTML dashboard that tracks on hold portfolio aging, revenue parked, and restart candidates, sending leadership a weekly update with the metric, comparison, reason, and next steps.",
-        tags: ["Automation", "HTML", "Slack"],
+          "A live dashboard for the North America and LAC on-hold onboarding queue that tracks parked ARR, restart pipeline by quarter, and aging and churn risk, cross checking Salesforce and Databricks and flagging mismatches between the two sources.",
+        tags: ["Cowork", "Salesforce", "Databricks"],
         status: "Live",
       },
       {
-        title: "OM Projects Daily Hygiene Dashboard",
+        title: "Regional Onboarding Report",
         description:
-          "A scheduled task and HTML dashboard covering portfolio KPIs and an onboarding cohort risk triage board, delivered automatically to Slack every morning.",
-        tags: ["Automation", "HTML", "Slack"],
+          "A scheduled reporting system that emails a formatted regional onboarding portfolio report every week, covering pipeline, on-hold and blocked counts, tier and country splits, and monthly business review numbers, assembled automatically from Salesforce and Databricks.",
+        tags: ["Cowork", "Salesforce", "Databricks", "Outlook"],
         status: "Live",
       },
       {
-        title: "Onboarding Cohort Status Skill",
+        title: "One-on-One Manager Co-Pilot",
         description:
-          "A standalone Claude skill that reviews every active cohort across Activation, Configuration, and Go Live Support against Salesforce, and flags blockers and at risk projects for the weekly standup.",
-        tags: ["Claude Skills", "Salesforce"],
+          "An automated briefing workflow that prepares one-on-one meeting notes ahead of each meeting by pulling portfolio and Databricks metrics, recent Slack activity, Gong call history, and Confluence notes into a single summary, removing manual prep before every one-on-one.",
+        tags: ["Cowork", "Databricks", "Slack", "Gong", "Confluence"],
         status: "Live",
       },
       {
-        title: "Northeast Realm Onboarding Report",
+        title: "Manager Review Dashboard",
         description:
-          "A live report system with canonical Salesforce and Databricks data definitions for a defined regional book of business, delivered as a formatted Word document by email every week.",
-        tags: ["Automation", "Salesforce", "Databricks"],
+          "A React dashboard for recurring manager portfolio reviews that tracks active project confidence levels, flags any active project missing a go-live date, and documents on-hold restart expectations. Debugged a recurring input focus bug during the build by isolating project data outside the component, memoizing rows, and moving local saves onto blur instead of each keystroke.",
+        tags: ["React", "Salesforce"],
         status: "Live",
       },
       {
         title: "CLAUDE.md Context System",
         description:
-          "A three tier context hierarchy, root, org, and per project, for Claude Code so role identity, tooling, pipeline data, and standing operational rules load automatically every session. Removes repeat context setting.",
+          "A three tier context system for Claude Code, root, organization, and project level, so role identity, tool access, pipeline data, and standing operational rules load automatically every session instead of being re-explained each time.",
         tags: ["Claude Code", "Prompt Engineering"],
         status: "Live",
       },
       {
-        title: "Personal AI Coaching Dashboard",
+        title: "Onboarding Cohort Status Skill",
         description:
-          "An HTML dashboard that consolidates the prompts and tools from an eight station internal AI training program, with search, one click copy, and a team contribution log. Built as the capstone for the CX AI Training Club Boss Level.",
-        tags: ["HTML", "Prompt Engineering"],
+          "A standalone Claude skill that reviews every active onboarding cohort across Activation, Configuration, and Go Live Support against Salesforce and flags blockers and at-risk projects for the weekly standup.",
+        tags: ["Claude Skills", "Salesforce"],
         status: "Live",
       },
+      {
+        title: "Personal Writing Voice Skill",
+        description:
+          "A reusable Claude skill built by analyzing more than 140 of my own written messages across DMs, team channels, and project threads to capture greeting style, message length, emoji use, and how tone shifts by audience, used since to keep AI drafted messages consistent with my own voice.",
+        tags: ["Claude Skills"],
+        status: "Live",
+      },
+    ],
+  },
+  {
+    title: "Guides & Enablement",
+    projects: [
       {
         title: "Flexkeeping Configuration Guide",
         description:
-          "An eighteen page plain English Word and PDF guide, built from a gated Mews University learning path, covering the full setup workflow, a worked example, a common issues table, and a glossary, written for coworkers and clients with no hospitality or software background.",
-        tags: ["Technical Writing", "Documentation"],
-        status: "Live",
+          "An eighteen page plain English Word and PDF guide converted from a gated Mews University learning path: what Flexkeeping is, a full setup walkthrough across ten configuration areas, a worked example following one room through a full cycle, a common issues table, and a glossary. Written for coworkers and clients with no hospitality or software background.",
+        tags: ["Word", "PDF", "Technical Writing"],
+        status: "Delivered",
       },
       {
-        title: "Mews University Training Check Skill",
+        title: "Personal AI Coaching Dashboard",
         description:
-          "A Claude skill that pulls Mews University training completion by account from Databricks Intellum tables, so onboarding managers can confirm client training progress without manual lookups.",
-        tags: ["Claude Skills", "Databricks"],
-        status: "Live",
+          "A shareable HTML dashboard that consolidates the prompts and tools from an eight station internal AI training program, with search, one-click copy, and a team contribution log. Built as the capstone for an internal CX AI training program.",
+        tags: ["HTML"],
+        status: "Delivered",
       },
       {
-        title: "Confluence AI Innovation Repository",
+        title: "AI Innovation Repository",
         description:
-          "Documented and catalogued team built AI assets, including the Call Companion and onboarding dashboards, into the NA Onboarding team's shared Confluence repository for cross team visibility and reuse.",
-        tags: ["Documentation", "Knowledge Sharing"],
+          "An ongoing effort documenting and cataloging my own and teammates' AI built assets into a shared Confluence repository, giving the wider team a single place to find and reuse internal tools.",
+        tags: ["Confluence", "Knowledge Sharing"],
         status: "Live",
       },
     ],
