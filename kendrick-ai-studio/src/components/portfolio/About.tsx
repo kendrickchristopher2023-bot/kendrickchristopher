@@ -44,6 +44,18 @@ export function About() {
               document what I build so others can use it, and I measure success by real outcomes:
               faster onboarding, cleaner data, and hours of manual work removed.
             </p>
+            <p>
+              I build by directing AI tools like Claude and Lovable rather than writing code by hand.
+              That lets me move from a real operational problem to a shipped, tested tool in days, and
+              it is why I am focused on product, implementation, and quality roles where understanding
+              the user and the workflow matters as much as the build.
+            </p>
+            <div className="inline-flex rounded-full border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10 px-4 py-2">
+              <p className="text-sm text-foreground">
+                Assessed at AI Fluency Level 4, Delegation and Description, on a recent internal
+                review, with a provisional Often Exceed Expectations performance rating.
+              </p>
+            </div>
           </Reveal>
         </div>
       </div>
