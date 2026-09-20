@@ -88,9 +88,10 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
       {
         title: "Mews Handover Hub",
         description:
-          "A Lovable application that structures the handoff of onboarding data to the customer success team, giving both sides one shared, organized source of account context at the point of handover.",
+          "A Lovable application that keeps onboarding projects covered when a manager is out. It reassigns a departing manager's active projects, sends the covering manager a Slack briefing with the account context they need, and gives leadership a real-time view of who owns what, so ownership and continuity hold through planned absences.",
         tags: ["Lovable"],
         status: "Live",
+        flow: ["Manager goes on leave", "Projects reassigned", "Slack briefing to covering manager", "Real-time management report"],
       },
     ],
   },
