@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { About } from "@/components/portfolio/About";
 import { Impact } from "@/components/portfolio/Impact";
+import { TrainingRecognition } from "@/components/portfolio/TrainingRecognition";
 import { Contact } from "@/components/portfolio/Contact";
 import { CoverLetter } from "@/components/portfolio/CoverLetter";
 import { Footer } from "@/components/portfolio/Footer";
@@ -10,6 +11,7 @@ import { Projects } from "@/components/portfolio/Projects";
 import { Resume } from "@/components/portfolio/Resume";
 import { ScrollToTop } from "@/components/portfolio/ScrollToTop";
 import { Skills } from "@/components/portfolio/Skills";
+
 
 const TITLE = "Christopher Kendrick | AI Builder";
 const DESCRIPTION =
