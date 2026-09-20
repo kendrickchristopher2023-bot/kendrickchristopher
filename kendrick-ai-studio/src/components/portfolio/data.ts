@@ -76,6 +76,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
           "A live internal AI support tool whose original knowledge base returned unreliable, sometimes invented answers. Rebuilt it from authoritative company sources into 100 question and answer entries across ten categories, 8 how-to guides, and 32 glossary terms, drawn from Confluence, the Mews Help Center, Slack, the Jira operations queue, and patterns from Gong calls. Every entry carries a source, a last verified date, and a confidence flag, and was pushed straight into the live app to replace the old seed data.",
         tags: ["Lovable", "Confluence", "Jira", "Gong"],
         status: "Live",
+        flow: ["Confluence, Slack, Jira, Gong", "Curated Q&A with confidence flags", "Live in-app answers"],
       },
       {
         title: "Onboarding Team Guide",
