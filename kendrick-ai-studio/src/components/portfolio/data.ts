@@ -60,6 +60,7 @@ export const AI_AT_WORK_GROUPS: { title: string; projects: Project[] }[] = [
         tags: ["Lovable", "Claude API", "Gong"],
         status: "Live",
         flagship: true,
+        flow: ["Gong call transcript", "Claude API", "Personalized follow-up email"],
       },
       {
         title: "Mews Reservation Import Converter",
