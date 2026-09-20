@@ -1,5 +1,5 @@
 export const RESUME_CONTACT = {
-  name: "Christopher Kendrick",
+  name: "Christopher B. Kendrick",
   title: "Customer Onboarding and Implementation Manager",
   email: "kendrickchristopher@hotmail.com",
   phone: "(404) 358-0626",
@@ -9,7 +9,7 @@ export const RESUME_CONTACT = {
 };
 
 export const RESUME_SUMMARY =
-  "Onboarding and implementation leader who turns complex technical rollouts into smooth client adoption, and who builds AI-powered workflows to eliminate manual work and accelerate client success. I pair more than a decade of training, implementation, and onboarding experience with modern AI tooling to design, test, and ship tools that teams actually use, and I measure the work by real outcomes: faster onboarding, cleaner data, and fewer manual steps.";
+  "Onboarding and implementation leader who streamlines technical training and client adoption. Proven track record designing and automating complex processes. Building AI-powered workflows to eliminate manual work and accelerate client success. Experienced in automating complex processes and solving implementation problems with AI. Skilled in bringing unique expertise in training, implementation, and onboarding. Focused on transforming complex technical concepts into accessible learning experiences for diverse organizational teams. Committed to continuously improving training methodologies and client engagement processes. Proactive learning specialist, proficient in designing structured onboarding experiences that enhance system adoption and user understanding.";
 
 export const RESUME_SKILLS = [
   "AI Workflow Automation",
@@ -115,7 +115,7 @@ export const RESUME_CERTIFICATIONS = [
   "Salesforce Training (Amadeus)",
   "Commercial Driver's License (Class A), X-Tanker and HazMat endorsements",
   "Public Key Infrastructure (PKI) Certification",
-  "Help Desk 2000 Support Certification",
+  "Help Desk 2000/e-Support Certification",
   "CompTIA A+ Certification",
 ];
 
