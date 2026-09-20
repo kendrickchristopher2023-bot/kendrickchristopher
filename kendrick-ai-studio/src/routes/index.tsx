@@ -65,8 +65,10 @@ function Index() {
         <Hero />
         <About />
         <Impact />
+        <TrainingRecognition />
         <Projects />
         <Skills />
+
         <Resume />
         <CoverLetter />
         <Contact />
