@@ -3,7 +3,13 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type ApplicationStage =
-  | "applied" | "response" | "screen" | "onsite" | "offer" | "rejected" | "withdrawn";
+  | "applied"
+  | "response"
+  | "screen"
+  | "onsite"
+  | "offer"
+  | "rejected"
+  | "withdrawn";
 
 export type Application = {
   id: string;
@@ -36,17 +42,21 @@ export const listApplications = createServerFn({ method: "GET" })
 export const upsertApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      id: z.string().uuid().optional(),
-      company: z.string().min(1).max(200),
-      role: z.string().min(1).max(200),
-      stage: z.enum(["applied", "response", "screen", "onsite", "offer", "rejected", "withdrawn"]).default("applied"),
-      jd_url: z.string().url().optional().nullable().or(z.literal("")),
-      notes: z.string().max(4000).optional().nullable(),
-      source: z.enum(["cold", "referral", "recruiter", "event", "other"]).default("cold"),
-      tailor_session_id: z.string().uuid().optional().nullable(),
-      applied_at: z.string().optional(),
-    }).parse(input),
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        company: z.string().min(1).max(200),
+        role: z.string().min(1).max(200),
+        stage: z
+          .enum(["applied", "response", "screen", "onsite", "offer", "rejected", "withdrawn"])
+          .default("applied"),
+        jd_url: z.string().url().optional().nullable().or(z.literal("")),
+        notes: z.string().max(4000).optional().nullable(),
+        source: z.enum(["cold", "referral", "recruiter", "event", "other"]).default("cold"),
+        tailor_session_id: z.string().uuid().optional().nullable(),
+        applied_at: z.string().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }): Promise<Application> => {
     const payload = {
@@ -170,4 +180,59 @@ export const listTailorSessions = createServerFn({ method: "GET" })
         match_score: t?.matchScore ?? null,
       };
     });
+  });
+
+export type TailorSessionDetail = {
+  id: string;
+  company: string | null;
+  role: string | null;
+  created_at: string;
+  jd_text: string | null;
+  jd_url: string | null;
+  cover_letter: string | null;
+  summary: string;
+  bullets: { company: string; title?: string; bullets: string[] }[];
+  match_score: number | null;
+  matched_keywords: string[];
+  missing_keywords: string[];
+};
+
+/**
+ * One saved tailoring session, scoped to the caller. RLS on tailor_sessions is
+ * `auth.uid() = user_id`, and the query also filters on the verified user id,
+ * so another user's session can never be returned.
+ */
+export const getTailorSession = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<TailorSessionDetail | null> => {
+    const { data: row, error } = await context.supabase
+      .from("tailor_sessions")
+      .select("id, company, role, created_at, jd_text, jd_url, cover_letter, tailored_resume")
+      .eq("user_id", context.userId)
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) return null;
+    const t = (row.tailored_resume ?? {}) as {
+      summary?: string;
+      bullets?: { company: string; title?: string; bullets: string[] }[];
+      matchScore?: number;
+      matchedKeywords?: string[];
+      missingKeywords?: string[];
+    };
+    return {
+      id: row.id,
+      company: row.company,
+      role: row.role,
+      created_at: row.created_at,
+      jd_text: row.jd_text,
+      jd_url: row.jd_url,
+      cover_letter: row.cover_letter,
+      summary: t.summary ?? "",
+      bullets: t.bullets ?? [],
+      match_score: typeof t.matchScore === "number" ? t.matchScore : null,
+      matched_keywords: t.matchedKeywords ?? [],
+      missing_keywords: t.missingKeywords ?? [],
+    };
   });
