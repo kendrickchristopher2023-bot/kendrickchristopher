@@ -6,6 +6,7 @@ import { z } from "zod";
 import { tailorResume, type TailorResult } from "@/lib/tailor.functions";
 import { getMyResume } from "@/lib/resume.functions";
 import { getMatchPrefill } from "@/lib/matches.functions";
+import { downloadTailoredResume, downloadCoverLetterFile } from "@/lib/tailor-download";
 import {
   EditableBlock,
   InjectionNotice,
@@ -158,32 +159,14 @@ function TailorPage() {
     }
     kind === "pdf" ? setPdfLoading(true) : setDocxLoading(true);
     try {
-      const url = kind === "pdf" ? "/api/tailored-resume" : "/api/resume-docx";
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resume: resumeData.resume,
-          summary: editSummary,
-          bullets: editBullets,
-          company,
-          role,
-        }),
+      await downloadTailoredResume({
+        kind,
+        resume: resumeData.resume,
+        summary: editSummary,
+        bullets: editBullets,
+        company,
+        role,
       });
-      if (!res.ok) throw new Error(`${kind.toUpperCase()} generation failed (${res.status})`);
-
-      const blob = await res.blob();
-      const href = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const slug = (resumeData.resume.name || "Resume").replace(/[^a-z0-9]/gi, "_");
-      a.href = href;
-      a.download = company
-        ? `${slug}_Resume_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
-        : `${slug}_Resume_Tailored.${kind}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(href);
     } catch (e) {
       setErr(e instanceof Error ? e.message : `${kind.toUpperCase()} export failed.`);
     } finally {
@@ -199,36 +182,13 @@ function TailorPage() {
     }
     kind === "pdf" ? setClPdfLoading(true) : setClDocxLoading(true);
     try {
-      const url = kind === "pdf" ? "/api/cover-letter-pdf" : "/api/cover-letter-docx";
-      const R = resumeData.resume;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: {
-            name: R.name || "",
-            email: R.email || "",
-            phone: R.phone || "",
-            location: R.location || "",
-          },
-          company,
-          role,
-          coverLetter: editCover,
-        }),
+      await downloadCoverLetterFile({
+        kind,
+        resume: resumeData.resume,
+        coverLetter: editCover,
+        company,
+        role,
       });
-      if (!res.ok) throw new Error(`Cover letter ${kind.toUpperCase()} failed (${res.status})`);
-      const blob = await res.blob();
-      const href = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const slug = (R.name || "Cover_Letter").replace(/[^a-z0-9]/gi, "_");
-      a.href = href;
-      a.download = company
-        ? `${slug}_Cover_Letter_${company.replace(/[^a-z0-9]/gi, "_")}.${kind}`
-        : `${slug}_Cover_Letter.${kind}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(href);
     } catch (e) {
       setErr(e instanceof Error ? e.message : `Cover letter ${kind.toUpperCase()} export failed.`);
     } finally {

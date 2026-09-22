@@ -30,6 +30,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedResumesRouteImport } from './routes/_authenticated/resumes'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/_admin/route'
@@ -164,6 +165,12 @@ const AuthenticatedApplyRoute = AuthenticatedApplyRouteImport.update({
   path: '/apply',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
     id: '/.well-known/oauth-protected-resource',
@@ -335,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/request-access': typeof RequestAccessRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/apply': typeof AuthenticatedApplyRouteWithChildren
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
@@ -385,6 +393,7 @@ export interface FileRoutesByTo {
   '/request-access': typeof RequestAccessRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/resumes': typeof AuthenticatedResumesRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -437,6 +446,7 @@ export interface FileRoutesById {
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRouteWithChildren
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/resumes': typeof AuthenticatedResumesRoute
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/request-access'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/applications'
     | '/apply'
     | '/resume'
     | '/resumes'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/request-access'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/applications'
     | '/resume'
     | '/resumes'
     | '/settings'
@@ -590,6 +602,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_admin'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/applications'
     | '/_authenticated/apply'
     | '/_authenticated/resume'
     | '/_authenticated/resumes'
@@ -814,6 +827,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof AuthenticatedApplyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/.well-known/oauth-protected-resource': {
@@ -1069,6 +1089,7 @@ const AuthenticatedApplyRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRouteWithChildren
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedResumesRoute: typeof AuthenticatedResumesRoute
@@ -1078,6 +1099,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedApplyRoute: AuthenticatedApplyRouteWithChildren,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedResumesRoute: AuthenticatedResumesRoute,
