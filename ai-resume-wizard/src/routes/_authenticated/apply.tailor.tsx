@@ -157,7 +157,8 @@ function TailorPage() {
       setErr("No resume found. Visit /resume to set one up first.");
       return;
     }
-    kind === "pdf" ? setPdfLoading(true) : setDocxLoading(true);
+    const setLoading = kind === "pdf" ? setPdfLoading : setDocxLoading;
+    setLoading(true);
     try {
       await downloadTailoredResume({
         kind,
@@ -170,7 +171,7 @@ function TailorPage() {
     } catch (e) {
       setErr(e instanceof Error ? e.message : `${kind.toUpperCase()} export failed.`);
     } finally {
-      kind === "pdf" ? setPdfLoading(false) : setDocxLoading(false);
+      setLoading(false);
     }
   };
 
@@ -180,7 +181,8 @@ function TailorPage() {
       setErr("No resume found. Visit /resume to set one up first.");
       return;
     }
-    kind === "pdf" ? setClPdfLoading(true) : setClDocxLoading(true);
+    const setLoading = kind === "pdf" ? setClPdfLoading : setClDocxLoading;
+    setLoading(true);
     try {
       await downloadCoverLetterFile({
         kind,
@@ -192,7 +194,7 @@ function TailorPage() {
     } catch (e) {
       setErr(e instanceof Error ? e.message : `Cover letter ${kind.toUpperCase()} export failed.`);
     } finally {
-      kind === "pdf" ? setClPdfLoading(false) : setClDocxLoading(false);
+      setLoading(false);
     }
   };
 
