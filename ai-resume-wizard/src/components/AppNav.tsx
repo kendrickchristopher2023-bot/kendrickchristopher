@@ -2,7 +2,16 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, X, Shield, Sparkles, Settings as SettingsIcon, LogOut, ChevronDown, User } from "lucide-react";
+import {
+  Menu,
+  X,
+  Shield,
+  Sparkles,
+  Settings as SettingsIcon,
+  LogOut,
+  ChevronDown,
+  User,
+} from "lucide-react";
 import { currentUserIsAdmin } from "@/lib/admin.functions";
 import { getChangelogUnreadCount } from "@/lib/changelog.functions";
 import { useSession, signOut } from "@/lib/session";
@@ -15,7 +24,18 @@ type NavItem = {
 
 const ITEMS: NavItem[] = [
   { to: "/apply/discover", label: "Find Jobs" },
-  { to: "/apply/matches", label: "My Jobs", match: ["/apply/go", "/apply/tailor", "/apply/interview-prep", "/apply/autofill", "/apply/referrals", "/apply/metrics"] },
+  {
+    to: "/apply/matches",
+    label: "My Jobs",
+    match: [
+      "/apply/go",
+      "/apply/tailor",
+      "/apply/interview-prep",
+      "/apply/autofill",
+      "/apply/referrals",
+      "/apply/metrics",
+    ],
+  },
   { to: "/resume", label: "My Resume", match: ["/resumes", "/apply/rewrite"] },
   { to: "/applications", label: "History" },
   { to: "/help/getting-started", label: "Help", match: ["/help/faq", "/help/"] },
@@ -78,11 +98,7 @@ export function AppNav() {
   return (
     <nav className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-12 max-w-6xl items-center gap-1 px-4">
-        <Link
-          to="/apply"
-          className="mr-3 text-sm font-semibold tracking-tight"
-          title="Home"
-        >
+        <Link to="/apply" className="mr-3 text-sm font-semibold tracking-tight" title="Home">
           Kit
         </Link>
         <div className="hidden flex-1 items-center gap-1 md:flex">
@@ -186,7 +202,13 @@ export function AppNav() {
             })}
             <div className="my-2 border-t border-border" />
             <MenuLink to="/settings" icon={SettingsIcon} label="Settings" mobile />
-            <MenuLink to="/whats-new" icon={Sparkles} label="What's new" badge={unreadCount} mobile />
+            <MenuLink
+              to="/whats-new"
+              icon={Sparkles}
+              label="What's new"
+              badge={unreadCount}
+              mobile
+            />
             {isAdmin && <MenuLink to="/admin" icon={Shield} label="Admin" mobile />}
             <button
               type="button"

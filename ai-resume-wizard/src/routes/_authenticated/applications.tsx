@@ -58,9 +58,7 @@ function ApplicationsHistoryPage() {
     const needle = q.trim().toLowerCase();
     const rows = sessionsQ.data ?? [];
     if (!needle) return rows;
-    return rows.filter((r) =>
-      `${r.company ?? ""} ${r.role ?? ""}`.toLowerCase().includes(needle),
-    );
+    return rows.filter((r) => `${r.company ?? ""} ${r.role ?? ""}`.toLowerCase().includes(needle));
   }, [sessionsQ.data, q]);
 
   const groups = useMemo(() => {
@@ -147,10 +145,7 @@ function ApplicationsHistoryPage() {
                       </span>
                     </button>
                     {openId === r.id && (
-                      <SessionDetail
-                        id={r.id}
-                        resume={resumeQ.data?.resume ?? null}
-                      />
+                      <SessionDetail id={r.id} resume={resumeQ.data?.resume ?? null} />
                     )}
                   </li>
                 ))}
@@ -187,7 +182,9 @@ function SessionDetail({
   };
 
   if (q.isLoading) {
-    return <p className="border-t border-border px-4 py-4 text-sm text-muted-foreground">Loading…</p>;
+    return (
+      <p className="border-t border-border px-4 py-4 text-sm text-muted-foreground">Loading…</p>
+    );
   }
   if (q.error || !q.data) {
     return (
@@ -305,10 +302,7 @@ function SessionDetail({
             <button
               type="button"
               onClick={() =>
-                downloadTextFile(
-                  `${company || "Job"}_${role || "description"}`,
-                  d.jd_text ?? "",
-                )
+                downloadTextFile(`${company || "Job"}_${role || "description"}`, d.jd_text ?? "")
               }
               className="text-xs font-medium text-primary hover:underline"
             >

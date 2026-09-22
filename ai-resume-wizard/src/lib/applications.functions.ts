@@ -3,7 +3,13 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type ApplicationStage =
-  | "applied" | "response" | "screen" | "onsite" | "offer" | "rejected" | "withdrawn";
+  | "applied"
+  | "response"
+  | "screen"
+  | "onsite"
+  | "offer"
+  | "rejected"
+  | "withdrawn";
 
 export type Application = {
   id: string;
@@ -36,17 +42,21 @@ export const listApplications = createServerFn({ method: "GET" })
 export const upsertApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      id: z.string().uuid().optional(),
-      company: z.string().min(1).max(200),
-      role: z.string().min(1).max(200),
-      stage: z.enum(["applied", "response", "screen", "onsite", "offer", "rejected", "withdrawn"]).default("applied"),
-      jd_url: z.string().url().optional().nullable().or(z.literal("")),
-      notes: z.string().max(4000).optional().nullable(),
-      source: z.enum(["cold", "referral", "recruiter", "event", "other"]).default("cold"),
-      tailor_session_id: z.string().uuid().optional().nullable(),
-      applied_at: z.string().optional(),
-    }).parse(input),
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        company: z.string().min(1).max(200),
+        role: z.string().min(1).max(200),
+        stage: z
+          .enum(["applied", "response", "screen", "onsite", "offer", "rejected", "withdrawn"])
+          .default("applied"),
+        jd_url: z.string().url().optional().nullable().or(z.literal("")),
+        notes: z.string().max(4000).optional().nullable(),
+        source: z.enum(["cold", "referral", "recruiter", "event", "other"]).default("cold"),
+        tailor_session_id: z.string().uuid().optional().nullable(),
+        applied_at: z.string().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }): Promise<Application> => {
     const payload = {
