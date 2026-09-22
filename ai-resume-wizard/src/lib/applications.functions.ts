@@ -171,3 +171,58 @@ export const listTailorSessions = createServerFn({ method: "GET" })
       };
     });
   });
+
+export type TailorSessionDetail = {
+  id: string;
+  company: string | null;
+  role: string | null;
+  created_at: string;
+  jd_text: string | null;
+  jd_url: string | null;
+  cover_letter: string | null;
+  summary: string;
+  bullets: { company: string; title?: string; bullets: string[] }[];
+  match_score: number | null;
+  matched_keywords: string[];
+  missing_keywords: string[];
+};
+
+/**
+ * One saved tailoring session, scoped to the caller. RLS on tailor_sessions is
+ * `auth.uid() = user_id`, and the query also filters on the verified user id,
+ * so another user's session can never be returned.
+ */
+export const getTailorSession = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }): Promise<TailorSessionDetail | null> => {
+    const { data: row, error } = await context.supabase
+      .from("tailor_sessions")
+      .select("id, company, role, created_at, jd_text, jd_url, cover_letter, tailored_resume")
+      .eq("user_id", context.userId)
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) return null;
+    const t = (row.tailored_resume ?? {}) as {
+      summary?: string;
+      bullets?: { company: string; title?: string; bullets: string[] }[];
+      matchScore?: number;
+      matchedKeywords?: string[];
+      missingKeywords?: string[];
+    };
+    return {
+      id: row.id,
+      company: row.company,
+      role: row.role,
+      created_at: row.created_at,
+      jd_text: row.jd_text,
+      jd_url: row.jd_url,
+      cover_letter: row.cover_letter,
+      summary: t.summary ?? "",
+      bullets: t.bullets ?? [],
+      match_score: typeof t.matchScore === "number" ? t.matchScore : null,
+      matched_keywords: t.matchedKeywords ?? [],
+      missing_keywords: t.missingKeywords ?? [],
+    };
+  });
