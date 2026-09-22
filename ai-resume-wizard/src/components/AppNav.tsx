@@ -17,6 +17,7 @@ const ITEMS: NavItem[] = [
   { to: "/apply/discover", label: "Find Jobs" },
   { to: "/apply/matches", label: "My Jobs", match: ["/apply/go", "/apply/tailor", "/apply/interview-prep", "/apply/autofill", "/apply/referrals", "/apply/metrics"] },
   { to: "/resume", label: "My Resume", match: ["/resumes", "/apply/rewrite"] },
+  { to: "/applications", label: "History" },
   { to: "/help/getting-started", label: "Help", match: ["/help/faq", "/help/"] },
 ];
 
