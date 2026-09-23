@@ -84,6 +84,7 @@ function SettingsPage() {
               ? "Your free allowance resets on the 1st of each month. Downloads, history and tracking are always free."
               : "Resets at midnight UTC."}
           </p>
+          <div className="mt-5 space-y-3">
 
             {ACTIONS.map((a) => {
               const used = counts[a] ?? 0;
