@@ -141,9 +141,7 @@ function ApplicationsHistoryPage() {
                     <SessionRow
                       row={j.latest}
                       open={openId === j.latest.id}
-                      onToggle={() =>
-                        setOpenId((v) => (v === j.latest.id ? null : j.latest.id))
-                      }
+                      onToggle={() => setOpenId((v) => (v === j.latest.id ? null : j.latest.id))}
                       resume={resumeQ.data?.resume ?? null}
                     />
                     {j.older.length > 0 && (
