@@ -310,7 +310,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
     const { data: existingReq } = await supabaseAdmin
       .from("access_requests")
       .select("id")
-      .ilike("email", data.email)
+      .ilike("email", data.email.replace(/[%_\\]/g, "\\$&"))
       .order("requested_at", { ascending: false })
       .limit(1)
       .maybeSingle();
