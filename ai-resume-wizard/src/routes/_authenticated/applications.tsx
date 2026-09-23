@@ -70,8 +70,18 @@ function ApplicationsHistoryPage() {
     for (const r of filtered) {
       const key = `${(r.company ?? "").trim().toLowerCase()}|${(r.role ?? "").trim().toLowerCase()}`;
       const found = byKey.get(key);
-      if (found) found.older.push(r);
-      else byKey.set(key, { latest: r, older: [] });
+      if (!found) {
+        byKey.set(key, { latest: r, older: [] });
+        continue;
+      }
+      // Prefer a run that actually produced a tailored resume as the headline
+      // entry, so a later interview prep run does not hide it.
+      if (!found.latest.has_tailored_resume && r.has_tailored_resume) {
+        found.older.push(found.latest);
+        found.latest = r;
+      } else {
+        found.older.push(r);
+      }
     }
     return [...byKey.values()];
   }, [filtered]);
