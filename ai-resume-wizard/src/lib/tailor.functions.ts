@@ -198,9 +198,11 @@ export const tailorResume = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<TailorResult> => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("LOVABLE_API_KEY not configured");
-    await enforceUsage(context.supabase, context.userId, "tailor");
 
-    const baseQ = context.supabase.from("resumes").select("data").eq("user_id", context.userId);
+    const baseQ = context.supabase
+      .from("resumes")
+      .select("data, updated_at")
+      .eq("user_id", context.userId);
     const { data: row, error } = data.resumeId
       ? await baseQ.eq("id", data.resumeId).maybeSingle()
       : await baseQ.eq("is_primary", true).maybeSingle();
@@ -208,6 +210,35 @@ export const tailorResume = createServerFn({ method: "POST" })
     if (!row) throw new Error("No resume found. Visit /resume to add yours first.");
 
     const master = row.data as unknown as MasterResume;
+    const trimmedJd = trimJobDescription(data.jobDescription);
+    const inputHash = await tailorInputHash({
+      userId: context.userId,
+      resumeVersion: String((row as { updated_at?: string }).updated_at ?? ""),
+      jd: trimmedJd,
+      mode: data.mode,
+    });
+
+    // Cache hit: identical resume version + job description + mode. Return the
+    // saved result, no AI call and no usage consumed.
+    const { data: cached } = await context.supabase
+      .from("tailor_sessions")
+      .select("tailored_resume")
+      .eq("user_id", context.userId)
+      .eq("input_hash", inputHash)
+      .not("tailored_resume", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (cached?.tailored_resume) {
+      const prior = cached.tailored_resume as unknown as TailorResult;
+      return {
+        ...prior,
+        injection: detectApplicantInstructions(data.jobDescription),
+        mode: data.mode,
+      };
+    }
+
+    await enforceUsage(context.supabase, context.userId, "tailor");
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const gateway = createLovableAiGatewayProvider(key);
@@ -232,9 +263,10 @@ export const tailorResume = createServerFn({ method: "POST" })
       roleList,
       company: data.company,
       role: data.role,
-      jd: data.jobDescription,
+      jd: trimmedJd,
       mode: data.mode,
     });
+
 
     const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
