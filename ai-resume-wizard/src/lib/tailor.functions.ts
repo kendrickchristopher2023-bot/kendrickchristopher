@@ -310,6 +310,8 @@ export const tailorResume = createServerFn({ method: "POST" })
         jd_text: data.jobDescription,
         tailored_resume: parsed as never,
         cover_letter: parsed.coverLetter,
+        input_hash: inputHash,
+
       });
     } catch {
       // ignore
