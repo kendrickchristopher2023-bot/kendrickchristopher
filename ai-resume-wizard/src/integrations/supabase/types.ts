@@ -389,6 +389,7 @@ export type Database = {
           last_active_at: string | null
           onboarded_at: string | null
           plan: Database["public"]["Enums"]["plan_tier"]
+          plan_expires_at: string | null
           screener_answers: Json
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -409,6 +410,7 @@ export type Database = {
           last_active_at?: string | null
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
+          plan_expires_at?: string | null
           screener_answers?: Json
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -429,6 +431,7 @@ export type Database = {
           last_active_at?: string | null
           onboarded_at?: string | null
           plan?: Database["public"]["Enums"]["plan_tier"]
+          plan_expires_at?: string | null
           screener_answers?: Json
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -513,6 +516,7 @@ export type Database = {
           cover_letter: string | null
           created_at: string
           id: string
+          input_hash: string | null
           interview_prep: Json | null
           jd_text: string | null
           jd_url: string | null
@@ -527,6 +531,7 @@ export type Database = {
           cover_letter?: string | null
           created_at?: string
           id?: string
+          input_hash?: string | null
           interview_prep?: Json | null
           jd_text?: string | null
           jd_url?: string | null
@@ -541,6 +546,7 @@ export type Database = {
           cover_letter?: string | null
           created_at?: string
           id?: string
+          input_hash?: string | null
           interview_prep?: Json | null
           jd_text?: string | null
           jd_url?: string | null
@@ -669,6 +675,7 @@ export type Database = {
     }
     Functions: {
       dispatch_refresh_slices: { Args: never; Returns: Json }
+      effective_plan: { Args: { _user_id: string }; Returns: string }
       increment_usage: {
         Args: { _action: string }
         Returns: {

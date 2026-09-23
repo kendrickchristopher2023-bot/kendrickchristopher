@@ -49,6 +49,7 @@ function SettingsPage() {
 
   const plan = q.data?.plan ?? "free";
   const counts = q.data?.counts ?? {};
+  const monthly = (q.data?.window ?? (plan === "free" ? "month" : "day")) === "month";
 
   return (
     <main
@@ -74,8 +75,14 @@ function SettingsPage() {
         <BillingSection plan={plan} />
 
         <section className="mt-6 rounded-lg border border-border bg-card p-6">
-          <h2 className="text-lg font-semibold">Today's AI usage</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Resets at midnight UTC.</p>
+          <h2 className="text-lg font-semibold">
+            {monthly ? "This month's AI usage" : "Today's AI usage"}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {monthly
+              ? "Your free allowance resets on the 1st of each month. Downloads, history and tracking are always free."
+              : "Resets at midnight UTC."}
+          </p>
           <div className="mt-5 space-y-3">
             {ACTIONS.map((a) => {
               const used = counts[a] ?? 0;
@@ -185,7 +192,7 @@ function BillingSection({ plan }: { plan: Plan }) {
               <li key={h.action} className="flex justify-between gap-4">
                 <span>{h.label}</span>
                 <span className="text-muted-foreground">
-                  {PLAN_CAPS.free[h.action]} → {PLAN_CAPS.pro[h.action]} per day
+                  {PLAN_CAPS.free[h.action]} a month → {PLAN_CAPS.pro[h.action]} a day
                 </span>
               </li>
             ))}

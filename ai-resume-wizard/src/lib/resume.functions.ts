@@ -24,7 +24,6 @@ async function markOnboardedIfNeeded(userId: string) {
     .is("onboarded_at", null);
 }
 
-
 export const listMyResumes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ResumeMeta[]> => {
@@ -43,15 +42,23 @@ export const getMyResume = createServerFn({ method: "GET" })
   .inputValidator((input?: { id?: string }) =>
     z.object({ id: z.string().uuid().optional() }).parse(input ?? {}),
   )
-  .handler(async ({ data, context }): Promise<{ resume: MasterResume | null; id: string | null; name: string | null }> => {
-    const q = context.supabase.from("resumes").select("id, data, name").eq("user_id", context.userId);
-    const { data: row, error } = data.id
-      ? await q.eq("id", data.id).maybeSingle()
-      : await q.eq("is_primary", true).maybeSingle();
-    if (error) throw error;
-    if (!row) return { resume: null, id: null, name: null };
-    return { resume: row.data as unknown as MasterResume, id: row.id, name: row.name ?? null };
-  });
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ resume: MasterResume | null; id: string | null; name: string | null }> => {
+      const q = context.supabase
+        .from("resumes")
+        .select("id, data, name")
+        .eq("user_id", context.userId);
+      const { data: row, error } = data.id
+        ? await q.eq("id", data.id).maybeSingle()
+        : await q.eq("is_primary", true).maybeSingle();
+      if (error) throw error;
+      if (!row) return { resume: null, id: null, name: null };
+      return { resume: row.data as unknown as MasterResume, id: row.id, name: row.name ?? null };
+    },
+  );
 
 export const saveMyResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -97,7 +104,12 @@ export const saveMyResume = createServerFn({ method: "POST" })
     }
     const { data: inserted, error } = await context.supabase
       .from("resumes")
-      .insert({ user_id: context.userId, data: data.resume as never, is_primary: true, name: data.name || null })
+      .insert({
+        user_id: context.userId,
+        data: data.resume as never,
+        is_primary: true,
+        name: data.name || null,
+      })
       .select("id")
       .single();
     if (error) throw error;
@@ -160,9 +172,7 @@ export const renameResume = createServerFn({ method: "POST" })
 
 export const setPrimaryResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) =>
-    z.object({ id: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     // Drop existing primary first (partial unique index would block otherwise).
     await context.supabase
@@ -240,7 +250,11 @@ ${data.text}`;
       prompt,
     });
 
-    const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
+    const cleaned = text
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/, "");
     let parsed: MasterResume;
     try {
       parsed = JSON.parse(cleaned);
@@ -254,6 +268,7 @@ ${data.text}`;
 
 export type UsageSnapshot = {
   plan: "free" | "pro" | "founder";
+  window: "month" | "day";
   day: string;
   counts: Record<string, number>;
 };
@@ -261,36 +276,47 @@ export type UsageSnapshot = {
 export const getMyUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<UsageSnapshot> => {
+    const { computeEffectivePlan, PLAN_WINDOW } = await import("./usage");
     const { data: prof } = await context.supabase
       .from("profiles")
-      .select("plan")
+      .select("plan, plan_expires_at")
       .eq("id", context.userId)
       .maybeSingle();
-    const planRaw = (prof?.plan as string | null) ?? "free";
-    const plan = (planRaw === "pro" || planRaw === "founder" ? planRaw : "free") as
-      | "free"
-      | "pro"
-      | "founder";
+    const plan = computeEffectivePlan(
+      prof?.plan as string | null,
+      (prof as { plan_expires_at?: string | null } | null)?.plan_expires_at ?? null,
+    );
+    const window = PLAN_WINDOW[plan];
 
     const today = new Date().toISOString().slice(0, 10);
-    const { data: usage } = await context.supabase
+    // Free runs on a calendar-month allowance, pro/founder on a daily guard.
+    const from = window === "month" ? `${today.slice(0, 7)}-01` : today;
+
+    const { data: rows } = await context.supabase
       .from("usage_daily")
       .select("*")
       .eq("user_id", context.userId)
-      .eq("day", today)
-      .maybeSingle();
+      .gte("day", from)
+      .lte("day", today);
+
+    const sum = (key: string) =>
+      (rows ?? []).reduce(
+        (acc: number, r: Record<string, unknown>) => acc + ((r[key] as number) ?? 0),
+        0,
+      );
 
     return {
       plan,
+      window,
       day: today,
       counts: {
-        tailor: (usage?.tailor_count as number) ?? 0,
-        cover_letter: (usage?.cover_letter_count as number) ?? 0,
-        interview_prep: (usage?.interview_prep_count as number) ?? 0,
-        linkedin: (usage?.linkedin_count as number) ?? 0,
-        referral_dm: (usage?.referral_dm_count as number) ?? 0,
-        parse_resume: (usage?.parse_resume_count as number) ?? 0,
-        chat: (usage?.chat_count as number) ?? 0,
+        tailor: sum("tailor_count"),
+        cover_letter: sum("cover_letter_count"),
+        interview_prep: sum("interview_prep_count"),
+        linkedin: sum("linkedin_count"),
+        referral_dm: sum("referral_dm_count"),
+        parse_resume: sum("parse_resume_count"),
+        chat: sum("chat_count"),
       },
     };
   });

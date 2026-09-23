@@ -65,16 +65,13 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
         .eq("id", data.id)
         .single();
       if (req) {
-        const { supabaseAdmin } = await import(
-          "@/integrations/supabase/client.server"
-        );
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const origin = process.env.APP_URL || "http://localhost:8080";
-        const { data: link, error: linkErr } =
-          await supabaseAdmin.auth.admin.generateLink({
-            type: "magiclink",
-            email: req.email,
-            options: { redirectTo: `${origin}/auth` },
-          });
+        const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+          type: "magiclink",
+          email: req.email,
+          options: { redirectTo: `${origin}/auth` },
+        });
         if (linkErr) throw linkErr;
         const magicLink = link.properties?.action_link ?? null;
 
@@ -83,20 +80,14 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
         let emailMessageId: string | null = null;
         if (magicLink) {
           try {
-            const { sendTemplateEmail } = await import(
-              "@/lib/email-templates/send-email"
-            );
-            const result = await sendTemplateEmail(
-              "access-approved",
-              req.email,
-              {
-                templateData: {
-                  magicLink,
-                  fullName: (req as { full_name?: string | null }).full_name ?? null,
-                },
-                idempotencyKey: `access-approved-${data.id}`,
+            const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+            const result = await sendTemplateEmail("access-approved", req.email, {
+              templateData: {
+                magicLink,
+                fullName: (req as { full_name?: string | null }).full_name ?? null,
               },
-            );
+              idempotencyKey: `access-approved-${data.id}`,
+            });
             emailSent = result.sent;
             emailMessageId = result.messageId ?? null;
             if (!result.sent) emailError = result.reason;
@@ -124,9 +115,7 @@ export const reviewAccessRequest = createServerFn({ method: "POST" })
 
 export const resendAccessLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) =>
-    z.object({ id: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: req, error: reqErr } = await context.supabase
@@ -136,16 +125,13 @@ export const resendAccessLink = createServerFn({ method: "POST" })
       .single();
     if (reqErr || !req) throw reqErr ?? new Error("Not found");
 
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const origin = process.env.APP_URL || "http://localhost:8080";
-    const { data: link, error: linkErr } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: req.email,
-        options: { redirectTo: `${origin}/auth` },
-      });
+    const { data: link, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email: req.email,
+      options: { redirectTo: `${origin}/auth` },
+    });
     if (linkErr) throw linkErr;
     const magicLink = link.properties?.action_link ?? null;
 
@@ -154,14 +140,11 @@ export const resendAccessLink = createServerFn({ method: "POST" })
     let emailMessageId: string | null = null;
     if (magicLink) {
       try {
-        const { sendTemplateEmail } = await import(
-          "@/lib/email-templates/send-email"
-        );
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
         const result = await sendTemplateEmail("access-approved", req.email, {
           templateData: {
             magicLink,
-            fullName:
-              (req as { full_name?: string | null }).full_name ?? null,
+            fullName: (req as { full_name?: string | null }).full_name ?? null,
           },
           idempotencyKey: `access-resend-${data.id}-${Date.now()}`,
         });
@@ -195,7 +178,6 @@ export const resendAccessLink = createServerFn({ method: "POST" })
 // Admin is provisioned manually in the database — there is no self-serve
 // claim endpoint. Only the single owner account holds the `admin` role.
 
-
 export const currentUserIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -224,9 +206,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const origin = process.env.APP_URL || "https://excel-ai-resume.lovable.app";
     const redirectTo = `${origin}/auth`;
 
@@ -240,9 +220,7 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
       });
       if (error) throw error;
       const users = list?.users ?? [];
-      const match = users.find(
-        (u) => (u.email ?? "").toLowerCase() === data.email,
-      );
+      const match = users.find((u) => (u.email ?? "").toLowerCase() === data.email);
       if (match) {
         existingUserId = match.id;
         break;
@@ -289,34 +267,53 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
     }
     // Persist full_name on the profile if provided (only for freshly-created users).
     if (userId && data.full_name && !existingUserId) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ full_name: data.full_name })
-        .eq("id", userId);
+      await supabaseAdmin.from("profiles").update({ full_name: data.full_name }).eq("id", userId);
     }
 
     // Record in access_requests so invites show up in the same audit trail.
-    const { data: reqRow } = await supabaseAdmin
+    // Upsert by lower(email): re-inviting the same person updates the existing
+    // row instead of piling up duplicates.
+    const inviteFields = {
+      email: data.email,
+      full_name: data.full_name ?? null,
+      reason: `[admin invite] plan=${data.plan ?? "free"}`,
+      status: "approved" as const,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: context.userId,
+    };
+
+    const { data: existingReq } = await supabaseAdmin
       .from("access_requests")
-      .insert({
-        email: data.email,
-        full_name: data.full_name ?? null,
-        reason: `[admin invite] plan=${data.plan ?? "free"}`,
-        status: "approved",
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: context.userId,
-      })
       .select("id")
-      .single();
+      .ilike("email", data.email.replace(/[%_\\]/g, "\\$&"))
+      .order("requested_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let reqRow: { id: string } | null = null;
+    if (existingReq?.id) {
+      const { data: updated } = await supabaseAdmin
+        .from("access_requests")
+        .update(inviteFields)
+        .eq("id", existingReq.id)
+        .select("id")
+        .single();
+      reqRow = updated ?? { id: existingReq.id as string };
+    } else {
+      const { data: inserted } = await supabaseAdmin
+        .from("access_requests")
+        .insert(inviteFields)
+        .select("id")
+        .single();
+      reqRow = inserted ?? null;
+    }
 
     let emailSent = false;
     let emailError: string | null = null;
     let emailMessageId: string | null = null;
     if (magicLink) {
       try {
-        const { sendTemplateEmail } = await import(
-          "@/lib/email-templates/send-email"
-        );
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
         const result = await sendTemplateEmail("access-approved", data.email, {
           templateData: {
             magicLink,
@@ -361,29 +358,23 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [{ data: profiles }, { data: resumes }, { data: usage }, authList] =
-      await Promise.all([
-        supabaseAdmin
-          .from("profiles")
-          // Demo accounts stay visible here so an admin can still manage or
-          // delete them; they are excluded from analytics, not user management.
-          .select("id, email, full_name, plan, created_at, onboarded_at, last_active_at")
-          .order("created_at", { ascending: false }),
+    const [{ data: profiles }, { data: resumes }, { data: usage }, authList] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        // Demo accounts stay visible here so an admin can still manage or
+        // delete them; they are excluded from analytics, not user management.
+        .select("id, email, full_name, plan, created_at, onboarded_at, last_active_at")
+        .order("created_at", { ascending: false }),
 
-        supabaseAdmin
-          .from("resumes")
-          .select("user_id, is_primary")
-          .eq("is_primary", true),
-        supabaseAdmin
-          .from("usage_daily")
-          .select("*")
-          .eq("day", new Date().toISOString().slice(0, 10)),
-        supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-      ]);
+      supabaseAdmin.from("resumes").select("user_id, is_primary").eq("is_primary", true),
+      supabaseAdmin
+        .from("usage_daily")
+        .select("*")
+        .eq("day", new Date().toISOString().slice(0, 10)),
+      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    ]);
 
     const primaryByUser = new Set((resumes ?? []).map((r) => r.user_id));
     const usageByUser = new Map<string, number>();
@@ -404,7 +395,10 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
       const untilRaw = (u as { banned_until?: string | null }).banned_until;
       const banned = !!untilRaw && new Date(untilRaw).getTime() > Date.now();
       bannedByUser.set(u.id, banned);
-      lastSignInByUser.set(u.id, (u as { last_sign_in_at?: string | null }).last_sign_in_at ?? null);
+      lastSignInByUser.set(
+        u.id,
+        (u as { last_sign_in_at?: string | null }).last_sign_in_at ?? null,
+      );
     }
 
     return {
@@ -424,19 +418,14 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
     };
   });
 
-
 export const updateUserPlanAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { userId: string; plan: PlanTier }) =>
-    z
-      .object({ userId: z.string().uuid(), plan: z.enum(PLAN_VALUES) })
-      .parse(input),
+    z.object({ userId: z.string().uuid(), plan: z.enum(PLAN_VALUES) }).parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({ plan: data.plan })
@@ -451,18 +440,14 @@ export const updateUserPlanAdmin = createServerFn({ method: "POST" })
 export const setUserAccessAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { userId: string; revoked: boolean }) =>
-    z
-      .object({ userId: z.string().uuid(), revoked: z.boolean() })
-      .parse(input),
+    z.object({ userId: z.string().uuid(), revoked: z.boolean() }).parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     if (data.userId === context.userId) {
       throw new Error("You can't revoke your own access.");
     }
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(
       data.userId,
       // 100 years to revoke, "none" to restore. Sign-in is blocked while banned;
@@ -498,9 +483,7 @@ export const deleteUserAdmin = createServerFn({ method: "POST" })
     if (data.userId === context.userId) {
       throw new Error("You can't delete your own account.");
     }
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Audit BEFORE delete so the target_user_id/email is retained even after
     // the auth user (and cascading profile rows) are gone.
     await writeAudit(context.userId, "user.deleted", data.userId, {
@@ -515,9 +498,7 @@ export const listAdminAuditLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("admin_audit_log")
       .select("*")
@@ -558,9 +539,7 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import(
-      "@/integrations/supabase/client.server"
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date();
     since.setDate(since.getDate() - 30);
     const sinceIso = since.toISOString();
@@ -574,26 +553,24 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
     const demoIds = (demoRows ?? []).map((r) => r.id);
     const notDemo = `(${demoIds.join(",")})`;
 
-    const [{ data: profs }, { data: usage }, { data: apps }] =
-      await Promise.all([
-        supabaseAdmin
-          .from("profiles")
-          .select("created_at")
-          .eq("is_demo", false)
-          .gte("created_at", sinceIso),
+    const [{ data: profs }, { data: usage }, { data: apps }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("created_at")
+        .eq("is_demo", false)
+        .gte("created_at", sinceIso),
 
-        (() => {
-          let q = supabaseAdmin.from("usage_daily").select("*").gte("day", sinceDay);
-          if (demoIds.length) q = q.not("user_id", "in", notDemo);
-          return q;
-        })(),
-        (() => {
-          let q = supabaseAdmin.from("applications").select("stage");
-          if (demoIds.length) q = q.not("user_id", "in", notDemo);
-          return q;
-        })(),
-      ]);
-
+      (() => {
+        let q = supabaseAdmin.from("usage_daily").select("*").gte("day", sinceDay);
+        if (demoIds.length) q = q.not("user_id", "in", notDemo);
+        return q;
+      })(),
+      (() => {
+        let q = supabaseAdmin.from("applications").select("stage");
+        if (demoIds.length) q = q.not("user_id", "in", notDemo);
+        return q;
+      })(),
+    ]);
 
     const signupsByDay = new Map<string, number>();
     for (const p of profs ?? []) {
@@ -629,4 +606,35 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
     }
 
     return { signups, usageTotals: totals, funnel };
+  });
+
+/**
+ * Remove a row from the Access requests audit list.
+ * This only deletes the audit row. It never touches the user's account,
+ * their login, or any of their data.
+ */
+export const deleteAccessRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row } = await supabaseAdmin
+      .from("access_requests")
+      .select("id, email, status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("Request not found");
+
+    const { error } = await supabaseAdmin.from("access_requests").delete().eq("id", data.id);
+    if (error) throw error;
+
+    await writeAudit(context.userId, "delete_access_request", null, {
+      request_id: data.id,
+      email: row.email,
+      status: row.status,
+    });
+
+    return { ok: true };
   });

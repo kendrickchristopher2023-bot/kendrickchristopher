@@ -17,6 +17,8 @@
 - **Saved resume rewrite usage change — REVERTED per Christopher (no-go).** The included rewrite is consumed when the AI produces the draft (original behavior); founders stay unlimited. Both What's New entries ("Your included resume rewrite is only used when you save it", "Clearer warning on invite links") stay unpublished.
 
 ## Recently completed
+- Plan/quota restructure: `plan_expires_at` + `effective_plan()` as the single source of truth (app + SQL agree), free = monthly allowance, pro/founder = daily abuse guard, new signups default to free, identical re-tailoring reuses the saved session (no AI call, no usage), invite no longer duplicates access-request rows, admin "Remove" button on access requests (audit row only).
+
 - Demo filming (Jordan Ellis, fictional data): 8 clips + contact sheets, uploaded, 7-day links. No publish, no real data.
 - Owner metrics feed: live, secret-gated, aggregate-only.
 - Session-security hardening, "sign out everywhere", 8h idle timeout, shared-computer reminder — published.
