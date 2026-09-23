@@ -116,7 +116,6 @@ function withRoleTitles(
   }));
 }
 
-
 function buildTailorPrompt(opts: {
   masterJson: string;
   roleList: { company: string; title: string }[];
@@ -267,7 +266,6 @@ export const tailorResume = createServerFn({ method: "POST" })
       mode: data.mode,
     });
 
-
     const { text } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
       system: SYSTEM,
@@ -311,7 +309,6 @@ export const tailorResume = createServerFn({ method: "POST" })
         tailored_resume: parsed as never,
         cover_letter: parsed.coverLetter,
         input_hash: inputHash,
-
       });
     } catch {
       // ignore
@@ -359,7 +356,6 @@ export const batchTailorResume = createServerFn({ method: "POST" })
     if (!row) throw new Error("No resume on file. Visit /resume first.");
     const master = row.data as unknown as MasterResume;
     const resumeVersion = String((row as { updated_at?: string }).updated_at ?? "");
-
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const gateway = createLovableAiGatewayProvider(key);
@@ -448,7 +444,6 @@ export const batchTailorResume = createServerFn({ method: "POST" })
             tailored_resume: parsed as never,
             cover_letter: parsed.coverLetter,
             input_hash: inputHash,
-
           })
           .select("id")
           .single();

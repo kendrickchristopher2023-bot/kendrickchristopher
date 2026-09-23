@@ -14,7 +14,6 @@ import {
   getAdminAnalytics,
   inviteUserByEmailAdmin,
   deleteAccessRequest,
-
 } from "@/lib/admin.functions";
 import { listRefreshRuns, type RefreshRun } from "@/lib/refresh-runs.functions";
 import {
@@ -193,8 +192,6 @@ function AdminDashboard() {
       qc.invalidateQueries({ queryKey: ["admin", "audit"] });
     },
   });
-
-
 
   const filteredUsers = useMemo(() => {
     const list = users.data?.users ?? [];
@@ -633,7 +630,6 @@ function AdminDashboard() {
                           >
                             Remove
                           </button>
-
                         </div>
                       </td>
                     </tr>

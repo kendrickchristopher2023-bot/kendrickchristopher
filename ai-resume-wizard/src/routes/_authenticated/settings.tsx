@@ -51,7 +51,6 @@ function SettingsPage() {
   const counts = q.data?.counts ?? {};
   const monthly = (q.data?.window ?? (plan === "free" ? "month" : "day")) === "month";
 
-
   return (
     <main
       className="min-h-screen bg-background px-6 py-12"
@@ -85,7 +84,6 @@ function SettingsPage() {
               : "Resets at midnight UTC."}
           </p>
           <div className="mt-5 space-y-3">
-
             {ACTIONS.map((a) => {
               const used = counts[a] ?? 0;
               const cap = PLAN_CAPS[plan][a];
@@ -196,7 +194,6 @@ function BillingSection({ plan }: { plan: Plan }) {
                 <span className="text-muted-foreground">
                   {PLAN_CAPS.free[h.action]} a month → {PLAN_CAPS.pro[h.action]} a day
                 </span>
-
               </li>
             ))}
             <li className="flex justify-between gap-4">

@@ -24,7 +24,6 @@ async function markOnboardedIfNeeded(userId: string) {
     .is("onboarded_at", null);
 }
 
-
 export const listMyResumes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ResumeMeta[]> => {
@@ -43,15 +42,23 @@ export const getMyResume = createServerFn({ method: "GET" })
   .inputValidator((input?: { id?: string }) =>
     z.object({ id: z.string().uuid().optional() }).parse(input ?? {}),
   )
-  .handler(async ({ data, context }): Promise<{ resume: MasterResume | null; id: string | null; name: string | null }> => {
-    const q = context.supabase.from("resumes").select("id, data, name").eq("user_id", context.userId);
-    const { data: row, error } = data.id
-      ? await q.eq("id", data.id).maybeSingle()
-      : await q.eq("is_primary", true).maybeSingle();
-    if (error) throw error;
-    if (!row) return { resume: null, id: null, name: null };
-    return { resume: row.data as unknown as MasterResume, id: row.id, name: row.name ?? null };
-  });
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ resume: MasterResume | null; id: string | null; name: string | null }> => {
+      const q = context.supabase
+        .from("resumes")
+        .select("id, data, name")
+        .eq("user_id", context.userId);
+      const { data: row, error } = data.id
+        ? await q.eq("id", data.id).maybeSingle()
+        : await q.eq("is_primary", true).maybeSingle();
+      if (error) throw error;
+      if (!row) return { resume: null, id: null, name: null };
+      return { resume: row.data as unknown as MasterResume, id: row.id, name: row.name ?? null };
+    },
+  );
 
 export const saveMyResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -97,7 +104,12 @@ export const saveMyResume = createServerFn({ method: "POST" })
     }
     const { data: inserted, error } = await context.supabase
       .from("resumes")
-      .insert({ user_id: context.userId, data: data.resume as never, is_primary: true, name: data.name || null })
+      .insert({
+        user_id: context.userId,
+        data: data.resume as never,
+        is_primary: true,
+        name: data.name || null,
+      })
       .select("id")
       .single();
     if (error) throw error;
@@ -160,9 +172,7 @@ export const renameResume = createServerFn({ method: "POST" })
 
 export const setPrimaryResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) =>
-    z.object({ id: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     // Drop existing primary first (partial unique index would block otherwise).
     await context.supabase
@@ -240,7 +250,11 @@ ${data.text}`;
       prompt,
     });
 
-    const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "");
+    const cleaned = text
+      .trim()
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/, "");
     let parsed: MasterResume;
     try {
       parsed = JSON.parse(cleaned);
@@ -306,4 +320,3 @@ export const getMyUsage = createServerFn({ method: "GET" })
       },
     };
   });
-
