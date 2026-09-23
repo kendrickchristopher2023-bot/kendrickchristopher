@@ -619,6 +619,21 @@ function AdminDashboard() {
                               Resend link
                             </button>
                           )}
+                          <button
+                            onClick={() => {
+                              const warn =
+                                r.status === "pending"
+                                  ? `This request from ${r.email} is still pending. Remove it from the list anyway? It will not be approved or denied.`
+                                  : `Remove the ${r.email} row from this list? This only clears the record here. Their account and access are not touched.`;
+                              if (window.confirm(warn)) removeRequest.mutate({ id: r.id });
+                            }}
+                            disabled={removeRequest.isPending}
+                            title="Remove this row from the list. Does not affect the person's account."
+                            className="rounded-md border border-input px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                          >
+                            Remove
+                          </button>
+
                         </div>
                       </td>
                     </tr>
