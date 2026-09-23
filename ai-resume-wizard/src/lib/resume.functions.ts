@@ -254,6 +254,7 @@ ${data.text}`;
 
 export type UsageSnapshot = {
   plan: "free" | "pro" | "founder";
+  window: "month" | "day";
   day: string;
   counts: Record<string, number>;
 };
@@ -261,36 +262,48 @@ export type UsageSnapshot = {
 export const getMyUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<UsageSnapshot> => {
+    const { computeEffectivePlan, PLAN_WINDOW } = await import("./usage");
     const { data: prof } = await context.supabase
       .from("profiles")
-      .select("plan")
+      .select("plan, plan_expires_at")
       .eq("id", context.userId)
       .maybeSingle();
-    const planRaw = (prof?.plan as string | null) ?? "free";
-    const plan = (planRaw === "pro" || planRaw === "founder" ? planRaw : "free") as
-      | "free"
-      | "pro"
-      | "founder";
+    const plan = computeEffectivePlan(
+      prof?.plan as string | null,
+      (prof as { plan_expires_at?: string | null } | null)?.plan_expires_at ?? null,
+    );
+    const window = PLAN_WINDOW[plan];
 
     const today = new Date().toISOString().slice(0, 10);
-    const { data: usage } = await context.supabase
+    // Free runs on a calendar-month allowance, pro/founder on a daily guard.
+    const from = window === "month" ? `${today.slice(0, 7)}-01` : today;
+
+    const { data: rows } = await context.supabase
       .from("usage_daily")
       .select("*")
       .eq("user_id", context.userId)
-      .eq("day", today)
-      .maybeSingle();
+      .gte("day", from)
+      .lte("day", today);
+
+    const sum = (key: string) =>
+      (rows ?? []).reduce(
+        (acc: number, r: Record<string, unknown>) => acc + ((r[key] as number) ?? 0),
+        0,
+      );
 
     return {
       plan,
+      window,
       day: today,
       counts: {
-        tailor: (usage?.tailor_count as number) ?? 0,
-        cover_letter: (usage?.cover_letter_count as number) ?? 0,
-        interview_prep: (usage?.interview_prep_count as number) ?? 0,
-        linkedin: (usage?.linkedin_count as number) ?? 0,
-        referral_dm: (usage?.referral_dm_count as number) ?? 0,
-        parse_resume: (usage?.parse_resume_count as number) ?? 0,
-        chat: (usage?.chat_count as number) ?? 0,
+        tailor: sum("tailor_count"),
+        cover_letter: sum("cover_letter_count"),
+        interview_prep: sum("interview_prep_count"),
+        linkedin: sum("linkedin_count"),
+        referral_dm: sum("referral_dm_count"),
+        parse_resume: sum("parse_resume_count"),
+        chat: sum("chat_count"),
       },
     };
   });
+
