@@ -351,13 +351,15 @@ export const batchTailorResume = createServerFn({ method: "POST" })
 
     const { data: row, error } = await context.supabase
       .from("resumes")
-      .select("data")
+      .select("data, updated_at")
       .eq("user_id", context.userId)
       .eq("is_primary", true)
       .maybeSingle();
     if (error) throw error;
     if (!row) throw new Error("No resume on file. Visit /resume first.");
     const master = row.data as unknown as MasterResume;
+    const resumeVersion = String((row as { updated_at?: string }).updated_at ?? "");
+
 
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
     const gateway = createLovableAiGatewayProvider(key);
@@ -375,17 +377,47 @@ export const batchTailorResume = createServerFn({ method: "POST" })
     const results: BatchTailorItemResult[] = [];
     for (const item of data.items) {
       try {
+        const trimmedJd = trimJobDescription(item.jobDescription);
+        const inputHash = await tailorInputHash({
+          userId: context.userId,
+          resumeVersion,
+          jd: trimmedJd,
+          mode: "both",
+        });
+
+        // Reuse an identical earlier run: no AI call, no usage consumed.
+        const { data: cached } = await context.supabase
+          .from("tailor_sessions")
+          .select("id, tailored_resume")
+          .eq("user_id", context.userId)
+          .eq("input_hash", inputHash)
+          .not("tailored_resume", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (cached?.tailored_resume) {
+          const prior = cached.tailored_resume as unknown as TailorResult;
+          results.push({
+            match_id: item.match_id,
+            company: item.company,
+            role: item.role,
+            session_id: cached.id as string,
+            matchScore: prior.matchScore,
+          });
+          continue;
+        }
+
         await enforceUsage(context.supabase, context.userId, "tailor");
 
         const prompt = buildTailorPrompt({
           masterJson,
           roleList,
-
           company: item.company,
           role: item.role,
-          jd: item.jobDescription,
+          jd: trimmedJd,
           mode: "both",
         });
+
         const { text } = await generateText({
           model: gateway("google/gemini-3-flash-preview"),
           system: SYSTEM,
