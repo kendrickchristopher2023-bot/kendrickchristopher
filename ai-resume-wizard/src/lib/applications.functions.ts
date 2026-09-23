@@ -157,6 +157,8 @@ export type TailorSessionSummary = {
   has_cover_letter: boolean;
   has_referral_dm: boolean;
   match_score: number | null;
+  has_tailored_resume: boolean;
+  has_interview_prep: boolean;
 };
 
 export const listTailorSessions = createServerFn({ method: "GET" })
@@ -164,7 +166,9 @@ export const listTailorSessions = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<TailorSessionSummary[]> => {
     const { data, error } = await context.supabase
       .from("tailor_sessions")
-      .select("id, company, role, created_at, cover_letter, referral_dm, tailored_resume")
+      .select(
+        "id, company, role, created_at, cover_letter, referral_dm, tailored_resume, interview_prep",
+      )
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -178,6 +182,8 @@ export const listTailorSessions = createServerFn({ method: "GET" })
         has_cover_letter: !!r.cover_letter,
         has_referral_dm: !!r.referral_dm,
         match_score: t?.matchScore ?? null,
+        has_tailored_resume: !!r.tailored_resume,
+        has_interview_prep: !!r.interview_prep,
       };
     });
   });

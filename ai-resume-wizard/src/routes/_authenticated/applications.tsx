@@ -44,6 +44,7 @@ function ApplicationsHistoryPage() {
   const resumeFn = useServerFn(getMyResume);
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
   const sessionsQ = useQuery({
     queryKey: ["tailor-sessions"],
@@ -61,16 +62,40 @@ function ApplicationsHistoryPage() {
     return rows.filter((r) => `${r.company ?? ""} ${r.role ?? ""}`.toLowerCase().includes(needle));
   }, [sessionsQ.data, q]);
 
-  const groups = useMemo(() => {
-    const out: { label: string; rows: typeof filtered }[] = [];
+  // Every tailoring run and every interview prep run saves its own row. Collapse
+  // repeats of the same company + role so the list shows one entry per job, with
+  // the newest version on top and older runs tucked underneath.
+  const jobs = useMemo(() => {
+    const byKey = new Map<string, { latest: Row; older: Row[] }>();
     for (const r of filtered) {
-      const label = monthLabel(r.created_at);
+      const key = `${(r.company ?? "").trim().toLowerCase()}|${(r.role ?? "").trim().toLowerCase()}`;
+      const found = byKey.get(key);
+      if (!found) {
+        byKey.set(key, { latest: r, older: [] });
+        continue;
+      }
+      // Prefer a run that actually produced a tailored resume as the headline
+      // entry, so a later interview prep run does not hide it.
+      if (!found.latest.has_tailored_resume && r.has_tailored_resume) {
+        found.older.push(found.latest);
+        found.latest = r;
+      } else {
+        found.older.push(r);
+      }
+    }
+    return [...byKey.values()];
+  }, [filtered]);
+
+  const groups = useMemo(() => {
+    const out: { label: string; jobs: typeof jobs }[] = [];
+    for (const j of jobs) {
+      const label = monthLabel(j.latest.created_at);
       const last = out[out.length - 1];
-      if (last && last.label === label) last.rows.push(r);
-      else out.push({ label, rows: [r] });
+      if (last && last.label === label) last.jobs.push(j);
+      else out.push({ label, jobs: [j] });
     }
     return out;
-  }, [filtered]);
+  }, [jobs]);
 
   return (
     <main className="min-h-screen bg-background px-6 py-10">
@@ -83,8 +108,8 @@ function ApplicationsHistoryPage() {
             My Applications
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Everything you have tailored, newest first. Open any one to read the job description you
-            pasted and download the resume or cover letter again.
+            Everything you have tailored, newest first, one entry per job. Open any one to read the
+            job description you pasted and download the resume or cover letter again.
           </p>
         </header>
 
@@ -121,31 +146,42 @@ function ApplicationsHistoryPage() {
                 {g.label}
               </h2>
               <ul className="space-y-2">
-                {g.rows.map((r) => (
-                  <li key={r.id} className="rounded-lg border border-border bg-card">
-                    <button
-                      type="button"
-                      onClick={() => setOpenId((v) => (v === r.id ? null : r.id))}
-                      aria-expanded={openId === r.id}
-                      className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-accent/40"
-                    >
-                      <span className="font-medium text-foreground">
-                        {r.company || "No company saved"}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {r.role || "No role saved"}
-                      </span>
-                      <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-                        {r.match_score !== null && (
-                          <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 font-semibold text-primary">
-                            Match {r.match_score}/100
-                          </span>
+                {g.jobs.map((j) => (
+                  <li key={j.latest.id} className="rounded-lg border border-border bg-card">
+                    <SessionRow
+                      row={j.latest}
+                      open={openId === j.latest.id}
+                      onToggle={() => setOpenId((v) => (v === j.latest.id ? null : j.latest.id))}
+                      resume={resumeQ.data?.resume ?? null}
+                    />
+                    {j.older.length > 0 && (
+                      <div className="border-t border-border">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedKeys((s) => ({ ...s, [j.latest.id]: !s[j.latest.id] }))
+                          }
+                          className="px-4 py-2 text-xs font-medium text-primary hover:underline"
+                        >
+                          {expandedKeys[j.latest.id]
+                            ? "Hide earlier versions"
+                            : `Show ${j.older.length} earlier ${j.older.length === 1 ? "version" : "versions"}`}
+                        </button>
+                        {expandedKeys[j.latest.id] && (
+                          <ul className="space-y-2 border-t border-border bg-muted/30 p-2">
+                            {j.older.map((r) => (
+                              <li key={r.id} className="rounded-md border border-border bg-card">
+                                <SessionRow
+                                  row={r}
+                                  open={openId === r.id}
+                                  onToggle={() => setOpenId((v) => (v === r.id ? null : r.id))}
+                                  resume={resumeQ.data?.resume ?? null}
+                                />
+                              </li>
+                            ))}
+                          </ul>
                         )}
-                        {formatDate(r.created_at)}
-                      </span>
-                    </button>
-                    {openId === r.id && (
-                      <SessionDetail id={r.id} resume={resumeQ.data?.resume ?? null} />
+                      </div>
                     )}
                   </li>
                 ))}
@@ -155,6 +191,51 @@ function ApplicationsHistoryPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+type Row = NonNullable<
+  Awaited<ReturnType<typeof import("@/lib/applications.functions").listTailorSessions>>
+>[number];
+
+function SessionRow({
+  row,
+  open,
+  onToggle,
+  resume,
+}: {
+  row: Row;
+  open: boolean;
+  onToggle: () => void;
+  resume: import("@/lib/resume-data").MasterResume | null;
+}) {
+  const prepOnly = !row.has_tailored_resume && row.has_interview_prep;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-accent/40"
+      >
+        <span className="font-medium text-foreground">{row.company || "No company saved"}</span>
+        <span className="text-sm text-muted-foreground">{row.role || "No role saved"}</span>
+        <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {prepOnly && (
+            <span className="rounded-full border border-border bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+              Interview prep
+            </span>
+          )}
+          {row.match_score !== null && (
+            <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 font-semibold text-primary">
+              Match {row.match_score}/100
+            </span>
+          )}
+          {formatDate(row.created_at)}
+        </span>
+      </button>
+      {open && <SessionDetail id={row.id} resume={resume} />}
+    </>
   );
 }
 
