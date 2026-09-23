@@ -296,18 +296,43 @@ export const inviteUserByEmailAdmin = createServerFn({ method: "POST" })
     }
 
     // Record in access_requests so invites show up in the same audit trail.
-    const { data: reqRow } = await supabaseAdmin
+    // Upsert by lower(email): re-inviting the same person updates the existing
+    // row instead of piling up duplicates.
+    const inviteFields = {
+      email: data.email,
+      full_name: data.full_name ?? null,
+      reason: `[admin invite] plan=${data.plan ?? "free"}`,
+      status: "approved" as const,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: context.userId,
+    };
+
+    const { data: existingReq } = await supabaseAdmin
       .from("access_requests")
-      .insert({
-        email: data.email,
-        full_name: data.full_name ?? null,
-        reason: `[admin invite] plan=${data.plan ?? "free"}`,
-        status: "approved",
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: context.userId,
-      })
       .select("id")
-      .single();
+      .ilike("email", data.email)
+      .order("requested_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let reqRow: { id: string } | null = null;
+    if (existingReq?.id) {
+      const { data: updated } = await supabaseAdmin
+        .from("access_requests")
+        .update(inviteFields)
+        .eq("id", existingReq.id)
+        .select("id")
+        .single();
+      reqRow = updated ?? { id: existingReq.id as string };
+    } else {
+      const { data: inserted } = await supabaseAdmin
+        .from("access_requests")
+        .insert(inviteFields)
+        .select("id")
+        .single();
+      reqRow = inserted ?? null;
+    }
+
 
     let emailSent = false;
     let emailError: string | null = null;
