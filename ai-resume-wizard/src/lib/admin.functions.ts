@@ -655,3 +655,34 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
 
     return { signups, usageTotals: totals, funnel };
   });
+
+/**
+ * Remove a row from the Access requests audit list.
+ * This only deletes the audit row. It never touches the user's account,
+ * their login, or any of their data.
+ */
+export const deleteAccessRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row } = await supabaseAdmin
+      .from("access_requests")
+      .select("id, email, status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("Request not found");
+
+    const { error } = await supabaseAdmin.from("access_requests").delete().eq("id", data.id);
+    if (error) throw error;
+
+    await writeAudit(context.userId, "delete_access_request", null, {
+      request_id: data.id,
+      email: row.email,
+      status: row.status,
+    });
+
+    return { ok: true };
+  });
