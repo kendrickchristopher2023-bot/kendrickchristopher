@@ -44,6 +44,7 @@ function ApplicationsHistoryPage() {
   const resumeFn = useServerFn(getMyResume);
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
   const sessionsQ = useQuery({
     queryKey: ["tailor-sessions"],
