@@ -194,8 +194,9 @@ function BillingSection({ plan }: { plan: Plan }) {
               <li key={h.action} className="flex justify-between gap-4">
                 <span>{h.label}</span>
                 <span className="text-muted-foreground">
-                  {PLAN_CAPS.free[h.action]} → {PLAN_CAPS.pro[h.action]} per day
+                  {PLAN_CAPS.free[h.action]} a month → {PLAN_CAPS.pro[h.action]} a day
                 </span>
+
               </li>
             ))}
             <li className="flex justify-between gap-4">
