@@ -13,6 +13,8 @@ import {
   listAdminAuditLog,
   getAdminAnalytics,
   inviteUserByEmailAdmin,
+  deleteAccessRequest,
+
 } from "@/lib/admin.functions";
 import { listRefreshRuns, type RefreshRun } from "@/lib/refresh-runs.functions";
 import {
@@ -94,6 +96,8 @@ function AdminDashboard() {
   const accessFn = useServerFn(setUserAccessAdmin);
   const deleteFn = useServerFn(deleteUserAdmin);
   const reviewFn = useServerFn(reviewAccessRequest);
+  const removeRequestFn = useServerFn(deleteAccessRequest);
+
   const resendFn = useServerFn(resendAccessLink);
 
   const users = useQuery({ queryKey: ["admin", "users"], queryFn: () => usersFn() });
@@ -181,6 +185,16 @@ function AdminDashboard() {
         });
     },
   });
+
+  const removeRequest = useMutation({
+    mutationFn: (v: { id: string }) => removeRequestFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "access-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin", "audit"] });
+    },
+  });
+
+
 
   const filteredUsers = useMemo(() => {
     const list = users.data?.users ?? [];
