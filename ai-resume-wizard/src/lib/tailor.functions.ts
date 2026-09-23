@@ -447,6 +447,8 @@ export const batchTailorResume = createServerFn({ method: "POST" })
             jd_text: item.jobDescription,
             tailored_resume: parsed as never,
             cover_letter: parsed.coverLetter,
+            input_hash: inputHash,
+
           })
           .select("id")
           .single();
