@@ -369,8 +369,9 @@ export const listUsersAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         supabaseAdmin
           .from("profiles")
+          // Demo accounts stay visible here so an admin can still manage or
+          // delete them; they are excluded from analytics, not user management.
           .select("id, email, full_name, plan, created_at, onboarded_at, last_active_at")
-          .eq("is_demo", false)
           .order("created_at", { ascending: false }),
 
         supabaseAdmin
