@@ -1,0 +1,500 @@
+{
+  "version": 1,
+  "sdk_version": "0.21.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://pmhehnoimzcaebcnsgau.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "excel-ai-resume",
+      "version": "0.1.0",
+      "title": "Excel AI Resume"
+    },
+    "tools": [
+      {
+        "name": "get_profile",
+        "title": "Get my profile",
+        "description": "Read the signed-in user's profile row (email, full_name, plan, onboarded_at).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_resume",
+        "title": "Get my resume",
+        "description": "Return the signed-in user's primary resume (structured JSON as stored). Use this before tailoring, cover-letter, LinkedIn optimize, or interview-prep tools.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_resume",
+        "title": "Update my resume",
+        "description": "Replace the signed-in user's primary resume with the provided JSON. Overwrites existing content — call get_resume first if you want to merge.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "Full resume object (summary, experience, education, skills, etc.) to store."
+            }
+          },
+          "required": [
+            "data"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_matches",
+        "title": "List my job matches",
+        "description": "List the signed-in user's private job matches (companies/roles they are targeting).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Max rows to return (default 50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_match",
+        "title": "Add a job match",
+        "description": "Add a company/role to the signed-in user's private matches list.",
+        "annotations": {
+          "readOnlyHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "company": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "role_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "location": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "tier": {
+              "description": "Priority tier, e.g. A/B/C or 1/2/3.",
+              "type": "string",
+              "maxLength": 50
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "company",
+            "role"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_applications",
+        "title": "List my job applications",
+        "description": "List the signed-in user's tracked job applications with stage and dates.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "stage": {
+              "description": "Filter by stage (e.g. applied, interview, offer).",
+              "type": "string",
+              "maxLength": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_application",
+        "title": "Track a new application",
+        "description": "Record that the signed-in user applied to a role.",
+        "annotations": {
+          "readOnlyHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "company": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "stage": {
+              "description": "Application stage (default: applied).",
+              "type": "string",
+              "maxLength": 50
+            },
+            "source": {
+              "description": "Where applied (linkedin, referral, direct, etc.).",
+              "type": "string",
+              "maxLength": 50
+            },
+            "jd_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "applied_at": {
+              "description": "ISO datetime; defaults to now.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "company",
+            "role"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_application",
+        "title": "Update an application",
+        "description": "Update an existing application's stage, response date, or notes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "stage": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "response_at": {
+              "description": "ISO datetime of last response from company.",
+              "type": "string"
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "tailor_resume",
+        "title": "Tailor resume to a job description",
+        "description": "Rewrite the user's stored resume for a specific JD. Returns a tailored summary, per-role bullets, match score, matched/missing keywords, and a cover-letter draft.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "job_description": {
+              "type": "string",
+              "minLength": 30,
+              "maxLength": 20000
+            },
+            "company": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          "required": [
+            "job_description"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "generate_cover_letter",
+        "title": "Generate a cover letter",
+        "description": "Write a 3-paragraph cover letter for a specific JD, grounded in the user's stored resume.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "job_description": {
+              "type": "string",
+              "minLength": 30,
+              "maxLength": 20000
+            },
+            "company": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "tone": {
+              "description": "e.g. warm, formal, direct (default: warm-professional).",
+              "type": "string",
+              "maxLength": 50
+            }
+          },
+          "required": [
+            "job_description"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "generate_referral_dm",
+        "title": "Generate a referral DM",
+        "description": "Draft a warm, specific LinkedIn DM asking someone at a target company for a 15-min chat.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "person_name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "company": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "context": {
+              "description": "Anything specific about this person (post, background, mutual).",
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "person_name",
+            "company"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "linkedin_optimize",
+        "title": "Optimize my LinkedIn",
+        "description": "Suggest concrete edits to the user's LinkedIn headline, About, and top-role bullets, targeted at a role/keywords, grounded in their resume.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "target_role": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "target_keywords": {
+              "description": "Comma-separated keywords to weight (e.g. 'forward deployed, AI enablement').",
+              "type": "string",
+              "maxLength": 1000
+            },
+            "current_headline": {
+              "type": "string",
+              "maxLength": 220
+            },
+            "current_about": {
+              "type": "string",
+              "maxLength": 4000
+            }
+          },
+          "required": [
+            "target_role"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "interview_prep_star",
+        "title": "Interview prep — STAR answers",
+        "description": "Generate STAR-format answers to likely interview questions for a JD, drawn from the user's real resume experience.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "job_description": {
+              "type": "string",
+              "minLength": 30,
+              "maxLength": 20000
+            },
+            "questions": {
+              "description": "Specific questions; if empty, top 6 are inferred from the JD.",
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 500
+              }
+            }
+          },
+          "required": [
+            "job_description"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "draft_followup",
+        "title": "Draft a follow-up email",
+        "description": "Draft a follow-up or thank-you email for an application or interview.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "thank_you",
+                "status_check",
+                "nudge",
+                "post_reject"
+              ],
+              "description": "Type of follow-up."
+            },
+            "company": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "role": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "recipient_name": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "days_since": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 365
+            },
+            "notes": {
+              "description": "Anything specific from the last interaction to reference.",
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "kind",
+            "company",
+            "role"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
